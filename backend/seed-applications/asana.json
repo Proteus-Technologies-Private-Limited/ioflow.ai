@@ -1,0 +1,754 @@
+{
+  "key": "asana",
+  "application": {
+    "app_name": "Asana",
+    "app_type": "api",
+    "category": "Integration",
+    "auth_type": "oauth2",
+    "description": "Work management platform to organize tasks, projects, and teams",
+    "base_url": "https://app.asana.com/api/1.0",
+    "version": "1.0.16",
+    "auth_config": {
+      "authorization_url": "https://app.asana.com/-/oauth_authorize",
+      "token_url": "https://app.asana.com/-/oauth_token",
+      "scopes": [
+        "default"
+      ]
+    }
+  },
+  "services": [
+    {
+      "service_name": "create_task",
+      "display_name": "Create Task",
+      "description": "Creates a new task in Asana",
+      "service_type": "api_call",
+      "endpoint_template": "/tasks",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            201
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Task name"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Task notes"
+          },
+          "projects": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of project IDs"
+          },
+          "assignee": {
+            "type": "string",
+            "description": "User ID to assign"
+          },
+          "due_on": {
+            "type": "string",
+            "format": "date",
+            "description": "Due date (YYYY-MM-DD)"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      }
+    },
+    {
+      "service_name": "get_task",
+      "display_name": "Get Task",
+      "description": "Retrieves a task by ID",
+      "service_type": "api_call",
+      "endpoint_template": "/tasks/{{task_gid}}",
+      "request_config": {
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "task_gid": {
+            "type": "string",
+            "description": "Task GID"
+          },
+          "opt_fields": {
+            "type": "string",
+            "description": "Comma-separated optional fields to include"
+          }
+        },
+        "required": [
+          "task_gid"
+        ]
+      }
+    },
+    {
+      "service_name": "update_task",
+      "display_name": "Update Task",
+      "description": "Updates fields on a task",
+      "service_type": "api_call",
+      "endpoint_template": "/tasks/{{task_gid}}",
+      "request_config": {
+        "method": "PUT",
+        "headers_template": {
+          "Content-Type": "application/json"
+        },
+        "body_template": {
+          "data": {
+            "name": "{{name}}",
+            "notes": "{{notes}}",
+            "assignee": "{{assignee}}",
+            "due_on": "{{due_on}}",
+            "completed": "{{completed}}"
+          }
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "task_gid": {
+            "type": "string",
+            "description": "Task GID"
+          },
+          "name": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "assignee": {
+            "type": "string"
+          },
+          "due_on": {
+            "type": "string",
+            "format": "date"
+          },
+          "completed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "task_gid"
+        ]
+      }
+    },
+    {
+      "service_name": "list_tasks",
+      "display_name": "List Tasks",
+      "description": "List tasks in a project or workspace",
+      "service_type": "api_call",
+      "endpoint_template": "/tasks",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "Accept": "application/json"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "project_gid": {
+            "type": "string"
+          },
+          "workspace_gid": {
+            "type": "string"
+          },
+          "assignee": {
+            "type": "string"
+          },
+          "completed_since": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "limit": {
+            "type": "integer"
+          }
+        },
+        "required": []
+      }
+    },
+    {
+      "service_name": "search_tasks",
+      "display_name": "Search Tasks",
+      "description": "Searches tasks by text and filters",
+      "service_type": "api_call",
+      "endpoint_template": "/tasks/search",
+      "request_config": {
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Search text"
+          },
+          "projects": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assignee": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ]
+      }
+    },
+    {
+      "service_name": "create_project",
+      "display_name": "Create Project",
+      "description": "Creates a new project",
+      "service_type": "api_call",
+      "endpoint_template": "/projects",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        },
+        "body_template": {
+          "data": {
+            "name": "{{name}}",
+            "team": "{{team}}",
+            "notes": "{{notes}}",
+            "public": "{{public}}"
+          }
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            201
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "team": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "public": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      }
+    },
+    {
+      "service_name": "list_projects",
+      "display_name": "List Projects",
+      "description": "List projects in a workspace or team",
+      "service_type": "api_call",
+      "endpoint_template": "/projects",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "Accept": "application/json"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "workspace_gid": {
+            "type": "string"
+          },
+          "team_gid": {
+            "type": "string"
+          },
+          "archived": {
+            "type": "boolean"
+          }
+        },
+        "required": []
+      }
+    },
+    {
+      "service_name": "create_tag",
+      "display_name": "Create Tag",
+      "description": "Creates a tag",
+      "service_type": "api_call",
+      "endpoint_template": "/tags",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        },
+        "body_template": {
+          "data": {
+            "name": "{{name}}",
+            "color": "{{color}}"
+          }
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            201
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      }
+    },
+    {
+      "service_name": "create_comment",
+      "display_name": "Create Comment",
+      "description": "Add a comment to a task or other resource",
+      "service_type": "api_call",
+      "endpoint_template": "/stories",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        },
+        "body_template": {
+          "data": {
+            "text": "{{text}}",
+            "is_pinned": "{{is_pinned}}",
+            "is_private": "{{is_private}}",
+            "parent": {
+              "gid": "{{parent_gid}}"
+            }
+          }
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200,
+            201
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "parent_gid": {
+            "type": "string"
+          },
+          "is_pinned": {
+            "type": "boolean"
+          },
+          "is_private": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "text",
+          "parent_gid"
+        ]
+      }
+    },
+    {
+      "service_name": "create_user",
+      "display_name": "Create User",
+      "description": "Create a new user (invite) in workspace",
+      "service_type": "api_call",
+      "endpoint_template": "/users",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        },
+        "body_template": {
+          "data": {
+            "name": "{{name}}",
+            "email": "{{email}}",
+            "workspace": "{{workspace_gid}}"
+          }
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200,
+            201
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "workspace_gid": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "workspace_gid"
+        ]
+      }
+    },
+    {
+      "service_name": "list_workspaces",
+      "display_name": "List Workspaces",
+      "description": "List workspaces available to the user",
+      "service_type": "api_call",
+      "endpoint_template": "/workspaces",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "Accept": "application/json"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  ],
+  "events": [
+    {
+      "event_name": "task_created",
+      "display_name": "Task Created",
+      "description": "Triggered when a new task is created in Asana",
+      "event_type": "webhook",
+      "event_configuration": {
+        "type": "object",
+        "properties": {
+          "event": {
+            "type": "object",
+            "properties": {
+              "resource": {
+                "type": "object",
+                "properties": {
+                  "gid": {
+                    "type": "string"
+                  },
+                  "resource_type": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              },
+              "action": {
+                "type": "string"
+              },
+              "parent": {
+                "type": "object"
+              },
+              "user": {
+                "type": "object"
+              },
+              "change": {
+                "type": "object"
+              }
+            }
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "event",
+          "timestamp"
+        ]
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "task_updated",
+      "display_name": "Task Updated",
+      "description": "Triggered when a task is updated in Asana",
+      "event_type": "webhook",
+      "event_configuration": {
+        "type": "object",
+        "properties": {
+          "event": {
+            "type": "object",
+            "properties": {
+              "resource": {
+                "type": "object",
+                "properties": {
+                  "gid": {
+                    "type": "string"
+                  },
+                  "resource_type": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              },
+              "action": {
+                "type": "string"
+              },
+              "user": {
+                "type": "object"
+              },
+              "change": {
+                "type": "object"
+              }
+            }
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "event",
+          "timestamp"
+        ]
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "task_deleted",
+      "display_name": "Task Deleted",
+      "description": "Triggered when a task is deleted in Asana",
+      "event_type": "webhook",
+      "event_configuration": {
+        "type": "object",
+        "properties": {
+          "event": {
+            "type": "object",
+            "properties": {
+              "resource": {
+                "type": "object",
+                "properties": {
+                  "gid": {
+                    "type": "string"
+                  },
+                  "resource_type": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              },
+              "action": {
+                "type": "string"
+              },
+              "user": {
+                "type": "object"
+              }
+            }
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "event",
+          "timestamp"
+        ]
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "project_created",
+      "display_name": "Project Created",
+      "description": "Triggered when a project is created",
+      "event_type": "webhook",
+      "event_configuration": {
+        "type": "object",
+        "properties": {
+          "gid": {
+            "type": "string"
+          },
+          "resource": {
+            "type": "object"
+          },
+          "action": {
+            "type": "string"
+          },
+          "user": {
+            "type": "object"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "gid",
+          "action",
+          "created_at"
+        ]
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "project_deleted",
+      "display_name": "Project Deleted",
+      "description": "Triggered when a project is deleted",
+      "event_type": "webhook",
+      "event_configuration": {
+        "type": "object",
+        "properties": {
+          "gid": {
+            "type": "string"
+          },
+          "resource": {
+            "type": "object"
+          },
+          "action": {
+            "type": "string"
+          },
+          "user": {
+            "type": "object"
+          },
+          "deleted_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "gid",
+          "action",
+          "deleted_at"
+        ]
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    }
+  ],
+  "_validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": [],
+    "validated_at": "2025-11-26T10:15:48.892274"
+  },
+  "metadata": {
+    "last_modified": "2025-11-26T04:45:48.953257",
+    "services_count": 11,
+    "events_count": 5
+  }
+}

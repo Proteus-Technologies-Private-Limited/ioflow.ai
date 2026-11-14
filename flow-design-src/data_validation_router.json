@@ -1,0 +1,129 @@
+{
+  "version": "1.0",
+  "export_timestamp": "2025-11-06T00:00:00Z",
+  "flow": {
+    "flow_name": "Data Validation & Routing",
+    "description": "Validate incoming data against business rules and route to different processing paths based on validation results. Demonstrates conditional logic, data quality checks, and error handling.",
+    "category": "Conditional Workflows",
+    "trigger_config": {
+      "type": "manual",
+      "manual_variables": [
+        {
+          "id": "customer_data",
+          "name": "customer_data",
+          "displayName": "Customer Data (JSON)",
+          "dataType": "string",
+          "uiControl": "textarea",
+          "required": true,
+          "defaultValue": "{\"name\": \"John Doe\", \"email\": \"john@example.com\", \"age\": 30, \"country\": \"US\"}"
+        }
+      ]
+    },
+    "flow_definition": {
+      "nodes": [
+        {
+          "id": "trigger_validation",
+          "type": "trigger",
+          "position": { "x": 300, "y": 100 },
+          "width": 240,
+          "height": 100,
+          "data": {
+            "label": "Receive Customer Data",
+            "triggerType": "manual",
+            "manualVariables": [
+              {
+                "id": "customer_data",
+                "name": "customer_data",
+                "displayName": "Customer Data (JSON)",
+                "dataType": "string",
+                "uiControl": "textarea",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "parse_and_validate",
+          "type": "transform",
+          "position": { "x": 300, "y": 240 },
+          "width": 260,
+          "height": 180,
+          "data": {
+            "label": "Parse & Validate Data",
+            "script": "import json\nimport re\n\n# Parse input JSON\ntry:\n    data = json.loads(input.get('customer_data', '{}'))\nexcept:\n    data = {}\n\n# Validation results\nerrors = []\nwarnings = []\n\n# Required fields check\nrequired_fields = ['name', 'email', 'age']\nfor field in required_fields:\n    if not data.get(field):\n        errors.append(f'Missing required field: {field}')\n\n# Email format validation\nemail = data.get('email', '')\nif email and not re.match(r'^[\\w\\.-]+@[\\w\\.-]+\\.\\w+$', email):\n    errors.append('Invalid email format')\n\n# Age validation\nage = data.get('age')\nif age:\n    try:\n        age_int = int(age)\n        if age_int < 18:\n            warnings.append('Customer is under 18')\n        elif age_int > 100:\n            warnings.append('Age seems unusually high')\n    except:\n        errors.append('Age must be a number')\n\n# Country validation\ncountry = data.get('country', '')\nvalid_countries = ['US', 'CA', 'UK', 'AU', 'IN']\nif country and country not in valid_countries:\n    warnings.append(f'Country {country} requires manual review')\n\n# Determine validation status\nif errors:\n    status = 'invalid'\nelif warnings:\n    status = 'needs_review'\nelse:\n    status = 'valid'\n\noutput = {\n    'customer_data': data,\n    'validation_status': status,\n    'errors': errors,\n    'warnings': warnings,\n    'is_valid': len(errors) == 0\n}"
+          }
+        },
+        {
+          "id": "check_validation",
+          "type": "condition",
+          "position": { "x": 320, "y": 460 },
+          "width": 220,
+          "height": 100,
+          "data": {
+            "label": "Is Data Valid?",
+            "expression": "node_outputs.parse_and_validate.is_valid == True"
+          }
+        },
+        {
+          "id": "process_valid_data",
+          "type": "transform",
+          "position": { "x": 140, "y": 600 },
+          "width": 240,
+          "height": 140,
+          "data": {
+            "label": "Process Valid Data",
+            "script": "import datetime\n\nvalidated_data = node_outputs.get('parse_and_validate', {})\ncustomer = validated_data.get('customer_data', {})\n\n# Process the valid customer data\noutput = {\n    'status': 'processed',\n    'customer_id': f\"CUST-{customer.get('email', '').split('@')[0].upper()}\",\n    'processed_at': datetime.datetime.now().isoformat(),\n    'customer_info': customer,\n    'warnings': validated_data.get('warnings', []),\n    'message': 'Customer data processed successfully'\n}"
+          }
+        },
+        {
+          "id": "handle_invalid_data",
+          "type": "transform",
+          "position": { "x": 460, "y": 600 },
+          "width": 240,
+          "height": 140,
+          "data": {
+            "label": "Handle Invalid Data",
+            "script": "import datetime\n\nvalidated_data = node_outputs.get('parse_and_validate', {})\n\n# Log errors and create error report\noutput = {\n    'status': 'rejected',\n    'reason': 'validation_failed',\n    'errors': validated_data.get('errors', []),\n    'warnings': validated_data.get('warnings', []),\n    'rejected_at': datetime.datetime.now().isoformat(),\n    'original_data': validated_data.get('customer_data', {}),\n    'message': 'Data validation failed - please correct errors and resubmit'\n}"
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "e1",
+          "source": "trigger_validation",
+          "target": "parse_and_validate",
+          "type": "smoothstep"
+        },
+        {
+          "id": "e2",
+          "source": "parse_and_validate",
+          "target": "check_validation",
+          "type": "smoothstep"
+        },
+        {
+          "id": "e3",
+          "source": "check_validation",
+          "target": "process_valid_data",
+          "sourceHandle": "true",
+          "type": "smoothstep"
+        },
+        {
+          "id": "e4",
+          "source": "check_validation",
+          "target": "handle_invalid_data",
+          "sourceHandle": "false",
+          "type": "smoothstep"
+        }
+      ]
+    },
+    "is_synchronous": false,
+    "sync_timeout": 30
+  },
+  "metadata": {
+    "required_applications": [],
+    "source_instance": {
+      "name": "IOFlow Example",
+      "version": "1.0"
+    }
+  }
+}

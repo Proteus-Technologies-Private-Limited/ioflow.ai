@@ -1,0 +1,277 @@
+{
+  "categories": [
+    {
+      "id": "ai-automation",
+      "name": "AI & Automation",
+      "icon": "SparklesIcon",
+      "color": "purple",
+      "description": "Leverage AI for content generation, data enrichment, and intelligent automation"
+    },
+    {
+      "id": "document-processing",
+      "name": "Document Processing",
+      "icon": "DocumentTextIcon",
+      "color": "blue",
+      "description": "Process, convert, and extract data from various document formats"
+    },
+    {
+      "id": "data-integration",
+      "name": "Data Integration",
+      "icon": "CircleStackIcon",
+      "color": "green",
+      "description": "Connect systems, sync data, and automate data pipelines"
+    },
+    {
+      "id": "notifications",
+      "name": "Notifications & Alerts",
+      "icon": "BellAlertIcon",
+      "color": "orange",
+      "description": "Send notifications via email, SMS, or other channels"
+    },
+    {
+      "id": "business-logic",
+      "name": "Business Logic",
+      "icon": "BeakerIcon",
+      "color": "red",
+      "description": "Implement complex business rules, validations, and workflows"
+    },
+    {
+      "id": "web-api",
+      "name": "Web & API",
+      "icon": "GlobeAltIcon",
+      "color": "cyan",
+      "description": "Interact with REST APIs, web scraping, and HTTP integrations"
+    },
+    {
+      "id": "file-operations",
+      "name": "File Operations",
+      "icon": "FolderIcon",
+      "color": "yellow",
+      "description": "File uploads, downloads, conversions, and batch processing"
+    },
+    {
+      "id": "conditional-workflows",
+      "name": "Conditional Workflows",
+      "icon": "AdjustmentsHorizontalIcon",
+      "color": "pink",
+      "description": "Dynamic routing based on conditions and data patterns"
+    }
+  ],
+  "examples": [
+    {
+      "id": "pdf-from-images",
+      "name": "Create PDF from Images",
+      "description": "Convert multiple images into a single PDF document. Perfect for creating reports, catalogs, or documentation from image files.",
+      "category": "Document Processing",
+      "icon": "DocumentTextIcon",
+      "color": "blue",
+      "tags": [
+        "PDF",
+        "Image Processing",
+        "File Conversion"
+      ],
+      "difficulty": "Beginner",
+      "estimated_time": "5-10 minutes",
+      "filename": "create_pdf_from_images_fixed_v2.json"
+    },
+    {
+      "id": "stock-statement-extractor",
+      "name": "Stock Statement Data Extractor",
+      "description": "Upload unstructured stock statements (image, PDF, Excel, Word) and automatically extract structured inventory data using Google Gemini AI, then save to Google Sheets.",
+      "category": "Data Integration",
+      "icon": "CircleStackIcon",
+      "color": "green",
+      "tags": [
+        "AI",
+        "OCR",
+        "Google Gemini",
+        "Google Sheets",
+        "Data Extraction"
+      ],
+      "difficulty": "Advanced",
+      "estimated_time": "15-20 minutes",
+      "filename": "stock-statement-complete.json"
+    },
+    {
+      "id": "email-notification-workflow",
+      "name": "Multi-Channel Notification System",
+      "description": "Send notifications across multiple channels (Email, Slack, SMS) based on trigger conditions. Includes template support and dynamic recipient selection.",
+      "category": "Notifications & Alerts",
+      "icon": "BellAlertIcon",
+      "color": "orange",
+      "tags": [
+        "Email",
+        "Notifications",
+        "Alerts",
+        "Multi-Channel"
+      ],
+      "difficulty": "Beginner",
+      "estimated_time": "5-10 minutes",
+      "filename": "email_notification_workflow.json"
+    },
+    {
+      "id": "approval-workflow",
+      "name": "Approval Workflow with Escalation",
+      "description": "Implement a multi-stage approval process with automatic escalation, email notifications, and audit trail. Perfect for expense approvals, leave requests, or document reviews.",
+      "category": "Business Logic",
+      "icon": "BeakerIcon",
+      "color": "red",
+      "tags": [
+        "Approval",
+        "Workflow",
+        "Escalation",
+        "Business Process"
+      ],
+      "difficulty": "Intermediate",
+      "estimated_time": "15-20 minutes",
+      "filename": "approval_workflow_with_escalation.json"
+    },
+    {
+      "id": "rest-api-integration",
+      "name": "REST API Data Aggregator",
+      "description": "Fetch data from multiple REST APIs, transform and aggregate the results, and store in a database or Google Sheets. Includes error handling and retry logic.",
+      "category": "Web & API",
+      "icon": "GlobeAltIcon",
+      "color": "cyan",
+      "tags": [
+        "REST API",
+        "HTTP",
+        "Data Aggregation",
+        "Integration"
+      ],
+      "difficulty": "Intermediate",
+      "estimated_time": "10-15 minutes",
+      "filename": "rest_api_data_aggregator.json"
+    },
+    {
+      "id": "web-scraper",
+      "name": "Web Data Scraper",
+      "description": "Scrape data from websites, extract specific information using selectors, and save results to a spreadsheet or database. Includes pagination support.",
+      "category": "Web & API",
+      "icon": "GlobeAltIcon",
+      "color": "cyan",
+      "tags": [
+        "Web Scraping",
+        "Data Extraction",
+        "HTML Parsing"
+      ],
+      "difficulty": "Advanced",
+      "estimated_time": "20-25 minutes",
+      "filename": "web_data_scraper.json"
+    },
+    {
+      "id": "file-batch-processor",
+      "name": "Batch File Processor",
+      "description": "Process multiple files from a folder, apply transformations (resize images, convert formats, extract text), and organize outputs in structured folders.",
+      "category": "File Operations",
+      "icon": "FolderIcon",
+      "color": "yellow",
+      "tags": [
+        "Batch Processing",
+        "File Management",
+        "Automation"
+      ],
+      "difficulty": "Intermediate",
+      "estimated_time": "10-15 minutes",
+      "filename": "batch_file_processor.json"
+    },
+    {
+      "id": "data-validation-router",
+      "name": "Data Validation & Routing",
+      "description": "Validate incoming data against business rules and route to different processing paths based on validation results. Includes error handling and notification.",
+      "category": "Conditional Workflows",
+      "icon": "AdjustmentsHorizontalIcon",
+      "color": "pink",
+      "tags": [
+        "Validation",
+        "Conditional Logic",
+        "Data Quality",
+        "Routing"
+      ],
+      "difficulty": "Intermediate",
+      "estimated_time": "10-15 minutes",
+      "filename": "data_validation_router.json"
+    },
+    {
+      "id": "customer-onboarding",
+      "name": "Customer Onboarding Automation",
+      "description": "Automate customer onboarding with account creation, welcome emails, document generation, and CRM integration. Includes conditional logic for different customer types.",
+      "category": "Business Logic",
+      "icon": "BeakerIcon",
+      "color": "red",
+      "tags": [
+        "Onboarding",
+        "CRM",
+        "Automation",
+        "Customer Management"
+      ],
+      "difficulty": "Advanced",
+      "estimated_time": "20-25 minutes",
+      "filename": "customer_onboarding_automation.json"
+    },
+    {
+      "id": "ai-data-enrichment",
+      "name": "AI-Powered Data Enrichment",
+      "description": "Enrich customer data using AI to extract insights, classify records, and append additional information from external sources.",
+      "category": "AI & Automation",
+      "icon": "SparklesIcon",
+      "color": "purple",
+      "tags": [
+        "AI",
+        "Data Enrichment",
+        "Classification",
+        "Google Gemini"
+      ],
+      "difficulty": "Intermediate",
+      "estimated_time": "10-15 minutes",
+      "filename": "ai_data_enrichment.json"
+    },
+    {
+      "id": "invoice-processing",
+      "name": "Invoice Processing & Data Extraction",
+      "description": "Extract data from invoice images or PDFs using OCR and AI, validate the extracted data, and save to accounting system or spreadsheet.",
+      "category": "Document Processing",
+      "icon": "DocumentTextIcon",
+      "color": "blue",
+      "tags": [
+        "OCR",
+        "Invoice",
+        "AI",
+        "Data Extraction",
+        "Accounting"
+      ],
+      "difficulty": "Advanced",
+      "estimated_time": "15-20 minutes",
+      "filename": "invoice_processing_ocr.json"
+    },
+    {
+      "id": "ai-blog-posting--to-wordpress",
+      "name": "AI Blog posting  to Wordpress",
+      "description": "Publishes ai generated blog posts with proper category, tag and image",
+      "category": "AI & Automation",
+      "icon": "SparklesIcon",
+      "color": "purple",
+      "tags": [
+        "Blogging",
+        "GenerativeAI"
+      ],
+      "difficulty": "Advanced",
+      "estimated_time": "10-15 minutes",
+      "filename": "ai-blog-posting--to-wordpress.json"
+    },
+    {
+      "id": "ask-chatgpt",
+      "name": "Ask ChatGPT",
+      "description": "Ask a question and ioflow will get the answer from Open AI and display. This is a simple example flow on how to make LLM calls in ioflow",
+      "category": "AI & Automation",
+      "icon": "SparklesIcon",
+      "color": "purple",
+      "tags": [
+        "AI"
+      ],
+      "difficulty": "Intermediate",
+      "estimated_time": "10-15 minutes",
+      "filename": "ask-chatgpt.json"
+    }
+  ]
+}

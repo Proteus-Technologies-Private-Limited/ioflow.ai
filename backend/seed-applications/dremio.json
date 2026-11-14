@@ -1,0 +1,523 @@
+{
+  "key": "dremio",
+  "application": {
+    "app_name": "Dremio Data Lakehouse",
+    "app_type": "database",
+    "app_scope": "tenant",
+    "description": "Connect to Dremio data lakehouse using Apache Arrow Flight protocol. Configure base_url as grpc://server:32010 for Arrow Flight. HTTP REST API URL is automatically derived for token exchange",
+    "category": "Database",
+    "auth_type": "token_exchange",
+    "auth_config": {
+      "database_type": "dremio",
+      "connection_pool_size": 5,
+      "connection_timeout": 30,
+      "login_url": "{{http_base_url}}/apiv2/login",
+      "token_field": "token",
+      "login_body_template": {
+        "userName": "{{username}}",
+        "password": "{{password}}"
+      },
+      "credential_fields": {
+        "username": {
+          "label": "Username",
+          "type": "text",
+          "required": true,
+          "placeholder": "Enter your username",
+          "help_text": "Dremio username"
+        },
+        "password": {
+          "label": "Password",
+          "type": "password",
+          "required": true,
+          "placeholder": "Enter your password",
+          "help_text": "Dremio password"
+        }
+      },
+      "ssl_mode": "require",
+      "fetch_size": 1000,
+      "max_rows": 100000
+    },
+    "version": "2.1.0",
+    "base_url": "grpc://localhost:32010",
+    "icon_url": "https://www.dremio.com/wp-content/uploads/2022/06/Dremio-logo-1.svg"
+  },
+  "services": [
+    {
+      "service_name": "execute_query",
+      "description": "Execute a SELECT query using Arrow Flight and return results as JSON array",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "query",
+        "result_format": "json_array",
+        "max_rows": 100000,
+        "timeout_seconds": 180,
+        "fetch_size": 1000
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "description": "SQL SELECT query to execute on Dremio",
+            "example": "SELECT * FROM Samples.\"samples.dremio.com\".\"NYC-weather.csv\" LIMIT 100"
+          },
+          "parameters": {
+            "type": "object",
+            "description": "Query parameters as key-value pairs (optional)"
+          }
+        },
+        "required": [
+          "sql"
+        ],
+        "additionalProperties": true
+      },
+      "sample_input": {
+        "sql": "SELECT * FROM Samples.\"samples.dremio.com\".\"NYC-weather.csv\" WHERE temperature > 70 LIMIT 10",
+        "parameters": {}
+      },
+      "sample_output": {
+        "success": true,
+        "data": [
+          {
+            "date": "2023-07-15",
+            "temperature": 85,
+            "humidity": 65,
+            "precipitation": 0
+          }
+        ],
+        "row_count": 10,
+        "truncated": false,
+        "execution_time_ms": 250
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "integer",
+            "description": "The success"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "description": "The date"
+                },
+                "temperature": {
+                  "type": "integer",
+                  "description": "The temperature"
+                },
+                "humidity": {
+                  "type": "integer",
+                  "description": "The humidity"
+                },
+                "precipitation": {
+                  "type": "integer",
+                  "description": "The precipitation"
+                }
+              }
+            },
+            "description": "The data"
+          },
+          "row_count": {
+            "type": "integer",
+            "description": "Number of row_s"
+          },
+          "truncated": {
+            "type": "integer",
+            "description": "The truncated"
+          },
+          "execution_time_ms": {
+            "type": "integer",
+            "description": "The execution_time_ms"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "query_to_arrow",
+      "description": "Execute a query and return results as Apache Arrow table for high-performance data processing",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "query",
+        "result_format": "arrow_table",
+        "max_rows": 100000,
+        "timeout_seconds": 180,
+        "fetch_size": 1000
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "description": "SQL SELECT query to execute on Dremio",
+            "example": "SELECT * FROM my_data_lake.sales_data WHERE year = 2024"
+          }
+        },
+        "required": [
+          "sql"
+        ],
+        "additionalProperties": true
+      },
+      "sample_input": {
+        "sql": "SELECT product_id, SUM(sales_amount) as total_sales FROM sales_data GROUP BY product_id"
+      },
+      "sample_output": {
+        "success": true,
+        "arrow_table": "pyarrow.Table object",
+        "row_count": 1500,
+        "schema": {
+          "product_id": "int64",
+          "total_sales": "double"
+        },
+        "execution_time_ms": 450
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "integer",
+            "description": "The success"
+          },
+          "arrow_table": {
+            "type": "string",
+            "description": "The arrow_table"
+          },
+          "row_count": {
+            "type": "integer",
+            "description": "Number of row_s"
+          },
+          "schema": {
+            "type": "object",
+            "properties": {
+              "product_id": {
+                "type": "string",
+                "description": "The product_id"
+              },
+              "total_sales": {
+                "type": "string",
+                "description": "The total_sales"
+              }
+            },
+            "description": "The schema"
+          },
+          "execution_time_ms": {
+            "type": "integer",
+            "description": "The execution_time_ms"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "query_to_pandas",
+      "description": "Execute a query and return results as Pandas DataFrame for data analysis",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "query",
+        "result_format": "pandas_dataframe",
+        "max_rows": 100000,
+        "timeout_seconds": 180,
+        "fetch_size": 1000
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "description": "SQL SELECT query to execute on Dremio",
+            "example": "SELECT * FROM data_lake.analytics_table"
+          }
+        },
+        "required": [
+          "sql"
+        ],
+        "additionalProperties": true
+      },
+      "sample_input": {
+        "sql": "SELECT customer_id, order_date, total_amount FROM orders WHERE order_date >= '2024-01-01'"
+      },
+      "sample_output": {
+        "success": true,
+        "dataframe_shape": [
+          5000,
+          3
+        ],
+        "columns": [
+          "customer_id",
+          "order_date",
+          "total_amount"
+        ],
+        "row_count": 5000,
+        "execution_time_ms": 320
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "integer",
+            "description": "The success"
+          },
+          "dataframe_shape": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "The dataframe_shape"
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The columns"
+          },
+          "row_count": {
+            "type": "integer",
+            "description": "Number of row_s"
+          },
+          "execution_time_ms": {
+            "type": "integer",
+            "description": "The execution_time_ms"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "query_single_row",
+      "description": "Execute a query that returns a single row as JSON object",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "query",
+        "result_format": "json_object",
+        "max_rows": 1,
+        "timeout_seconds": 60,
+        "fetch_size": 1
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "description": "SQL query that returns a single row",
+            "example": "SELECT COUNT(*) as total_records FROM my_table"
+          }
+        },
+        "required": [
+          "sql"
+        ],
+        "additionalProperties": true
+      },
+      "sample_input": {
+        "sql": "SELECT MAX(transaction_amount) as max_amount, MIN(transaction_amount) as min_amount FROM transactions"
+      },
+      "sample_output": {
+        "success": true,
+        "data": {
+          "max_amount": 15000.5,
+          "min_amount": 10.25
+        },
+        "row_count": 1,
+        "execution_time_ms": 180
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "integer",
+            "description": "The success"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "max_amount": {
+                "type": "number",
+                "description": "The max_amount"
+              },
+              "min_amount": {
+                "type": "number",
+                "description": "The min_amount"
+              }
+            },
+            "description": "The data"
+          },
+          "row_count": {
+            "type": "integer",
+            "description": "Number of row_s"
+          },
+          "execution_time_ms": {
+            "type": "integer",
+            "description": "The execution_time_ms"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "query_to_duckdb",
+      "description": "Execute a query and return results as DuckDB relation for advanced analytics",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "query",
+        "result_format": "duckdb_relation",
+        "max_rows": 100000,
+        "timeout_seconds": 180,
+        "fetch_size": 1000
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "description": "SQL SELECT query to execute on Dremio",
+            "example": "SELECT * FROM data_lake.large_dataset"
+          }
+        },
+        "required": [
+          "sql"
+        ],
+        "additionalProperties": true
+      },
+      "sample_input": {
+        "sql": "SELECT region, product_category, SUM(revenue) as total_revenue FROM sales_fact GROUP BY region, product_category"
+      },
+      "sample_output": {
+        "success": true,
+        "duckdb_relation": "DuckDB Relation object",
+        "row_count": 2500,
+        "columns": [
+          "region",
+          "product_category",
+          "total_revenue"
+        ],
+        "execution_time_ms": 380
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "integer",
+            "description": "The success"
+          },
+          "duckdb_relation": {
+            "type": "string",
+            "description": "The duckdb_relation"
+          },
+          "row_count": {
+            "type": "integer",
+            "description": "Number of row_s"
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The columns"
+          },
+          "execution_time_ms": {
+            "type": "integer",
+            "description": "The execution_time_ms"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "query_to_polars",
+      "description": "Execute a query and return results as Polars DataFrame for fast data manipulation",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "query",
+        "result_format": "polars_dataframe",
+        "max_rows": 100000,
+        "timeout_seconds": 180,
+        "fetch_size": 1000
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "description": "SQL SELECT query to execute on Dremio",
+            "example": "SELECT * FROM iceberg_table WHERE partition_date = '2024-08-01'"
+          }
+        },
+        "required": [
+          "sql"
+        ],
+        "additionalProperties": true
+      },
+      "sample_input": {
+        "sql": "SELECT user_id, event_type, COUNT(*) as event_count FROM events GROUP BY user_id, event_type"
+      },
+      "sample_output": {
+        "success": true,
+        "dataframe_shape": [
+          8000,
+          3
+        ],
+        "columns": [
+          "user_id",
+          "event_type",
+          "event_count"
+        ],
+        "row_count": 8000,
+        "execution_time_ms": 290
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "integer",
+            "description": "The success"
+          },
+          "dataframe_shape": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "The dataframe_shape"
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The columns"
+          },
+          "row_count": {
+            "type": "integer",
+            "description": "Number of row_s"
+          },
+          "execution_time_ms": {
+            "type": "integer",
+            "description": "The execution_time_ms"
+          }
+        }
+      }
+    }
+  ],
+  "events": [],
+  "metadata": {
+    "created_at": "2025-08-22T18:42:17.500773",
+    "created_by": "IOFlow",
+    "author": "IOFlow",
+    "tags": [
+      "database",
+      "arrow-flight",
+      "data-lakehouse",
+      "analytics"
+    ],
+    "documentation_url": "https://docs.dremio.com/current/sonar/developing-client-apps/arrow-flight/",
+    "support_email": "support@example.com",
+    "last_modified": "2025-01-23T00:00:00.000000",
+    "modified_by": "ioflow-system",
+    "services_count": 6,
+    "notes": "Uses Arrow Flight protocol via grpc+tls:// URL scheme detection"
+  },
+  "_validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": [],
+    "validated_at": "2025-08-23T00:14:36.685886"
+  }
+}

@@ -1,0 +1,2123 @@
+{
+  "key": "vayana_api",
+  "application": {
+    "app_name": "Vayana API",
+    "app_type": "api",
+    "description": "Comprehensive integration with Vayana API for business verification services including GST, PAN, Bank Account, Vehicle verification, and e-invoice generation. Provides access to government database verifications and compliance services. Note: Organization ID is automatically extracted from authentication response and used in all API calls.",
+    "category": "API Platform",
+    "auth_type": "token_exchange",
+    "auth_config": {
+      "login_url": "{{base_url}}/theodore/apis/v1/authtokens",
+      "exchange_url": "{{base_url}}/theodore/apis/v1/authtokens",
+      "token_field": "data.token",
+      "credentials_format": "json",
+      "request_method": "POST",
+      "response_type": "json",
+      "headers_template": {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      "body_template": {
+        "handle": "{{username}}",
+        "handleType": "{{handle_type}}",
+        "password": "{{password}}",
+        "otp": "{{otp}}"
+      },
+      "token_location": "header",
+      "token_header": "Authorization",
+      "token_prefix": "Bearer",
+      "refresh_url": "{{base_url}}/theodore/apis/v1/authtokens",
+      "refresh_method": "PUT",
+      "refresh_token_field": "data.token",
+      "expiry_field": "data.expiry",
+      "user_id_field": "data.userId",
+      "success_field": "data",
+      "additional_fields": {
+        "org_id": "data.associatedOrgs[0].organisation.id"
+      },
+      "credentials_schema": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "title": "Email Address",
+            "description": "Email or mobile number",
+            "format": "email"
+          },
+          "handle_type": {
+            "type": "string",
+            "title": "Handle Type",
+            "enum": [
+              "email",
+              "mobile"
+            ],
+            "default": "email",
+            "description": "Type of handle"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password",
+            "description": "User password",
+            "format": "password"
+          }
+        },
+        "required": [
+          "username",
+          "handle_type",
+          "password"
+        ]
+      }
+    },
+    "version": "1.3.1",
+    "base_url": "https://api.one.vayana.com",
+    "icon_url": "https://www.vayana.com/assets/images/vayana-logo.png",
+    "default_custom_params": {
+      "header": {},
+      "query": {},
+      "body": {}
+    },
+    "app_scope": "global"
+  },
+  "services": [
+    {
+      "service_name": "verify_gstin",
+      "description": "Verify GSTIN and fetch taxpayer details from GSTN portal",
+      "service_type": "api_call",
+      "endpoint_template": "/atlas/v1/gstin/{{gstin}}",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "X-ATLAS-ORG-ID": "{{auth.org_id}}",
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "X-FLYNN-N-GSTN-GSP-CODE": "vay",
+          "Authorization": "Bearer {{auth.access_token}}"
+        },
+        "success_status_codes": [
+          200,
+          400
+        ]
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "gstin": {
+            "type": "string",
+            "description": "GSTIN to verify (15 character alphanumeric)",
+            "pattern": "^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[A-Z0-9]{1}$"
+          }
+        },
+        "required": [
+          "gstin"
+        ]
+      },
+      "sample_input": {
+        "gstin": "29ABCDE1234F1Z5"
+      },
+      "sample_output": {
+        "status": "1",
+        "data": {
+          "gstin": "27ASJPC0786C3C7",
+          "lgnm": "Vay Network Services Pvt Ltd",
+          "tradeNam": "GSTN",
+          "sts": "Active",
+          "rgdt": "5/5/2017",
+          "ctb": "sole",
+          "einvoiceStatus": "Yes",
+          "pradr": {
+            "addr": {
+              "bnm": "KATGARA HOUSE",
+              "loc": "MALABAR HILL",
+              "pncd": "400006"
+            }
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "The status"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "gstin": {
+                "type": "string",
+                "description": "The gstin"
+              },
+              "lgnm": {
+                "type": "string",
+                "description": "The lgnm"
+              },
+              "tradeNam": {
+                "type": "string",
+                "description": "The tradeNam"
+              },
+              "sts": {
+                "type": "string",
+                "description": "The sts"
+              },
+              "rgdt": {
+                "type": "string",
+                "description": "The rgdt"
+              },
+              "ctb": {
+                "type": "string",
+                "description": "The ctb"
+              },
+              "einvoiceStatus": {
+                "type": "string",
+                "description": "The einvoiceStatus"
+              },
+              "pradr": {
+                "type": "object",
+                "properties": {
+                  "addr": {
+                    "type": "object",
+                    "properties": {
+                      "bnm": {
+                        "type": "string",
+                        "description": "The bnm"
+                      },
+                      "loc": {
+                        "type": "string",
+                        "description": "The loc"
+                      },
+                      "pncd": {
+                        "type": "string",
+                        "description": "The pncd"
+                      }
+                    },
+                    "description": "The addr"
+                  }
+                },
+                "description": "The pradr"
+              }
+            },
+            "description": "The data"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "verify_pan",
+      "description": "Verify PAN and get basic details",
+      "service_type": "api_call",
+      "endpoint_template": "/atlas/v1/pan/{{pan}}",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "X-ATLAS-ORG-ID": "{{auth.org_id}}",
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer {{auth.access_token}}"
+        },
+        "success_status_codes": [
+          200,
+          400
+        ]
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "pan": {
+            "type": "string",
+            "description": "PAN number to verify",
+            "pattern": "^[A-Z]{5}[0-9]{4}[A-Z]{1}$"
+          }
+        },
+        "required": [
+          "pan"
+        ]
+      },
+      "sample_input": {
+        "pan": "AAAAA1234A"
+      },
+      "sample_output": {
+        "message": null,
+        "results": {
+          "pan": "AAAAA1234A",
+          "name": "ABC Company",
+          "status": "PAN is Active and the details are matching with PAN database"
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "The message"
+          },
+          "results": {
+            "type": "object",
+            "properties": {
+              "pan": {
+                "type": "string",
+                "description": "The pan"
+              },
+              "name": {
+                "type": "string",
+                "description": "The name"
+              },
+              "status": {
+                "type": "string",
+                "description": "The status"
+              }
+            },
+            "description": "The results"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "verify_bank_account",
+      "description": "Verify bank account details with IFSC and account number",
+      "service_type": "api_call",
+      "endpoint_template": "/atlas/v1/bankAccount/{{ifsc}}/{{accountNumber}}",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "X-ATLAS-ORG-ID": "{{auth.org_id}}",
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer {{auth.access_token}}"
+        },
+        "success_status_codes": [
+          200,
+          400
+        ]
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "ifsc": {
+            "type": "string",
+            "description": "Bank IFSC code",
+            "pattern": "^[A-Z]{4}0[A-Z0-9]{6}$"
+          },
+          "accountNumber": {
+            "type": "string",
+            "description": "Bank account number"
+          }
+        },
+        "required": [
+          "ifsc",
+          "accountNumber"
+        ]
+      },
+      "sample_input": {
+        "ifsc": "ABCC0001234",
+        "accountNumber": "12345678901234"
+      },
+      "sample_output": {
+        "message": null,
+        "results": {
+          "account_holder_name": "Holder name",
+          "bank_name": "ABC BANK",
+          "account_number": "12345678901234",
+          "ifsc": "ABCC0001234",
+          "branch": "VIDYAVIHAR WEST"
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "The message"
+          },
+          "results": {
+            "type": "object",
+            "properties": {
+              "account_holder_name": {
+                "type": "string",
+                "description": "The account_holder_name"
+              },
+              "bank_name": {
+                "type": "string",
+                "description": "The bank_name"
+              },
+              "account_number": {
+                "type": "string",
+                "description": "Number of ac_numbers"
+              },
+              "ifsc": {
+                "type": "string",
+                "description": "The ifsc"
+              },
+              "branch": {
+                "type": "string",
+                "description": "The branch"
+              }
+            },
+            "description": "The results"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "generate_einvoice",
+      "description": "Generate e-invoice through IRP",
+      "service_type": "api_call",
+      "endpoint_template": "/atlas/v1/irp/{{irp}}/einvoice",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "X-ATLAS-ORG-ID": "{{auth.org_id}}",
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer {{auth.access_token}}"
+        },
+        "body_template": "{{invoice_data}}",
+        "success_status_codes": [
+          200,
+          400
+        ]
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "irp": {
+            "type": "string",
+            "description": "IRP provider identifier"
+          },
+          "invoice_data": {
+            "type": "object",
+            "description": "Invoice data for e-invoice generation"
+          }
+        },
+        "required": [
+          "irp",
+          "invoice_data"
+        ]
+      },
+      "sample_input": {
+        "irp": "irp1",
+        "invoice_data": {
+          "Version": "1.1",
+          "TranDtls": {
+            "TaxSch": "GST",
+            "SupTyp": "B2B"
+          }
+        }
+      },
+      "sample_output": {
+        "status": "1",
+        "data": {
+          "irn": "12345678901234567890123456789012345678901234567890123456789012",
+          "AckNo": 112010033817432,
+          "AckDt": "2020-08-28 15:12:00",
+          "SignedInvoice": "signed_invoice_data",
+          "SignedQRCode": "qr_code_data"
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "The status"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "irn": {
+                "type": "string",
+                "description": "The irn"
+              },
+              "AckNo": {
+                "type": "integer",
+                "description": "The AckNo"
+              },
+              "AckDt": {
+                "type": "string",
+                "description": "The AckDt"
+              },
+              "SignedInvoice": {
+                "type": "string",
+                "description": "The SignedInvoice"
+              },
+              "SignedQRCode": {
+                "type": "string",
+                "description": "The SignedQRCode"
+              }
+            },
+            "description": "The data"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "verify_vehicle",
+      "description": "Verify vehicle registration details",
+      "service_type": "api_call",
+      "endpoint_template": "/atlas/v1/vehicleNumber/{{vehicleNumber}}",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "X-ATLAS-ORG-ID": "{{auth.org_id}}",
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer {{auth.access_token}}"
+        },
+        "success_status_codes": [
+          200,
+          400
+        ]
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "vehicleNumber": {
+            "type": "string",
+            "description": "Vehicle registration number",
+            "pattern": "^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{4}$"
+          }
+        },
+        "required": [
+          "vehicleNumber"
+        ]
+      },
+      "sample_input": {
+        "vehicleNumber": "AB12CD1234"
+      },
+      "sample_output": {
+        "message": null,
+        "results": {
+          "vehicle_number": "AB12CD1234",
+          "owner_name": "ABC surname",
+          "registration_date": "01-06-2020",
+          "fuel_type": "PETROL",
+          "vehicle_class": "2WN",
+          "maker_name": "ABC AUTO LTD",
+          "model": "ABC 800",
+          "rc_status": "ACTIVE"
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "The message"
+          },
+          "results": {
+            "type": "object",
+            "properties": {
+              "vehicle_number": {
+                "type": "string",
+                "description": "The vehicle_number"
+              },
+              "owner_name": {
+                "type": "string",
+                "description": "The owner_name"
+              },
+              "registration_date": {
+                "type": "string",
+                "description": "The registration_date"
+              },
+              "fuel_type": {
+                "type": "string",
+                "description": "The fuel_type"
+              },
+              "vehicle_class": {
+                "type": "string",
+                "description": "The vehicle_class"
+              },
+              "maker_name": {
+                "type": "string",
+                "description": "The maker_name"
+              },
+              "model": {
+                "type": "string",
+                "description": "The model"
+              },
+              "rc_status": {
+                "type": "string",
+                "description": "The rc_status"
+              }
+            },
+            "description": "The results"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "authenticate",
+      "description": "Authenticate and obtain JWT token",
+      "service_type": "api_call",
+      "endpoint_template": "/theodore/apis/v1/authtokens",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        },
+        "body_template": {
+          "handle": "{{username}}",
+          "handleType": "{{handle_type}}",
+          "password": "{{password}}",
+          "otp": "{{otp}}"
+        },
+        "success_status_codes": [
+          200,
+          400
+        ]
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "Email or mobile number"
+          },
+          "handle_type": {
+            "type": "string",
+            "description": "Type of handle",
+            "enum": [
+              "email",
+              "mobile"
+            ],
+            "default": "email"
+          },
+          "password": {
+            "type": "string",
+            "description": "User password"
+          }
+        },
+        "required": [
+          "username",
+          "handle_type",
+          "password"
+        ]
+      },
+      "sample_input": {
+        "username": "user@example.com",
+        "handle_type": "email",
+        "password": "password123"
+      },
+      "sample_output": {
+        "data": {
+          "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "expiry": 1629456789,
+          "email": "user@example.com",
+          "associatedOrgs": [
+            {
+              "organisation": {
+                "id": "ba4cf3fa-f0da-4764-b108-eca22098e7cb",
+                "name": "Test Organization",
+                "taxIdentifier": "ABCDE1234F",
+                "taxIdentifierType": "PAN",
+                "country": "India"
+              },
+              "userAccessInfo": {
+                "primary": true,
+                "admin": true
+              }
+            }
+          ]
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string",
+                "description": "The token"
+              },
+              "userId": {
+                "type": "string",
+                "description": "The userId"
+              },
+              "expiry": {
+                "type": "integer",
+                "description": "The expiry"
+              },
+              "email": {
+                "type": "string",
+                "description": "The email"
+              },
+              "associatedOrgs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "organisation": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "The id"
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "The name"
+                        },
+                        "taxIdentifier": {
+                          "type": "string",
+                          "description": "The taxIdentifier"
+                        },
+                        "taxIdentifierType": {
+                          "type": "string",
+                          "description": "The taxIdentifierType"
+                        },
+                        "country": {
+                          "type": "string",
+                          "description": "Number of rys"
+                        }
+                      },
+                      "description": "The organisation"
+                    },
+                    "userAccessInfo": {
+                      "type": "object",
+                      "properties": {
+                        "primary": {
+                          "type": "integer",
+                          "description": "The primary"
+                        },
+                        "admin": {
+                          "type": "integer",
+                          "description": "The admin"
+                        }
+                      },
+                      "description": "The userAccessInfo"
+                    }
+                  }
+                },
+                "description": "The associatedOrgs"
+              }
+            },
+            "description": "The data"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "generate_email_otp",
+      "description": "Generate and send OTP to email for authentication",
+      "service_type": "api_call",
+      "endpoint_template": "/theodore/apis/v1/users/email/otps",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        },
+        "body_template": {
+          "email": "{{email}}",
+          "otpPurposeType": "{{otpPurposeType}}"
+        },
+        "success_status_codes": [
+          200,
+          400
+        ]
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email address to send OTP",
+            "format": "email"
+          },
+          "otpPurposeType": {
+            "type": "string",
+            "description": "Purpose of OTP",
+            "enum": [
+              "LoginOTP",
+              "SignupOTP",
+              "UpdateHandleOTP"
+            ],
+            "default": "LoginOTP"
+          }
+        },
+        "required": [
+          "email",
+          "otpPurposeType"
+        ]
+      },
+      "sample_input": {
+        "email": "user@example.com",
+        "otpPurposeType": "LoginOTP"
+      },
+      "sample_output": {
+        "status": "success",
+        "message": "OTP sent successfully"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "The status"
+          },
+          "message": {
+            "type": "string",
+            "description": "The message"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "generate_mobile_otp",
+      "description": "Generate and send OTP to mobile for authentication",
+      "service_type": "api_call",
+      "endpoint_template": "/theodore/apis/v1/users/mobile/otps",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        },
+        "body_template": {
+          "mobile": "{{mobile}}",
+          "otpPurposeType": "{{otpPurposeType}}"
+        },
+        "success_status_codes": [
+          200,
+          400
+        ]
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "mobile": {
+            "type": "string",
+            "description": "Mobile number to send OTP (with country code)",
+            "pattern": "^\\+[0-9]{1,3}-[0-9]{10}$"
+          },
+          "otpPurposeType": {
+            "type": "string",
+            "description": "Purpose of OTP",
+            "enum": [
+              "LoginOTP",
+              "SignupOTP",
+              "UpdateHandleOTP"
+            ],
+            "default": "LoginOTP"
+          }
+        },
+        "required": [
+          "mobile",
+          "otpPurposeType"
+        ]
+      },
+      "sample_input": {
+        "mobile": "+91-9111111111",
+        "otpPurposeType": "LoginOTP"
+      },
+      "sample_output": {
+        "status": "success",
+        "message": "OTP sent successfully"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "The status"
+          },
+          "message": {
+            "type": "string",
+            "description": "The message"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "refresh_token",
+      "description": "Refresh authentication token",
+      "service_type": "api_call",
+      "endpoint_template": "/theodore/apis/v1/authtokens",
+      "request_config": {
+        "method": "PUT",
+        "headers_template": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer {{auth.access_token}}"
+        },
+        "success_status_codes": [
+          200,
+          400
+        ]
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {}
+      },
+      "sample_input": {},
+      "sample_output": {
+        "data": {
+          "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "expiry": 1629456789
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string",
+                "description": "The token"
+              },
+              "userId": {
+                "type": "string",
+                "description": "The userId"
+              },
+              "expiry": {
+                "type": "integer",
+                "description": "The expiry"
+              }
+            },
+            "description": "The data"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "logout",
+      "description": "Logout from the application",
+      "service_type": "api_call",
+      "endpoint_template": "/theodore/apis/v1/logout",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer {{auth.access_token}}"
+        },
+        "success_status_codes": [
+          200,
+          400
+        ]
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {}
+      },
+      "sample_input": {},
+      "sample_output": {
+        "status": "success",
+        "message": "Logged out successfully"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "The status"
+          },
+          "message": {
+            "type": "string",
+            "description": "The message"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "verify_aadhaar",
+      "description": "Verify Aadhaar number and get masked data",
+      "service_type": "api_call",
+      "endpoint_template": "/atlas/v1/aadhaar/{{aadharNumber}}",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "X-ATLAS-ORG-ID": "{{auth.org_id}}",
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer {{auth.access_token}}"
+        },
+        "success_status_codes": [
+          200,
+          400
+        ]
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "aadharNumber": {
+            "type": "string",
+            "description": "12-digit Aadhaar number",
+            "pattern": "^[0-9]{12}$"
+          }
+        },
+        "required": [
+          "aadharNumber"
+        ]
+      },
+      "sample_input": {
+        "aadharNumber": "123456789101"
+      },
+      "sample_output": {
+        "message": null,
+        "results": {
+          "aadhar_number": "123456789101",
+          "gender": "MALE",
+          "masked_mobile_number": "*******123",
+          "age_band": "30-40",
+          "state": "Maharashtra"
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "The message"
+          },
+          "results": {
+            "type": "object",
+            "properties": {
+              "aadhar_number": {
+                "type": "string",
+                "description": "The aadhar_number"
+              },
+              "gender": {
+                "type": "string",
+                "description": "The gender"
+              },
+              "masked_mobile_number": {
+                "type": "string",
+                "description": "The masked_mobile_number"
+              },
+              "age_band": {
+                "type": "string",
+                "description": "The age_band"
+              },
+              "state": {
+                "type": "string",
+                "description": "The state"
+              }
+            },
+            "description": "The results"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "verify_pan_details",
+      "description": "Get detailed PAN information including address",
+      "service_type": "api_call",
+      "endpoint_template": "/atlas/v1/pan/{{pan}}/details",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "X-ATLAS-ORG-ID": "{{auth.org_id}}",
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer {{auth.access_token}}"
+        },
+        "success_status_codes": [
+          200,
+          400
+        ]
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "pan": {
+            "type": "string",
+            "description": "PAN number to verify",
+            "pattern": "^[A-Z]{5}[0-9]{4}[A-Z]{1}$"
+          }
+        },
+        "required": [
+          "pan"
+        ]
+      },
+      "sample_input": {
+        "pan": "AAAAA1234A"
+      },
+      "sample_output": {
+        "message": null,
+        "results": {
+          "name": "ABC Company",
+          "pan": "AAAAA1234A",
+          "address": "D 424 NEELKANTH BUSINESS PARK, NATHANI ROAD, VIDYAVIHAR WEST, MUMBAI - 400086, MAHARASHTRA",
+          "city": "Mumbai",
+          "pincode": "400086",
+          "state": "Maharashtra",
+          "country": "India",
+          "dob": "03-05-2010"
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "The message"
+          },
+          "results": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name"
+              },
+              "pan": {
+                "type": "string",
+                "description": "The pan"
+              },
+              "address": {
+                "type": "string",
+                "description": "The address"
+              },
+              "city": {
+                "type": "string",
+                "description": "The city"
+              },
+              "pincode": {
+                "type": "string",
+                "description": "The pincode"
+              },
+              "state": {
+                "type": "string",
+                "description": "The state"
+              },
+              "country": {
+                "type": "string",
+                "description": "Number of rys"
+              },
+              "dob": {
+                "type": "string",
+                "description": "The dob"
+              }
+            },
+            "description": "The results"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "verify_tan",
+      "description": "Verify TAN (Tax Deduction Account Number)",
+      "service_type": "api_call",
+      "endpoint_template": "/atlas/v1/tan/{{tanNumber}}",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "X-ATLAS-ORG-ID": "{{auth.org_id}}",
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer {{auth.access_token}}"
+        },
+        "success_status_codes": [
+          200,
+          400
+        ]
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "tanNumber": {
+            "type": "string",
+            "description": "TAN number to verify",
+            "pattern": "^[A-Z]{4}[0-9]{5}[A-Z]{1}$"
+          }
+        },
+        "required": [
+          "tanNumber"
+        ]
+      },
+      "sample_input": {
+        "tanNumber": "ABCD12345A"
+      },
+      "sample_output": {
+        "message": null,
+        "results": {
+          "name": "ABC Company",
+          "tanNumber": "ABCD12345A"
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "The message"
+          },
+          "results": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name"
+              },
+              "tanNumber": {
+                "type": "string",
+                "description": "The tanNumber"
+              }
+            },
+            "description": "The results"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "verify_fssai",
+      "description": "Verify FSSAI food license certificate",
+      "service_type": "api_call",
+      "endpoint_template": "/atlas/v1/fssaiCertificate/{{licenseNumber}}",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "X-ATLAS-ORG-ID": "{{auth.org_id}}",
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer {{auth.access_token}}"
+        },
+        "success_status_codes": [
+          200,
+          400
+        ]
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "licenseNumber": {
+            "type": "string",
+            "description": "FSSAI license number",
+            "pattern": "^[0-9]{14}$"
+          }
+        },
+        "required": [
+          "licenseNumber"
+        ]
+      },
+      "sample_input": {
+        "licenseNumber": "12345678901234"
+      },
+      "sample_output": {
+        "message": null,
+        "results": {
+          "license_number": "123456789012",
+          "entity_name": "ABC Company",
+          "status": "ACTIVE",
+          "license_type": "STATE LICENSE",
+          "address": "MUMBAI,MAHARASHTRA-400012",
+          "state": "MAHARASHTRA"
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "The message"
+          },
+          "results": {
+            "type": "object",
+            "properties": {
+              "license_number": {
+                "type": "string",
+                "description": "The license_number"
+              },
+              "entity_name": {
+                "type": "string",
+                "description": "The entity_name"
+              },
+              "status": {
+                "type": "string",
+                "description": "The status"
+              },
+              "license_type": {
+                "type": "string",
+                "description": "The license_type"
+              },
+              "address": {
+                "type": "string",
+                "description": "The address"
+              },
+              "state": {
+                "type": "string",
+                "description": "The state"
+              }
+            },
+            "description": "The results"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "verify_driving_licence",
+      "description": "Verify driving licence details",
+      "service_type": "api_call",
+      "endpoint_template": "/atlas/v1/drivingLicence/{{dlNumber}}",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "X-ATLAS-ORG-ID": "{{auth.org_id}}",
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer {{auth.access_token}}"
+        },
+        "success_status_codes": [
+          200,
+          400
+        ]
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "dlNumber": {
+            "type": "string",
+            "description": "Driving licence number"
+          },
+          "dob": {
+            "type": "string",
+            "description": "Date of birth (optional)",
+            "format": "date"
+          }
+        },
+        "required": [
+          "dlNumber"
+        ]
+      },
+      "sample_input": {
+        "dlNumber": "MH3120110000000",
+        "dob": "01/01/1982"
+      },
+      "sample_output": {
+        "message": null,
+        "results": {
+          "dob": "01/01/1982",
+          "name": "Mr A",
+          "address": "FLAT NO.06, MUMBAI, 400001",
+          "valid_to_date": "13/10/2031",
+          "valid_from_date": "14/10/2011",
+          "class_of_vehicle": "LMV",
+          "driving_licence_number": "MH3120110000000"
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "The message"
+          },
+          "results": {
+            "type": "object",
+            "properties": {
+              "dob": {
+                "type": "string",
+                "description": "The dob"
+              },
+              "name": {
+                "type": "string",
+                "description": "The name"
+              },
+              "address": {
+                "type": "string",
+                "description": "The address"
+              },
+              "valid_to_date": {
+                "type": "string",
+                "description": "The valid_to_date"
+              },
+              "valid_from_date": {
+                "type": "string",
+                "description": "The valid_from_date"
+              },
+              "class_of_vehicle": {
+                "type": "string",
+                "description": "The class_of_vehicle"
+              },
+              "driving_licence_number": {
+                "type": "string",
+                "description": "The driving_licence_number"
+              }
+            },
+            "description": "The results"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_vehicle_challan",
+      "description": "Get challan details for a vehicle",
+      "service_type": "api_call",
+      "endpoint_template": "/atlas/v1/challan/{{last5DigitsOfChasisNo}}/{{vehicleNumber}}",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "X-ATLAS-ORG-ID": "{{auth.org_id}}",
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer {{auth.access_token}}"
+        },
+        "success_status_codes": [
+          200,
+          400
+        ]
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "vehicleNumber": {
+            "type": "string",
+            "description": "Vehicle registration number"
+          },
+          "last5DigitsOfChasisNo": {
+            "type": "string",
+            "description": "Last 5 digits of chassis number",
+            "pattern": "^[A-Z0-9]{5}$"
+          }
+        },
+        "required": [
+          "vehicleNumber",
+          "last5DigitsOfChasisNo"
+        ]
+      },
+      "sample_input": {
+        "vehicleNumber": "AB12CD1234",
+        "last5DigitsOfChasisNo": "12345"
+      },
+      "sample_output": {
+        "message": null,
+        "results": {
+          "challan_list": [
+            {
+              "number": 1,
+              "challanNumber": "MH11314523120******7",
+              "offenseDetails": "Custom offence 1",
+              "challanDate": "2023-12-08 21:30:10",
+              "accusedName": "ABC",
+              "amount": 1000,
+              "challanStatus": "Disposed"
+            }
+          ]
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "The message"
+          },
+          "results": {
+            "type": "object",
+            "properties": {
+              "challan_list": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "number": {
+                      "type": "integer",
+                      "description": "The number"
+                    },
+                    "challanNumber": {
+                      "type": "string",
+                      "description": "The challanNumber"
+                    },
+                    "offenseDetails": {
+                      "type": "string",
+                      "description": "The offenseDetails"
+                    },
+                    "challanDate": {
+                      "type": "string",
+                      "description": "The challanDate"
+                    },
+                    "accusedName": {
+                      "type": "string",
+                      "description": "The accusedName"
+                    },
+                    "amount": {
+                      "type": "integer",
+                      "description": "The amount"
+                    },
+                    "challanStatus": {
+                      "type": "string",
+                      "description": "The challanStatus"
+                    }
+                  }
+                },
+                "description": "The challan_list"
+              }
+            },
+            "description": "The results"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_gst_returns",
+      "description": "Get GST return filing status for a financial year",
+      "service_type": "api_call",
+      "endpoint_template": "/atlas/v1/gstin/{{gstin}}/returns-track/fy/{{fy}}",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "X-ATLAS-ORG-ID": "{{auth.org_id}}",
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "X-FLYNN-N-GSTN-GSP-CODE": "vay",
+          "Authorization": "Bearer {{auth.access_token}}"
+        },
+        "success_status_codes": [
+          200,
+          400
+        ]
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "gstin": {
+            "type": "string",
+            "description": "GSTIN to check returns for"
+          },
+          "fy": {
+            "type": "string",
+            "description": "Financial year (e.g., 2023-24)",
+            "pattern": "^[0-9]{4}-[0-9]{2}$"
+          }
+        },
+        "required": [
+          "gstin",
+          "fy"
+        ]
+      },
+      "sample_input": {
+        "gstin": "29ABCDE1234F1Z5",
+        "fy": "2023-24"
+      },
+      "sample_output": {
+        "status": "1",
+        "data": {
+          "gstin": "29ABCDE1234F1Z5",
+          "fy": "2023-24",
+          "returns": []
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "The status"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "gstin": {
+                "type": "string",
+                "description": "The gstin"
+              },
+              "fy": {
+                "type": "string",
+                "description": "The fy"
+              },
+              "returns": {
+                "type": "array",
+                "description": "The returns"
+              }
+            },
+            "description": "The data"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_einvoice_by_irn",
+      "description": "Get e-invoice details by IRN",
+      "service_type": "api_call",
+      "endpoint_template": "/atlas/v1/irp/{{irp}}/einvoice/{{irn}}",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "X-ATLAS-ORG-ID": "{{auth.org_id}}",
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer {{auth.access_token}}"
+        },
+        "success_status_codes": [
+          200,
+          400
+        ]
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "irp": {
+            "type": "string",
+            "description": "IRP provider identifier"
+          },
+          "irn": {
+            "type": "string",
+            "description": "Invoice Reference Number",
+            "minLength": 64,
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "irp",
+          "irn"
+        ]
+      },
+      "sample_input": {
+        "irp": "irp1",
+        "irn": "12345678901234567890123456789012345678901234567890123456789012"
+      },
+      "sample_output": {
+        "status": "1",
+        "data": {
+          "irn": "12345678901234567890123456789012345678901234567890123456789012",
+          "AckNo": 112010033817432,
+          "AckDt": "2020-08-28 15:12:00"
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "The status"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "irn": {
+                "type": "string",
+                "description": "The irn"
+              },
+              "AckNo": {
+                "type": "integer",
+                "description": "The AckNo"
+              },
+              "AckDt": {
+                "type": "string",
+                "description": "The AckDt"
+              }
+            },
+            "description": "The data"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "cancel_einvoice",
+      "description": "Cancel an e-invoice",
+      "service_type": "api_call",
+      "endpoint_template": "/atlas/v1/irp/{{irp}}/einvoice/cancel",
+      "request_config": {
+        "method": "PATCH",
+        "headers_template": {
+          "X-ATLAS-ORG-ID": "{{auth.org_id}}",
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer {{auth.access_token}}"
+        },
+        "body_template": {
+          "irn": "{{irn}}",
+          "CnlRsn": "{{cancel_reason}}",
+          "CnlRem": "{{cancel_remarks}}"
+        },
+        "success_status_codes": [
+          200,
+          400
+        ]
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "irp": {
+            "type": "string",
+            "description": "IRP provider identifier"
+          },
+          "irn": {
+            "type": "string",
+            "description": "Invoice Reference Number to cancel"
+          },
+          "cancel_reason": {
+            "type": "string",
+            "description": "Cancellation reason code",
+            "enum": [
+              "1",
+              "2",
+              "3",
+              "4"
+            ]
+          },
+          "cancel_remarks": {
+            "type": "string",
+            "description": "Cancellation remarks"
+          }
+        },
+        "required": [
+          "irp",
+          "irn",
+          "cancel_reason",
+          "cancel_remarks"
+        ]
+      },
+      "sample_input": {
+        "irp": "irp1",
+        "irn": "12345678901234567890123456789012345678901234567890123456789012",
+        "cancel_reason": "1",
+        "cancel_remarks": "Duplicate invoice"
+      },
+      "sample_output": {
+        "status": "1",
+        "data": {
+          "irn": "12345678901234567890123456789012345678901234567890123456789012",
+          "CancelDate": "2020-08-28 15:30:00"
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "The status"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "irn": {
+                "type": "string",
+                "description": "The irn"
+              },
+              "CancelDate": {
+                "type": "string",
+                "description": "The CancelDate"
+              }
+            },
+            "description": "The data"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "create_eway_bill",
+      "description": "Create a new e-way bill",
+      "service_type": "api_call",
+      "endpoint_template": "/atlas/v1/eway/{{ewb-provider}}/eway-bill",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "X-ATLAS-ORG-ID": "{{auth.org_id}}",
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer {{auth.access_token}}"
+        },
+        "body_template": "{{eway_bill_data}}",
+        "success_status_codes": [
+          200,
+          400
+        ]
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "ewb-provider": {
+            "type": "string",
+            "description": "E-way bill provider identifier"
+          },
+          "eway_bill_data": {
+            "type": "object",
+            "description": "E-way bill data"
+          }
+        },
+        "required": [
+          "ewb-provider",
+          "eway_bill_data"
+        ]
+      },
+      "sample_input": {
+        "ewb-provider": "ewb1",
+        "eway_bill_data": {
+          "supplyType": "O",
+          "subSupplyType": "1",
+          "docType": "INV"
+        }
+      },
+      "sample_output": {
+        "status": "1",
+        "data": {
+          "ewayBillNo": 123456789012,
+          "ewayBillDate": "28/08/2020 03:20:00 PM"
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "The status"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "ewayBillNo": {
+                "type": "integer",
+                "description": "The ewayBillNo"
+              },
+              "ewayBillDate": {
+                "type": "string",
+                "description": "The ewayBillDate"
+              }
+            },
+            "description": "The data"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "generate_eway_bill_by_irn",
+      "description": "Generate e-way bill using IRN",
+      "service_type": "api_call",
+      "endpoint_template": "/atlas/v1/irp/{{irp}}/eway-bill/by-einvoice",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "X-ATLAS-ORG-ID": "{{auth.org_id}}",
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer {{auth.access_token}}"
+        },
+        "body_template": {
+          "irn": "{{irn}}",
+          "TransId": "{{transporter_id}}",
+          "TransMode": "{{transport_mode}}",
+          "Distance": "{{distance}}",
+          "TransDocNo": "{{transport_doc_no}}",
+          "TransDocDt": "{{transport_doc_date}}",
+          "VehNo": "{{vehicle_no}}",
+          "VehType": "{{vehicle_type}}"
+        },
+        "success_status_codes": [
+          200,
+          400
+        ]
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "irp": {
+            "type": "string",
+            "description": "IRP provider identifier"
+          },
+          "irn": {
+            "type": "string",
+            "description": "Invoice Reference Number"
+          },
+          "transporter_id": {
+            "type": "string",
+            "description": "Transporter GSTIN"
+          },
+          "transport_mode": {
+            "type": "string",
+            "description": "Mode of transport",
+            "enum": [
+              "1",
+              "2",
+              "3",
+              "4"
+            ]
+          },
+          "distance": {
+            "type": "integer",
+            "description": "Distance in KM"
+          },
+          "transport_doc_no": {
+            "type": "string",
+            "description": "Transport document number"
+          },
+          "transport_doc_date": {
+            "type": "string",
+            "description": "Transport document date"
+          },
+          "vehicle_no": {
+            "type": "string",
+            "description": "Vehicle number"
+          },
+          "vehicle_type": {
+            "type": "string",
+            "description": "Vehicle type",
+            "enum": [
+              "R",
+              "O"
+            ]
+          }
+        },
+        "required": [
+          "irp",
+          "irn",
+          "transport_mode",
+          "distance"
+        ]
+      },
+      "sample_input": {
+        "irp": "irp1",
+        "irn": "12345678901234567890123456789012345678901234567890123456789012",
+        "transport_mode": "1",
+        "distance": 100,
+        "vehicle_no": "KA01AB1234",
+        "vehicle_type": "R"
+      },
+      "sample_output": {
+        "status": "1",
+        "data": {
+          "ewayBillNo": 123456789012,
+          "ewayBillDate": "28/08/2020 03:20:00 PM"
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "The status"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "ewayBillNo": {
+                "type": "integer",
+                "description": "The ewayBillNo"
+              },
+              "ewayBillDate": {
+                "type": "string",
+                "description": "The ewayBillDate"
+              }
+            },
+            "description": "The data"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_eway_bill",
+      "description": "Get e-way bill details",
+      "service_type": "api_call",
+      "endpoint_template": "/atlas/v1/eway/{{ewb-provider}}/eway-bill/{{ewb-number}}",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "X-ATLAS-ORG-ID": "{{auth.org_id}}",
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer {{auth.access_token}}"
+        },
+        "success_status_codes": [
+          200,
+          400
+        ]
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "ewb-provider": {
+            "type": "string",
+            "description": "E-way bill provider identifier"
+          },
+          "ewb-number": {
+            "type": "string",
+            "description": "E-way bill number",
+            "pattern": "^[0-9]{12}$"
+          }
+        },
+        "required": [
+          "ewb-provider",
+          "ewb-number"
+        ]
+      },
+      "sample_input": {
+        "ewb-provider": "ewb1",
+        "ewb-number": "123456789012"
+      },
+      "sample_output": {
+        "status": "1",
+        "data": {
+          "ewayBillNo": 123456789012,
+          "genMode": "API",
+          "userGstin": "29ABCDE1234F1Z5",
+          "supplyType": "O",
+          "subSupplyType": "1",
+          "docType": "INV",
+          "docNo": "INV001"
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "The status"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "ewayBillNo": {
+                "type": "integer",
+                "description": "The ewayBillNo"
+              },
+              "genMode": {
+                "type": "string",
+                "description": "The genMode"
+              },
+              "userGstin": {
+                "type": "string",
+                "description": "The userGstin"
+              },
+              "supplyType": {
+                "type": "string",
+                "description": "The supplyType"
+              },
+              "subSupplyType": {
+                "type": "string",
+                "description": "The subSupplyType"
+              },
+              "docType": {
+                "type": "string",
+                "description": "The docType"
+              },
+              "docNo": {
+                "type": "string",
+                "description": "The docNo"
+              }
+            },
+            "description": "The data"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "cancel_eway_bill",
+      "description": "Cancel an e-way bill",
+      "service_type": "api_call",
+      "endpoint_template": "/atlas/v1/eway/{{ewb-provider}}/eway-bill/cancel",
+      "request_config": {
+        "method": "PATCH",
+        "headers_template": {
+          "X-ATLAS-ORG-ID": "{{auth.org_id}}",
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer {{auth.access_token}}"
+        },
+        "body_template": {
+          "ewbNo": "{{ewb_number}}",
+          "cancelRsnCode": "{{cancel_reason_code}}",
+          "cancelRmrk": "{{cancel_remarks}}"
+        },
+        "success_status_codes": [
+          200,
+          400
+        ]
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "ewb-provider": {
+            "type": "string",
+            "description": "E-way bill provider identifier"
+          },
+          "ewb_number": {
+            "type": "string",
+            "description": "E-way bill number to cancel"
+          },
+          "cancel_reason_code": {
+            "type": "string",
+            "description": "Cancellation reason code",
+            "enum": [
+              "1",
+              "2",
+              "3",
+              "4"
+            ]
+          },
+          "cancel_remarks": {
+            "type": "string",
+            "description": "Cancellation remarks"
+          }
+        },
+        "required": [
+          "ewb-provider",
+          "ewb_number",
+          "cancel_reason_code",
+          "cancel_remarks"
+        ]
+      },
+      "sample_input": {
+        "ewb-provider": "ewb1",
+        "ewb_number": "123456789012",
+        "cancel_reason_code": "2",
+        "cancel_remarks": "Order cancelled"
+      },
+      "sample_output": {
+        "status": "1",
+        "data": {
+          "ewayBillNo": 123456789012,
+          "cancelDate": "28/08/2020 04:00:00 PM"
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "The status"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "ewayBillNo": {
+                "type": "integer",
+                "description": "The ewayBillNo"
+              },
+              "cancelDate": {
+                "type": "string",
+                "description": "The cancelDate"
+              }
+            },
+            "description": "The data"
+          }
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "event_name": "manual_verification",
+      "description": "Manually trigger verification workflows",
+      "event_type": "manual",
+      "event_configuration": {},
+      "sample_payload": {
+        "verification_type": "gstin",
+        "identifier": "29ABCDE1234F1Z5"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  ],
+  "metadata": {
+    "created_at": "2025-07-31T18:19:52.807348",
+    "created_by": "IOFlow",
+    "author": "IOFlow",
+    "tags": [
+      "api platform"
+    ],
+    "documentation_url": "https://docs.example.com/vayana_api",
+    "support_email": "support@example.com",
+    "last_modified": "2025-08-23T12:53:14.111251",
+    "services_count": 24,
+    "events_count": 1,
+    "modified_by": "claude-code"
+  },
+  "_validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": [],
+    "validated_at": "2025-12-15T12:03:29.788299"
+  }
+}

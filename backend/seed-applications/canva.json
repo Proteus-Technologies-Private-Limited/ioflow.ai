@@ -1,0 +1,149 @@
+{
+  "key": "canva",
+  "application": {
+    "app_name": "Canva",
+    "app_type": "api",
+    "category": "Integration",
+    "auth_type": "oauth2",
+    "description": "Design platform for creating visual content",
+    "base_url": "https://api.canva.com",
+    "version": "1.0.3",
+    "auth_config": {
+      "authorization_url": "https://www.canva.com/oauth2/authorize",
+      "token_url": "https://api.canva.com/oauth/token",
+      "scopes": [
+        "designs.read",
+        "designs.write",
+        "templates.read",
+        "uploads.write"
+      ]
+    }
+  },
+  "services": [
+    {
+      "service_name": "get_design",
+      "display_name": "Get Design",
+      "description": "Retrieve a design by ID from Canva",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/designs/{{design_id}}",
+      "request_config": {
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "design_id": {
+            "type": "string",
+            "description": "The ID of the design to retrieve"
+          }
+        },
+        "required": [
+          "design_id"
+        ]
+      }
+    },
+    {
+      "service_name": "create_design",
+      "display_name": "Create Design",
+      "description": "Create a new design in Canva",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/designs",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        },
+        "body_template": {
+          "title": "{{title}}",
+          "description": "{{description}}",
+          "pages": "{{pages}}"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            201,
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Title of the design"
+          },
+          "description": {
+            "type": "string",
+            "description": "Design description"
+          },
+          "pages": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "description": "Pages data for the design"
+          }
+        },
+        "required": [
+          "title"
+        ]
+      }
+    }
+  ],
+  "events": [
+    {
+      "event_name": "design_updated",
+      "display_name": "Design Updated",
+      "description": "Triggered when a design is updated in Canva",
+      "event_type": "webhook",
+      "event_configuration": {
+        "type": "object",
+        "properties": {
+          "design_id": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "changes": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "design_id",
+          "updated_at"
+        ]
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    }
+  ],
+  "_validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": [],
+    "validated_at": "2025-11-24T11:44:34.393635"
+  },
+  "metadata": {
+    "last_modified": "2025-11-24T06:14:34.394337",
+    "services_count": 2,
+    "events_count": 1
+  }
+}

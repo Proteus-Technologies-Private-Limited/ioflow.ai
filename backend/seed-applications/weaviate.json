@@ -1,0 +1,878 @@
+{
+  "key": "weaviate",
+  "application": {
+    "app_name": "Weaviate",
+    "description": "Weaviate is an open-source vector database that stores both objects and vectors, allowing for combining vector search with structured filtering. It provides semantic search, question answering, and generative search capabilities.",
+    "category": "Database",
+    "auth_type": "api_key",
+    "base_url": "http://localhost:8080",
+    "auth_config": {
+      "auth_header": "X-API-Key",
+      "auth_prefix": "",
+      "auth_location": "header",
+      "api_key_param_name": "api_key",
+      "default_api_key": "weaviate-api-key-ioflow-2024",
+      "header_name": "X-API-Key"
+    },
+    "version": "1.2.3",
+    "app_type": "api",
+    "documentation_url": "https://weaviate.io/developers/weaviate",
+    "icon_url": "https://weaviate.io/img/site/weaviate-logo.png"
+  },
+  "services": [
+    {
+      "service_name": "create_class",
+      "display_name": "Create Class",
+      "description": "Create a new class (collection) in Weaviate schema",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/schema",
+      "request_config": {
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body_type": "json",
+        "timeout": 30000
+      },
+      "response_config": {
+        "response_type": "json",
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200,
+            201
+          ]
+        },
+        "response_mapping": {
+          "class": "$.class",
+          "properties": "$.properties",
+          "vectorizer": "$.vectorizer"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "class": {
+            "type": "string",
+            "description": "Name of the class to create"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the class"
+          },
+          "vectorizer": {
+            "type": "string",
+            "description": "Vectorizer to use (e.g., text2vec-openai, text2vec-transformers)",
+            "default": "text2vec-transformers"
+          },
+          "properties": {
+            "type": "array",
+            "description": "Properties of the class",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Property name"
+                },
+                "dataType": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Data types (e.g., [\"text\"], [\"number\"])"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Property description"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "class",
+          "properties"
+        ]
+      }
+    },
+    {
+      "service_name": "get_schema",
+      "display_name": "Get Schema",
+      "description": "Retrieve the current Weaviate schema",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/schema",
+      "request_config": {
+        "method": "GET",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "timeout": 10000
+      },
+      "response_config": {
+        "response_type": "json",
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "response_mapping": {
+          "classes": "$.classes"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "service_name": "delete_class",
+      "display_name": "Delete Class",
+      "description": "Delete a class from Weaviate schema",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/schema/{className}",
+      "request_config": {
+        "method": "DELETE",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "timeout": 10000
+      },
+      "response_config": {
+        "response_type": "json",
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200,
+            204
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "className": {
+            "type": "string",
+            "description": "Name of the class to delete"
+          }
+        },
+        "required": [
+          "className"
+        ]
+      }
+    },
+    {
+      "service_name": "create_object",
+      "display_name": "Create Object",
+      "description": "Create a new object in Weaviate",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/objects",
+      "request_config": {
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body_type": "json",
+        "timeout": 30000
+      },
+      "response_config": {
+        "response_type": "json",
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200,
+            201
+          ]
+        },
+        "response_mapping": {
+          "id": "$.id",
+          "class": "$.class",
+          "properties": "$.properties",
+          "vector": "$.vector"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "class": {
+            "type": "string",
+            "description": "Class name for the object"
+          },
+          "properties": {
+            "type": "object",
+            "description": "Object properties as key-value pairs"
+          },
+          "vector": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "description": "Optional vector representation"
+          },
+          "id": {
+            "type": "string",
+            "description": "Optional UUID for the object"
+          }
+        },
+        "required": [
+          "class",
+          "properties"
+        ]
+      }
+    },
+    {
+      "service_name": "get_object",
+      "display_name": "Get Object",
+      "description": "Retrieve an object by ID",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/objects/{className}/{id}",
+      "request_config": {
+        "method": "GET",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "timeout": 10000
+      },
+      "response_config": {
+        "response_type": "json",
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "response_mapping": {
+          "id": "$.id",
+          "class": "$.class",
+          "properties": "$.properties",
+          "vector": "$.vector"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "className": {
+            "type": "string",
+            "description": "Class name of the object"
+          },
+          "id": {
+            "type": "string",
+            "description": "UUID of the object"
+          },
+          "include": {
+            "type": "string",
+            "description": "Additional fields to include (e.g., vector)"
+          }
+        },
+        "required": [
+          "className",
+          "id"
+        ]
+      }
+    },
+    {
+      "service_name": "update_object",
+      "display_name": "Update Object",
+      "description": "Update an existing object",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/objects/{className}/{id}",
+      "request_config": {
+        "method": "PATCH",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body_type": "json",
+        "timeout": 30000
+      },
+      "response_config": {
+        "response_type": "json",
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200,
+            204
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "className": {
+            "type": "string",
+            "description": "Class name of the object"
+          },
+          "id": {
+            "type": "string",
+            "description": "UUID of the object"
+          },
+          "properties": {
+            "type": "object",
+            "description": "Properties to update"
+          }
+        },
+        "required": [
+          "className",
+          "id",
+          "properties"
+        ]
+      }
+    },
+    {
+      "service_name": "delete_object",
+      "display_name": "Delete Object",
+      "description": "Delete an object",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/objects/{className}/{id}",
+      "request_config": {
+        "method": "DELETE",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "timeout": 10000
+      },
+      "response_config": {
+        "response_type": "json",
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200,
+            204
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "className": {
+            "type": "string",
+            "description": "Class name of the object"
+          },
+          "id": {
+            "type": "string",
+            "description": "UUID of the object"
+          }
+        },
+        "required": [
+          "className",
+          "id"
+        ]
+      }
+    },
+    {
+      "service_name": "vector_search",
+      "display_name": "Vector Search",
+      "description": "Perform vector similarity search",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/graphql",
+      "request_config": {
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body_type": "json",
+        "timeout": 30000
+      },
+      "response_config": {
+        "response_type": "json",
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "response_mapping": {
+          "results": "$.data.Get"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "GraphQL query string"
+          },
+          "variables": {
+            "type": "object",
+            "description": "GraphQL variables (optional)"
+          }
+        },
+        "required": [
+          "query"
+        ]
+      }
+    },
+    {
+      "service_name": "hybrid_search",
+      "display_name": "Hybrid Search",
+      "description": "Perform hybrid search combining vector and keyword search",
+      "service_type": "graphql",
+      "endpoint_template": "/v1/graphql",
+      "request_config": {
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "timeout": 30000
+      },
+      "response_config": {
+        "response_type": "json",
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "response_mapping": {
+          "results": "$.data.Get"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "className": {
+            "type": "string",
+            "description": "Class to search in"
+          },
+          "hybrid": {
+            "type": "object",
+            "description": "Hybrid search parameters",
+            "properties": {
+              "query": {
+                "type": "string",
+                "description": "Search query"
+              },
+              "alpha": {
+                "type": "number",
+                "description": "Weight between keyword (0) and vector (1) search",
+                "default": 0.5
+              }
+            }
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Fields to return"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum number of results",
+            "default": 10
+          }
+        },
+        "required": [
+          "className",
+          "hybrid"
+        ]
+      }
+    },
+    {
+      "service_name": "aggregate_data",
+      "display_name": "Aggregate Data",
+      "description": "Perform aggregation queries on data",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/graphql",
+      "request_config": {
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body_type": "json",
+        "timeout": 30000
+      },
+      "response_config": {
+        "response_type": "json",
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "response_mapping": {
+          "results": "$.data.Aggregate"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "className": {
+            "type": "string",
+            "description": "Class to aggregate"
+          },
+          "groupBy": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Properties to group by"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Aggregation fields (e.g., meta { count })"
+          },
+          "where": {
+            "type": "object",
+            "description": "Filter conditions"
+          }
+        },
+        "required": [
+          "className"
+        ]
+      }
+    },
+    {
+      "service_name": "batch_import",
+      "display_name": "Batch Import Objects",
+      "description": "Import multiple objects in batch",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/batch/objects",
+      "request_config": {
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body_type": "json",
+        "timeout": 60000
+      },
+      "response_config": {
+        "response_type": "json",
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "response_mapping": {
+          "successful": "$.successful",
+          "failed": "$.failed"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "objects": {
+            "type": "array",
+            "description": "Array of objects to import",
+            "items": {
+              "type": "object",
+              "properties": {
+                "class": {
+                  "type": "string"
+                },
+                "properties": {
+                  "type": "object"
+                },
+                "vector": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "objects"
+        ]
+      }
+    },
+    {
+      "service_name": "batch_delete",
+      "display_name": "Batch Delete Objects",
+      "description": "Delete multiple objects matching criteria",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/batch/objects",
+      "request_config": {
+        "method": "DELETE",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body_type": "json",
+        "timeout": 60000
+      },
+      "response_config": {
+        "response_type": "json",
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "response_mapping": {
+          "results": "$.results"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "match": {
+            "type": "object",
+            "description": "Match criteria",
+            "properties": {
+              "class": {
+                "type": "string",
+                "description": "Class name"
+              },
+              "where": {
+                "type": "object",
+                "description": "Filter conditions"
+              }
+            }
+          },
+          "dryRun": {
+            "type": "boolean",
+            "description": "Preview deletion without executing",
+            "default": false
+          }
+        },
+        "required": [
+          "match"
+        ]
+      }
+    },
+    {
+      "service_name": "classify_text",
+      "display_name": "Classify Text",
+      "description": "Classify text using kNN classification",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/classifications",
+      "request_config": {
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body_type": "json",
+        "timeout": 60000
+      },
+      "response_config": {
+        "response_type": "json",
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200,
+            201
+          ]
+        },
+        "response_mapping": {
+          "id": "$.id",
+          "status": "$.status",
+          "results": "$.results"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "class": {
+            "type": "string",
+            "description": "Class to classify"
+          },
+          "type": {
+            "type": "string",
+            "description": "Classification type (e.g., knn)",
+            "default": "knn"
+          },
+          "basedOnProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Properties to base classification on"
+          },
+          "classifyProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Properties to classify"
+          },
+          "k": {
+            "type": "integer",
+            "description": "Number of neighbors for kNN",
+            "default": 3
+          }
+        },
+        "required": [
+          "class",
+          "basedOnProperties",
+          "classifyProperties"
+        ]
+      }
+    },
+    {
+      "service_name": "create_backup",
+      "display_name": "Create Backup",
+      "description": "Create a backup of Weaviate data",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/backups/{backend}",
+      "request_config": {
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body_type": "json",
+        "timeout": 120000
+      },
+      "response_config": {
+        "response_type": "json",
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200,
+            201
+          ]
+        },
+        "response_mapping": {
+          "id": "$.id",
+          "status": "$.status",
+          "path": "$.path"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "backend": {
+            "type": "string",
+            "description": "Backup backend (filesystem, s3, gcs, azure)",
+            "default": "filesystem"
+          },
+          "id": {
+            "type": "string",
+            "description": "Backup identifier"
+          },
+          "include": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Classes to include"
+          },
+          "exclude": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Classes to exclude"
+          }
+        },
+        "required": [
+          "backend",
+          "id"
+        ]
+      }
+    },
+    {
+      "service_name": "restore_backup",
+      "display_name": "Restore Backup",
+      "description": "Restore data from backup",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/backups/{backend}/{id}/restore",
+      "request_config": {
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body_type": "json",
+        "timeout": 120000
+      },
+      "response_config": {
+        "response_type": "json",
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "response_mapping": {
+          "status": "$.status"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "backend": {
+            "type": "string",
+            "description": "Backup backend",
+            "default": "filesystem"
+          },
+          "id": {
+            "type": "string",
+            "description": "Backup identifier to restore"
+          },
+          "include": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Classes to restore"
+          }
+        },
+        "required": [
+          "backend",
+          "id"
+        ]
+      }
+    },
+    {
+      "service_name": "health_check",
+      "display_name": "Health Check",
+      "description": "Check Weaviate health status",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/.well-known/live",
+      "request_config": {
+        "method": "GET",
+        "timeout": 5000
+      },
+      "response_config": {
+        "response_type": "text",
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "service_name": "get_cluster_status",
+      "display_name": "Get Cluster Status",
+      "description": "Get Weaviate cluster status and nodes information",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/nodes",
+      "request_config": {
+        "method": "GET",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "timeout": 10000
+      },
+      "response_config": {
+        "response_type": "json",
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "response_mapping": {
+          "nodes": "$.nodes",
+          "statistics": "$.statistics"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  ],
+  "events": []
+}

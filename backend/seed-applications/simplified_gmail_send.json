@@ -1,0 +1,115 @@
+{
+  "key": "simplified_gmail_send",
+  "application": {
+    "app_name": "Simplified_Gmail_Send App",
+    "app_type": "flow",
+    "description": "Auto-generated application from Simplified_Gmail_Send flow",
+    "category": "Flow Applications",
+    "auth_type": "none",
+    "auth_config": {
+      "description": "No authentication required for flow-based applications"
+    },
+    "version": "1.1.0",
+    "base_url": "http://localhost:7001",
+    "icon_url": "https://via.placeholder.com/64x64.png?text=Flow",
+    "flow_based": true,
+    "source_flow_id": "367e29a1-ecb6-4e2b-983a-693ff8dc45f4",
+    "created_at": "2025-08-23T15:07:09.801810",
+    "complexity_score": 12,
+    "estimated_execution_time": 5
+  },
+  "services": [
+    {
+      "service_name": "execute_simplified_gmail_send",
+      "display_name": "Execute Simplified_Gmail_Send",
+      "service_type": "api_call",
+      "description": "Execute the Simplified_Gmail_Send flow with provided parameters",
+      "endpoint_template": "/api/v1/flows/367e29a1-ecb6-4e2b-983a-693ff8dc45f4/execute-internal-sync",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body_template": {
+          "variables": {
+            "to": "{{to}}",
+            "subject": "{{subject}}",
+            "message": "{{message}}",
+            "attachments": "{{attachments}}"
+          }
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "value": 200
+        },
+        "data_path": "data",
+        "error_path": "error"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "to": {
+            "type": "string",
+            "description": "Parameter to",
+            "minLength": 1
+          },
+          "subject": {
+            "type": "string",
+            "description": "Parameter subject",
+            "minLength": 1
+          },
+          "message": {
+            "type": "string",
+            "description": "Parameter message",
+            "minLength": 1
+          },
+          "attachments": {
+            "type": "string",
+            "description": "Parameter attachments",
+            "minLength": 1
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "final_output_action_1": {
+            "type": "object",
+            "description": "Output from final node action_1"
+          }
+        }
+      },
+      "sync_mode": "sync",
+      "timeout_seconds": 30,
+      "flow_based": true,
+      "source_flow_id": "367e29a1-ecb6-4e2b-983a-693ff8dc45f4"
+    }
+  ],
+  "events": [
+    {
+      "event_name": "simplified_gmail_send_completed",
+      "display_name": "Simplified_Gmail_Send Completed",
+      "trigger_type": "flow_completion",
+      "description": "Triggered when Simplified_Gmail_Send flow completes",
+      "trigger_config": {
+        "flow_id": "367e29a1-ecb6-4e2b-983a-693ff8dc45f4",
+        "status": "completed"
+      },
+      "sync_mode": "async",
+      "flow_based": true,
+      "source_flow_id": "367e29a1-ecb6-4e2b-983a-693ff8dc45f4"
+    }
+  ],
+  "metadata": {
+    "generated_from_flow": true,
+    "flow_id": "367e29a1-ecb6-4e2b-983a-693ff8dc45f4",
+    "flow_name": "Simplified_Gmail_Send",
+    "generated_at": "2025-08-23T15:07:09.801856",
+    "dependencies": [],
+    "transformations_count": 1,
+    "error_handling_nodes": []
+  }
+}

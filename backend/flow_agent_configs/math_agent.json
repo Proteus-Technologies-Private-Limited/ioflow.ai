@@ -1,0 +1,24 @@
+{
+  "agent_id": "math_agent",
+  "model": "gemini-2.0-flash-exp",
+  "description": "Agent specialized in mathematical calculations and unit conversions.",
+  "system_prompt": "You are a helpful assistant specialized in mathematical calculations, unit conversions, and numerical analysis. You have access to mathematical tools to perform calculations and conversions.",
+  "instruction": "IMPORTANT INSTRUCTIONS:\n1. When asked to calculate or evaluate mathematical expressions, use the calculate tool.\n2. When asked to convert between units, use the convert_units tool.\n3. When asked about Fibonacci numbers, use the fibonacci tool.\n4. Always provide clear explanations of the calculations performed.",
+  "tools": [
+    {
+      "name": "calculate",
+      "description": "Evaluate mathematical expressions",
+      "function": "calculate"
+    },
+    {
+      "name": "convert_units",
+      "description": "Convert between different units of measurement",
+      "function": "convert_units"
+    },
+    {
+      "name": "fibonacci",
+      "description": "Calculate Fibonacci numbers",
+      "function": "fibonacci"
+    }
+  ]
+}

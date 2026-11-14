@@ -1,0 +1,130 @@
+{
+  "flow_name": "Send Telegram Message (Manual)",
+  "description": "Manually send a text message via Telegram Bot API and display the response",
+  "category": "Messaging",
+  "flow_scope": "global",
+  "trigger_config": {
+    "type": "manual",
+    "manual_variables": [
+      {
+        "id": 1,
+        "name": "chat_id",
+        "displayName": "Chat ID",
+        "description": "Telegram chat ID or @channel username",
+        "dataType": "string",
+        "uiControl": "text",
+        "required": true,
+        "defaultValue": "",
+        "validation": {},
+        "order": 0
+      },
+      {
+        "id": 2,
+        "name": "message_text",
+        "displayName": "Message Text",
+        "description": "Text of the message to send",
+        "dataType": "string",
+        "uiControl": "textarea",
+        "required": true,
+        "defaultValue": "Hello from IOFlow!",
+        "validation": {},
+        "order": 1
+      }
+    ]
+  },
+  "flow_definition": {
+    "nodes": [
+      {
+        "id": "trigger_1",
+        "type": "trigger",
+        "position": { "x": 0, "y": 0 },
+        "data": {
+          "label": "Manual Input",
+          "triggerType": "manual",
+          "manualVariables": [
+            {
+              "id": 1,
+              "name": "chat_id",
+              "displayName": "Chat ID",
+              "description": "Telegram chat ID or @channel username",
+              "dataType": "string",
+              "uiControl": "text",
+              "required": true,
+              "defaultValue": "",
+              "validation": {},
+              "order": 0
+            },
+            {
+              "id": 2,
+              "name": "message_text",
+              "displayName": "Message Text",
+              "description": "Text of the message to send",
+              "dataType": "string",
+              "uiControl": "textarea",
+              "required": true,
+              "defaultValue": "Hello from IOFlow!",
+              "validation": {},
+              "order": 1
+            }
+          ],
+          "config": {},
+          "width": 200,
+          "height": 100
+        }
+      },
+      {
+        "id": "send_telegram",
+        "type": "action",
+        "position": { "x": 300, "y": 0 },
+        "data": {
+          "label": "Send Telegram Message",
+          "appId": "817a7ffe-bbe2-4883-b9c8-a1be1b18138e",
+          "serviceId": "f780f043-7e38-4100-9241-acfa3f171d5b",
+          "appName": "Telegram",
+          "service": "send_message",
+          "serviceDisplayName": "Send Message",
+          "useParameterMapping": true,
+          "parameterMapping": {
+            "chat_id": {
+              "source": "trigger",
+              "value": "{{trigger.chat_id}}"
+            },
+            "text": {
+              "source": "trigger",
+              "value": "{{trigger.message_text}}"
+            }
+          },
+          "config": {},
+          "width": 200,
+          "height": 100
+        }
+      },
+      {
+        "id": "show_response",
+        "type": "response",
+        "position": { "x": 600, "y": 0 },
+        "data": {
+          "label": "Telegram Response",
+          "variable": "{{node_outputs.send_telegram}}",
+          "statusCode": 200,
+          "width": 200,
+          "height": 100
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "edge_trigger_to_send",
+        "source": "trigger_1",
+        "target": "send_telegram",
+        "type": "default"
+      },
+      {
+        "id": "edge_send_to_response",
+        "source": "send_telegram",
+        "target": "show_response",
+        "type": "default"
+      }
+    ]
+  }
+}

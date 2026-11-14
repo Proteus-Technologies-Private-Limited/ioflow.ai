@@ -1,0 +1,171 @@
+{
+  "version": "1.0",
+  "export_timestamp": "2025-11-06T00:00:00Z",
+  "flow": {
+    "flow_name": "Multi-Channel Notification System",
+    "description": "Send notifications across multiple channels (Email, Slack) based on trigger conditions. Includes template support and dynamic recipient selection.",
+    "category": "Notifications & Alerts",
+    "trigger_config": {
+      "type": "manual",
+      "manual_variables": [
+        {
+          "id": "notification_type",
+          "name": "notification_type",
+          "displayName": "Notification Type",
+          "dataType": "string",
+          "uiControl": "select",
+          "required": true,
+          "defaultValue": "info",
+          "options": ["info", "warning", "error", "success"]
+        },
+        {
+          "id": "recipient_email",
+          "name": "recipient_email",
+          "displayName": "Recipient Email",
+          "dataType": "string",
+          "uiControl": "text",
+          "required": true,
+          "defaultValue": "user@example.com"
+        },
+        {
+          "id": "subject",
+          "name": "subject",
+          "displayName": "Email Subject",
+          "dataType": "string",
+          "uiControl": "text",
+          "required": true,
+          "defaultValue": "Important Notification"
+        },
+        {
+          "id": "message",
+          "name": "message",
+          "displayName": "Message",
+          "dataType": "string",
+          "uiControl": "textarea",
+          "required": true,
+          "defaultValue": "This is an important notification."
+        }
+      ]
+    },
+    "flow_definition": {
+      "nodes": [
+        {
+          "id": "trigger_notification",
+          "type": "trigger",
+          "position": { "x": 100, "y": 100 },
+          "width": 250,
+          "height": 120,
+          "data": {
+            "label": "Notification Trigger",
+            "triggerType": "manual",
+            "manualVariables": [
+              {
+                "id": "notification_type",
+                "name": "notification_type",
+                "displayName": "Notification Type",
+                "dataType": "string",
+                "uiControl": "select",
+                "required": true,
+                "options": ["info", "warning", "error", "success"]
+              },
+              {
+                "id": "recipient_email",
+                "name": "recipient_email",
+                "displayName": "Recipient Email",
+                "dataType": "string",
+                "uiControl": "text",
+                "required": true
+              },
+              {
+                "id": "subject",
+                "name": "subject",
+                "displayName": "Email Subject",
+                "dataType": "string",
+                "uiControl": "text",
+                "required": true
+              },
+              {
+                "id": "message",
+                "name": "message",
+                "displayName": "Message",
+                "dataType": "string",
+                "uiControl": "textarea",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "format_message",
+          "type": "transform",
+          "position": { "x": 100, "y": 260 },
+          "width": 250,
+          "height": 140,
+          "data": {
+            "label": "Format Email Template",
+            "script": "import datetime\n\n# Get input variables\nnotif_type = input.get('notification_type', 'info')\nsubject = input.get('subject', 'Notification')\nmessage = input.get('message', '')\n\n# Add timestamp\ntimestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')\n\n# Format email body with HTML\nemail_body = f\"\"\"<html>\n<body style='font-family: Arial, sans-serif;'>\n  <div style='padding: 20px; border-left: 4px solid {'#3b82f6' if notif_type == 'info' else '#ef4444' if notif_type == 'error' else '#f59e0b' if notif_type == 'warning' else '#10b981'};'>\n    <h2 style='margin-top: 0;'>{notif_type.upper()}</h2>\n    <p>{message}</p>\n    <hr style='border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;'>\n    <p style='color: #6b7280; font-size: 12px;'>Sent at: {timestamp}</p>\n  </div>\n</body>\n</html>\"\"\"\n\n# Prepare output\noutput = {\n  'formatted_subject': f'[{notif_type.upper()}] {subject}',\n  'email_body': email_body,\n  'timestamp': timestamp\n}"
+          }
+        },
+        {
+          "id": "send_email",
+          "type": "action",
+          "position": { "x": 100, "y": 440 },
+          "width": 250,
+          "height": 120,
+          "data": {
+            "label": "Send Email",
+            "comment": "Configure your SMTP settings in Settings > SMTP Configuration before using this node. This is a placeholder that demonstrates how to send emails.",
+            "service": "send_email",
+            "serviceDisplayName": "Send Email",
+            "parameterMapping": {
+              "to": { "source": "variable", "value": "trigger.recipient_email" },
+              "subject": { "source": "variable", "value": "node_outputs.format_message.formatted_subject" },
+              "body": { "source": "variable", "value": "node_outputs.format_message.email_body" },
+              "html": { "source": "value", "value": true }
+            }
+          }
+        },
+        {
+          "id": "log_result",
+          "type": "transform",
+          "position": { "x": 100, "y": 600 },
+          "width": 250,
+          "height": 120,
+          "data": {
+            "label": "Log Success",
+            "script": "import datetime\n\noutput = {\n  'status': 'success',\n  'recipient': input.get('recipient_email'),\n  'notification_type': input.get('notification_type'),\n  'sent_at': datetime.datetime.now().isoformat(),\n  'message': 'Notification sent successfully'\n}"
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "e1",
+          "source": "trigger_notification",
+          "target": "format_message",
+          "type": "smoothstep"
+        },
+        {
+          "id": "e2",
+          "source": "format_message",
+          "target": "send_email",
+          "type": "smoothstep"
+        },
+        {
+          "id": "e3",
+          "source": "send_email",
+          "target": "log_result",
+          "type": "smoothstep"
+        }
+      ]
+    },
+    "is_synchronous": false,
+    "sync_timeout": 30
+  },
+  "metadata": {
+    "required_applications": [],
+    "source_instance": {
+      "name": "IOFlow Example",
+      "version": "1.0"
+    }
+  }
+}

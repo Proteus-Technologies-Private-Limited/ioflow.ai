@@ -1,0 +1,721 @@
+{
+  "key": "google_tasks",
+  "application": {
+    "app_name": "Google Tasks",
+    "app_type": "api",
+    "description": "Google Tasks API - Create, manage, and organize tasks and task lists",
+    "category": "Productivity",
+    "auth_type": "oauth2",
+    "auth_config": {
+      "authorization_url": "https://accounts.google.com/o/oauth2/v2/auth",
+      "token_url": "https://oauth2.googleapis.com/token",
+      "scopes": [
+        "https://www.googleapis.com/auth/tasks",
+        "https://www.googleapis.com/auth/tasks.readonly"
+      ],
+      "grant_type": "authorization_code",
+      "authorization_params": {
+        "access_type": "offline",
+        "prompt": "consent"
+      }
+    },
+    "version": "2.1.0",
+    "base_url": "https://tasks.googleapis.com/tasks/v1",
+    "icon_url": "https://ssl.gstatic.com/tasks/logo_tasks_color_2x_web_64dp.png",
+    "auth_example": {
+      "client_id": "your_client_id",
+      "client_secret": "your_client_secret",
+      "redirect_uri": "http://localhost:8000/api/v1/oauth/callback"
+    },
+    "app_scope": "global"
+  },
+  "services": [
+    {
+      "service_name": "list_task_lists",
+      "description": "Lists all the authenticated user's task lists",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "query_params",
+        "query_params_template": {
+          "maxResults": "{{maxResults}}",
+          "pageToken": "{{pageToken}}"
+        },
+        "method": "GET"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "maxResults": {
+            "type": "integer",
+            "description": "Maximum number of task lists to return"
+          },
+          "pageToken": {
+            "type": "string",
+            "description": "Page token to retrieve a specific page of results"
+          }
+        },
+        "required": []
+      },
+      "sample_input": {
+        "maxResults": 10
+      },
+      "sample_output": {
+        "kind": "tasks#taskLists",
+        "items": [
+          {
+            "kind": "tasks#taskList",
+            "id": "MTAwMTQ3MDI4NTg4NjU0MzY0ODQ6MDow",
+            "title": "My Tasks",
+            "updated": "2025-07-27T10:30:00.000Z"
+          }
+        ]
+      },
+      "endpoint_template": "/users/@me/lists",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "The kind"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "description": "The kind"
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The id"
+                },
+                "title": {
+                  "type": "string",
+                  "description": "The title"
+                },
+                "updated": {
+                  "type": "string",
+                  "description": "The updated"
+                }
+              }
+            },
+            "description": "The items"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "create_task_list",
+      "description": "Creates a new task list for the authenticated user",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "body_template": {
+          "title": "{{title}}"
+        },
+        "method": "POST"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Title of the new task list"
+          }
+        },
+        "required": [
+          "title"
+        ]
+      },
+      "sample_input": {
+        "title": "My Shopping List"
+      },
+      "sample_output": {
+        "kind": "tasks#taskList",
+        "id": "MTAwMTQ3MDI4NTg4NjU0MzY0ODQ6MjoxNjA3",
+        "title": "My Shopping List",
+        "updated": "2025-07-27T10:30:00.000Z",
+        "selfLink": "https://tasks.googleapis.com/tasks/v1/users/@me/lists/MTAwMTQ3MDI4NTg4NjU0MzY0ODQ6MjoxNjA3"
+      },
+      "endpoint_template": "/users/@me/lists",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "The kind"
+          },
+          "id": {
+            "type": "string",
+            "description": "The id"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title"
+          },
+          "updated": {
+            "type": "string",
+            "description": "The updated"
+          },
+          "selfLink": {
+            "type": "string",
+            "description": "The selfLink"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "list_tasks",
+      "description": "Returns all tasks in the specified task list",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "query_params",
+        "query_params_template": {
+          "maxResults": "{{maxResults}}",
+          "pageToken": "{{pageToken}}",
+          "showCompleted": "{{showCompleted}}",
+          "showHidden": "{{showHidden}}",
+          "showDeleted": "{{showDeleted}}",
+          "updatedMin": "{{updatedMin}}",
+          "completedMax": "{{completedMax}}",
+          "completedMin": "{{completedMin}}",
+          "dueMax": "{{dueMax}}",
+          "dueMin": "{{dueMin}}"
+        },
+        "method": "GET"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "tasklist": {
+            "type": "string",
+            "description": "Task list identifier",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_task_lists",
+              "parameters": {},
+              "extractPath": "items",
+              "valueField": "id",
+              "displayField": "title",
+              "description": "Select from available task lists"
+            }
+          },
+          "maxResults": {
+            "type": "integer",
+            "description": "Maximum number of tasks to return"
+          },
+          "showCompleted": {
+            "type": "boolean",
+            "description": "Show completed tasks"
+          }
+        },
+        "required": [
+          "tasklist"
+        ]
+      },
+      "sample_input": {
+        "tasklist": "MTAwMTQ3MDI4NTg4NjU0MzY0ODQ6MDow",
+        "maxResults": 10,
+        "showCompleted": true
+      },
+      "sample_output": {
+        "kind": "tasks#tasks",
+        "items": [
+          {
+            "kind": "tasks#task",
+            "id": "MDQ4NjE3MzA2MDc5OTgxNjUzOTQ6MDow",
+            "title": "Buy groceries",
+            "updated": "2025-07-27T10:30:00.000Z",
+            "status": "needsAction"
+          }
+        ]
+      },
+      "endpoint_template": "/lists/{{tasklist}}/tasks",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "The kind"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "description": "The kind"
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The id"
+                },
+                "title": {
+                  "type": "string",
+                  "description": "The title"
+                },
+                "updated": {
+                  "type": "string",
+                  "description": "The updated"
+                },
+                "status": {
+                  "type": "string",
+                  "description": "The status"
+                }
+              }
+            },
+            "description": "The items"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "create_task",
+      "description": "Creates a new task in the specified task list",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "body_template": {
+          "title": "{{title}}",
+          "notes": "{{notes}}",
+          "due": "{{due}}",
+          "status": "{{status}}",
+          "parent": "{{parent}}",
+          "previous": "{{previous}}"
+        },
+        "method": "POST"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "tasklist": {
+            "type": "string",
+            "description": "Task list identifier",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_task_lists",
+              "parameters": {},
+              "extractPath": "items",
+              "valueField": "id",
+              "displayField": "title",
+              "description": "Select from available task lists"
+            }
+          },
+          "title": {
+            "type": "string",
+            "description": "Task title"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Task notes or description"
+          },
+          "due": {
+            "type": "string",
+            "description": "Due date in RFC 3339 format"
+          }
+        },
+        "required": [
+          "tasklist",
+          "title"
+        ]
+      },
+      "sample_input": {
+        "tasklist": "MTAwMTQ3MDI4NTg4NjU0MzY0ODQ6MDow",
+        "title": "Call dentist",
+        "notes": "Schedule annual checkup",
+        "due": "2025-08-01T00:00:00.000Z"
+      },
+      "sample_output": {
+        "kind": "tasks#task",
+        "id": "MDQ4NjE3MzA2MDc5OTgxNjUzOTQ6MDox",
+        "title": "Call dentist",
+        "notes": "Schedule annual checkup",
+        "due": "2025-08-01T00:00:00.000Z",
+        "status": "needsAction",
+        "updated": "2025-07-27T10:30:00.000Z"
+      },
+      "endpoint_template": "/lists/{{tasklist}}/tasks",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "The kind"
+          },
+          "id": {
+            "type": "string",
+            "description": "The id"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title"
+          },
+          "notes": {
+            "type": "string",
+            "description": "The notes"
+          },
+          "due": {
+            "type": "string",
+            "description": "The due"
+          },
+          "status": {
+            "type": "string",
+            "description": "The status"
+          },
+          "updated": {
+            "type": "string",
+            "description": "The updated"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "update_task",
+      "description": "Updates an existing task",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "body_template": {
+          "title": "{{title}}",
+          "notes": "{{notes}}",
+          "due": "{{due}}",
+          "status": "{{status}}",
+          "completed": "{{completed}}"
+        },
+        "method": "PATCH"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "tasklist": {
+            "type": "string",
+            "description": "Task list identifier",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_task_lists",
+              "parameters": {},
+              "extractPath": "items",
+              "valueField": "id",
+              "displayField": "title",
+              "description": "Select from available task lists"
+            }
+          },
+          "task": {
+            "type": "string",
+            "description": "Task identifier",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_tasks",
+              "parameters": {
+                "tasklist": "{{tasklist}}"
+              },
+              "extractPath": "items",
+              "valueField": "id",
+              "displayField": "title",
+              "description": "Select from available tasks in the selected list"
+            }
+          },
+          "title": {
+            "type": "string",
+            "description": "Task title"
+          },
+          "status": {
+            "type": "string",
+            "description": "Task status (needsAction or completed)"
+          }
+        },
+        "required": [
+          "tasklist",
+          "task"
+        ]
+      },
+      "sample_input": {
+        "tasklist": "MTAwMTQ3MDI4NTg4NjU0MzY0ODQ6MDow",
+        "task": "MDQ4NjE3MzA2MDc5OTgxNjUzOTQ6MDox",
+        "status": "completed",
+        "completed": "2025-07-27T15:00:00.000Z"
+      },
+      "sample_output": {
+        "kind": "tasks#task",
+        "id": "MDQ4NjE3MzA2MDc5OTgxNjUzOTQ6MDox",
+        "title": "Call dentist",
+        "status": "completed",
+        "completed": "2025-07-27T15:00:00.000Z",
+        "updated": "2025-07-27T15:00:00.000Z"
+      },
+      "endpoint_template": "/lists/{{tasklist}}/tasks/{{task}}",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "The kind"
+          },
+          "id": {
+            "type": "string",
+            "description": "The id"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title"
+          },
+          "status": {
+            "type": "string",
+            "description": "The status"
+          },
+          "completed": {
+            "type": "string",
+            "description": "The completed"
+          },
+          "updated": {
+            "type": "string",
+            "description": "The updated"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "delete_task",
+      "description": "Deletes the specified task from the task list",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "method": "DELETE"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "tasklist": {
+            "type": "string",
+            "description": "Task list identifier",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_task_lists",
+              "parameters": {},
+              "extractPath": "items",
+              "valueField": "id",
+              "displayField": "title",
+              "description": "Select from available task lists"
+            }
+          },
+          "task": {
+            "type": "string",
+            "description": "Task identifier",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_tasks",
+              "parameters": {
+                "tasklist": "{{tasklist}}"
+              },
+              "extractPath": "items",
+              "valueField": "id",
+              "displayField": "title",
+              "description": "Select from available tasks in the selected list"
+            }
+          }
+        },
+        "required": [
+          "tasklist",
+          "task"
+        ]
+      },
+      "sample_input": {
+        "tasklist": "MTAwMTQ3MDI4NTg4NjU0MzY0ODQ6MDow",
+        "task": "MDQ4NjE3MzA2MDc5OTgxNjUzOTQ6MDox"
+      },
+      "endpoint_template": "/lists/{{tasklist}}/tasks/{{task}}"
+    },
+    {
+      "service_name": "get_task",
+      "description": "Returns the specified task",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "method": "GET"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "tasklist": {
+            "type": "string",
+            "description": "Task list identifier",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_task_lists",
+              "parameters": {},
+              "extractPath": "items",
+              "valueField": "id",
+              "displayField": "title",
+              "description": "Select from available task lists"
+            }
+          },
+          "task": {
+            "type": "string",
+            "description": "Task identifier",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_tasks",
+              "parameters": {
+                "tasklist": "{{tasklist}}"
+              },
+              "extractPath": "items",
+              "valueField": "id",
+              "displayField": "title",
+              "description": "Select from available tasks in the selected list"
+            }
+          }
+        },
+        "required": [
+          "tasklist",
+          "task"
+        ]
+      },
+      "sample_input": {
+        "tasklist": "MTAwMTQ3MDI4NTg4NjU0MzY0ODQ6MDow",
+        "task": "MDQ4NjE3MzA2MDc5OTgxNjUzOTQ6MDow"
+      },
+      "sample_output": {
+        "kind": "tasks#task",
+        "id": "MDQ4NjE3MzA2MDc5OTgxNjUzOTQ6MDow",
+        "title": "Buy groceries",
+        "notes": "Milk, bread, eggs",
+        "updated": "2025-07-27T10:30:00.000Z",
+        "status": "needsAction"
+      },
+      "endpoint_template": "/lists/{{tasklist}}/tasks/{{task}}",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "The kind"
+          },
+          "id": {
+            "type": "string",
+            "description": "The id"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title"
+          },
+          "notes": {
+            "type": "string",
+            "description": "The notes"
+          },
+          "updated": {
+            "type": "string",
+            "description": "The updated"
+          },
+          "status": {
+            "type": "string",
+            "description": "The status"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "delete_task_list",
+      "description": "Deletes the specified task list",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "method": "DELETE"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "tasklist": {
+            "type": "string",
+            "description": "Task list identifier",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_task_lists",
+              "parameters": {},
+              "extractPath": "items",
+              "valueField": "id",
+              "displayField": "title",
+              "description": "Select from available task lists"
+            }
+          }
+        },
+        "required": [
+          "tasklist"
+        ]
+      },
+      "sample_input": {
+        "tasklist": "MTAwMTQ3MDI4NTg4NjU0MzY0ODQ6MjoxNjA3"
+      },
+      "endpoint_template": "/users/@me/lists/{{tasklist}}"
+    },
+    {
+      "service_name": "clear_completed_tasks",
+      "description": "Clears all completed tasks from the specified task list",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "method": "POST"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "tasklist": {
+            "type": "string",
+            "description": "Task list identifier",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_task_lists",
+              "parameters": {},
+              "extractPath": "items",
+              "valueField": "id",
+              "displayField": "title",
+              "description": "Select from available task lists"
+            }
+          }
+        },
+        "required": [
+          "tasklist"
+        ]
+      },
+      "sample_input": {
+        "tasklist": "MTAwMTQ3MDI4NTg4NjU0MzY0ODQ6MDow"
+      },
+      "endpoint_template": "/lists/{{tasklist}}/clear"
+    }
+  ],
+  "events": [
+    {
+      "event_name": "manual_trigger",
+      "description": "Manually trigger Google Tasks API operations",
+      "event_type": "manual",
+      "event_configuration": {
+        "description": "Use this to manually trigger Google Tasks operations"
+      },
+      "sample_payload": "{\"action\": \"sync_tasks\", \"tasklist_id\": \"MTAwMTQ3MDI4NTg4NjU0MzY0ODQ6MDow\"}",
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  ],
+  "metadata": {
+    "created_at": "2025-07-27T19:45:25.761473",
+    "created_by": "IOFlow",
+    "author": "IOFlow",
+    "tags": [
+      "productivity"
+    ],
+    "documentation_url": "https://docs.example.com/google_tasks",
+    "support_email": "support@example.com",
+    "last_modified": "2025-08-23T12:53:14.105327",
+    "modified_by": "claude-code",
+    "services_count": 9,
+    "events_count": 1,
+    "changelog": {
+      "2.0.0": "MAJOR UPDATE: Added comprehensive parameter lookup functionality for enhanced user experience. Task list IDs now support dropdown selection with real-time data from the API. Task IDs provide context-aware selection based on the selected task list. This eliminates manual ID entry and significantly improves usability."
+    }
+  }
+}

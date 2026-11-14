@@ -1,0 +1,1052 @@
+{
+  "key": "pdf_processing",
+  "application": {
+    "app_name": "PDF Processing",
+    "app_type": "api",
+    "app_scope": "tenant",
+    "description": "Comprehensive PDF processing services including manipulation, creation, encryption, OCR, and various transformations",
+    "category": "Document Processing",
+    "auth_type": "none",
+    "version": "1.0.0",
+    "base_url": "pdf://",
+    "icon_url": "https://cdn.jsdelivr.net/npm/heroicons@2.0.18/24/solid/document-text.svg",
+    "base_url_placeholder": "pdf://",
+    "base_url_help_text": "Local PDF processing service"
+  },
+  "services": [
+    {
+      "service_name": "merge_pdfs",
+      "display_name": "Merge PDFs",
+      "service_type": "file_operation",
+      "description": "Merge multiple PDF files into a single PDF",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "merge_pdfs",
+            "enum": ["merge_pdfs"],
+            "ui_control": "hidden"
+          },
+          "pdfs": {
+            "type": "array",
+            "description": "List of PDF files to merge",
+            "items": {
+              "type": "string",
+              "format": "base64"
+            },
+            "minItems": 2,
+            "ui_control": "file_array",
+            "accept": "application/pdf",
+            "help_text": "Upload multiple PDF files to merge them in order"
+          }
+        },
+        "required": ["pdfs"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "pdf": {"type": "string", "format": "base64"},
+          "page_count": {"type": "integer"},
+          "pdf_count": {"type": "integer"},
+          "size": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 60
+    },
+    {
+      "service_name": "split_pdf",
+      "display_name": "Split PDF",
+      "service_type": "file_operation",
+      "description": "Split a PDF into multiple files by pages, ranges, or chunks",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "split_pdf",
+            "enum": ["split_pdf"],
+            "ui_control": "hidden"
+          },
+          "pdf": {
+            "type": "string",
+            "description": "PDF file to split",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "application/pdf"
+          },
+          "split_mode": {
+            "type": "string",
+            "enum": ["pages", "range", "chunks"],
+            "default": "pages",
+            "description": "How to split the PDF",
+            "help_text": "pages: individual pages, range: custom ranges, chunks: fixed size chunks"
+          },
+          "ranges": {
+            "type": "array",
+            "description": "Page ranges for 'range' mode",
+            "items": {
+              "type": "object",
+              "properties": {
+                "start": {"type": "integer", "minimum": 1},
+                "end": {"type": "integer", "minimum": 1}
+              }
+            },
+            "ui_visible_when": {"split_mode": "range"}
+          },
+          "chunk_size": {
+            "type": "integer",
+            "description": "Pages per chunk for 'chunks' mode",
+            "default": 1,
+            "minimum": 1,
+            "ui_visible_when": {"split_mode": "chunks"}
+          }
+        },
+        "required": ["pdf", "split_mode"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "pdfs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "pdf": {"type": "string", "format": "base64"},
+                "page_range": {"type": "string"},
+                "total_pages": {"type": "integer"}
+              }
+            }
+          },
+          "total_files": {"type": "integer"},
+          "original_pages": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 60
+    },
+    {
+      "service_name": "rotate_pdf_pages",
+      "display_name": "Rotate PDF Pages",
+      "service_type": "file_operation",
+      "description": "Rotate specific pages in a PDF document",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "rotate_pages",
+            "enum": ["rotate_pages"],
+            "ui_control": "hidden"
+          },
+          "pdf": {
+            "type": "string",
+            "description": "PDF file to rotate",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "application/pdf"
+          },
+          "angle": {
+            "type": "integer",
+            "enum": [90, 180, 270],
+            "default": 90,
+            "description": "Rotation angle in degrees"
+          },
+          "pages": {
+            "type": ["string", "array"],
+            "default": "all",
+            "description": "Pages to rotate ('all' or array of page numbers)",
+            "help_text": "Use 'all' to rotate all pages or provide specific page numbers like [1, 3, 5]"
+          }
+        },
+        "required": ["pdf", "angle"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "pdf": {"type": "string", "format": "base64"},
+          "angle": {"type": "integer"},
+          "pages_rotated": {"type": ["string", "array"]},
+          "total_pages": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "extract_pdf_pages",
+      "display_name": "Extract PDF Pages",
+      "service_type": "file_operation",
+      "description": "Extract specific pages from a PDF document",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "extract_pages",
+            "enum": ["extract_pages"],
+            "ui_control": "hidden"
+          },
+          "pdf": {
+            "type": "string",
+            "description": "PDF file to extract pages from",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "application/pdf"
+          },
+          "pages": {
+            "type": "array",
+            "description": "Page numbers to extract",
+            "items": {"type": "integer", "minimum": 1},
+            "minItems": 1,
+            "example": [1, 3, 5, 7],
+            "help_text": "Specify the page numbers you want to extract"
+          }
+        },
+        "required": ["pdf", "pages"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "pdf": {"type": "string", "format": "base64"},
+          "pages_extracted": {"type": "array", "items": {"type": "integer"}},
+          "total_pages": {"type": "integer"},
+          "original_pages": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "encrypt_pdf",
+      "display_name": "Encrypt PDF",
+      "service_type": "file_operation",
+      "description": "Add password protection and encryption to a PDF",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "encrypt_pdf",
+            "enum": ["encrypt_pdf"],
+            "ui_control": "hidden"
+          },
+          "pdf": {
+            "type": "string",
+            "description": "PDF file to encrypt",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "application/pdf"
+          },
+          "user_password": {
+            "type": "string",
+            "description": "Password required to open the PDF",
+            "ui_control": "password",
+            "help_text": "Users will need this password to view the PDF"
+          },
+          "owner_password": {
+            "type": "string",
+            "description": "Password for full control (optional)",
+            "ui_control": "password",
+            "help_text": "Leave empty to use the same as user password"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["print", "modify", "copy", "annotate"]
+            },
+            "default": ["print", "modify", "copy", "annotate"],
+            "description": "Allowed permissions for the encrypted PDF"
+          }
+        },
+        "required": ["pdf", "user_password"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "pdf": {"type": "string", "format": "base64"},
+          "encrypted": {"type": "boolean"},
+          "permissions": {"type": "array", "items": {"type": "string"}},
+          "size": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "decrypt_pdf",
+      "display_name": "Decrypt PDF",
+      "service_type": "file_operation",
+      "description": "Remove password protection from an encrypted PDF",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "decrypt_pdf",
+            "enum": ["decrypt_pdf"],
+            "ui_control": "hidden"
+          },
+          "pdf": {
+            "type": "string",
+            "description": "Encrypted PDF file",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "application/pdf"
+          },
+          "password": {
+            "type": "string",
+            "description": "Password to decrypt the PDF",
+            "ui_control": "password"
+          }
+        },
+        "required": ["pdf", "password"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "pdf": {"type": "string", "format": "base64"},
+          "decrypted": {"type": "boolean"},
+          "size": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "get_pdf_info",
+      "display_name": "Get PDF Information",
+      "service_type": "file_operation",
+      "description": "Extract metadata and information from a PDF document",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "get_pdf_info",
+            "enum": ["get_pdf_info"],
+            "ui_control": "hidden"
+          },
+          "pdf": {
+            "type": "string",
+            "description": "PDF file to analyze",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "application/pdf"
+          }
+        },
+        "required": ["pdf"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "page_count": {"type": "integer"},
+          "metadata": {"type": "object"},
+          "encrypted": {"type": "boolean"},
+          "pages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "page_number": {"type": "integer"},
+                "width": {"type": "number"},
+                "height": {"type": "number"},
+                "rotation": {"type": "integer"}
+              }
+            }
+          },
+          "file_size": {"type": "integer"},
+          "pdf_version": {"type": "string"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "extract_pdf_text",
+      "display_name": "Extract Text from PDF",
+      "service_type": "file_operation",
+      "description": "Extract text content from a PDF document",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "extract_text",
+            "enum": ["extract_text"],
+            "ui_control": "hidden"
+          },
+          "pdf": {
+            "type": "string",
+            "description": "PDF file to extract text from",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "application/pdf"
+          },
+          "pages": {
+            "type": ["string", "array"],
+            "default": "all",
+            "description": "Pages to extract text from",
+            "help_text": "Use 'all' for all pages or specify page numbers like [1, 2, 3]"
+          }
+        },
+        "required": ["pdf"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "text": {"type": "string"},
+          "pages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "page": {"type": "integer"},
+                "text": {"type": "string"}
+              }
+            }
+          },
+          "page_count": {"type": "integer"},
+          "extraction_method": {"type": "string"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 60
+    },
+    {
+      "service_name": "add_pdf_watermark",
+      "display_name": "Add Watermark to PDF",
+      "service_type": "file_operation",
+      "description": "Add a text watermark to all pages of a PDF",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "add_watermark",
+            "enum": ["add_watermark"],
+            "ui_control": "hidden"
+          },
+          "pdf": {
+            "type": "string",
+            "description": "PDF file to watermark",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "application/pdf"
+          },
+          "text": {
+            "type": "string",
+            "description": "Watermark text",
+            "default": "CONFIDENTIAL",
+            "example": "DRAFT"
+          },
+          "position": {
+            "type": "string",
+            "enum": ["center", "diagonal"],
+            "default": "diagonal",
+            "description": "Watermark position"
+          },
+          "opacity": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 1.0,
+            "default": 0.3,
+            "description": "Watermark opacity"
+          },
+          "font_size": {
+            "type": "integer",
+            "minimum": 10,
+            "maximum": 200,
+            "default": 50,
+            "description": "Font size for watermark text"
+          },
+          "color": {
+            "type": "string",
+            "default": "#808080",
+            "description": "Watermark color (hex format)",
+            "pattern": "^#[0-9A-Fa-f]{6}$"
+          }
+        },
+        "required": ["pdf", "text"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "pdf": {"type": "string", "format": "base64"},
+          "watermark_text": {"type": "string"},
+          "position": {"type": "string"},
+          "pages_watermarked": {"type": "integer"},
+          "size": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 60
+    },
+    {
+      "service_name": "compress_pdf",
+      "display_name": "Compress PDF",
+      "service_type": "file_operation",
+      "description": "Reduce the file size of a PDF document",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "compress_pdf",
+            "enum": ["compress_pdf"],
+            "ui_control": "hidden"
+          },
+          "pdf": {
+            "type": "string",
+            "description": "PDF file to compress",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "application/pdf"
+          },
+          "compression_level": {
+            "type": "string",
+            "enum": ["low", "medium", "high"],
+            "default": "medium",
+            "description": "Compression level",
+            "help_text": "Higher compression may reduce quality"
+          }
+        },
+        "required": ["pdf"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "pdf": {"type": "string", "format": "base64"},
+          "original_size": {"type": "integer"},
+          "compressed_size": {"type": "integer"},
+          "compression_ratio": {"type": "string"},
+          "compression_level": {"type": "string"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 60
+    },
+    {
+      "service_name": "create_pdf",
+      "display_name": "Create PDF",
+      "service_type": "file_operation",
+      "description": "Create a new PDF document from scratch",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "create_pdf",
+            "enum": ["create_pdf"],
+            "ui_control": "hidden"
+          },
+          "page_size": {
+            "type": "string",
+            "enum": ["letter", "a4", "a3", "legal"],
+            "default": "letter",
+            "description": "Page size for the PDF"
+          },
+          "title": {
+            "type": "string",
+            "description": "PDF title (metadata)"
+          },
+          "author": {
+            "type": "string",
+            "description": "PDF author (metadata)"
+          },
+          "subject": {
+            "type": "string",
+            "description": "PDF subject (metadata)"
+          },
+          "content": {
+            "type": "array",
+            "description": "Content items for the PDF",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": ["text", "paragraph", "page_break"]
+                },
+                "text": {"type": "string"},
+                "font": {"type": "string", "default": "Helvetica"},
+                "font_size": {"type": "integer", "default": 12},
+                "x": {"type": "number"},
+                "y": {"type": "number"}
+              }
+            },
+            "help_text": "Array of content items to add to the PDF"
+          }
+        },
+        "required": ["content"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "pdf": {"type": "string", "format": "base64"},
+          "page_size": {"type": "string"},
+          "content_items": {"type": "integer"},
+          "size": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "html_to_pdf",
+      "display_name": "HTML to PDF",
+      "service_type": "file_operation",
+      "description": "Convert HTML content to a PDF document",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "html_to_pdf",
+            "enum": ["html_to_pdf"],
+            "ui_control": "hidden"
+          },
+          "html": {
+            "type": "string",
+            "description": "HTML content to convert",
+            "ui_control": "textarea",
+            "help_text": "Enter HTML content to convert to PDF"
+          },
+          "page_size": {
+            "type": "string",
+            "enum": ["A4", "Letter"],
+            "default": "A4",
+            "description": "Page size for the PDF"
+          },
+          "margin_top": {
+            "type": "string",
+            "default": "0.75in",
+            "description": "Top margin"
+          },
+          "margin_right": {
+            "type": "string",
+            "default": "0.75in",
+            "description": "Right margin"
+          },
+          "margin_bottom": {
+            "type": "string",
+            "default": "0.75in",
+            "description": "Bottom margin"
+          },
+          "margin_left": {
+            "type": "string",
+            "default": "0.75in",
+            "description": "Left margin"
+          }
+        },
+        "required": ["html"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "pdf": {"type": "string", "format": "base64"},
+          "method": {"type": "string"},
+          "size": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 60
+    },
+    {
+      "service_name": "text_to_pdf",
+      "display_name": "Text to PDF",
+      "service_type": "file_operation",
+      "description": "Convert plain text to a PDF document",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "text_to_pdf",
+            "enum": ["text_to_pdf"],
+            "ui_control": "hidden"
+          },
+          "text": {
+            "type": "string",
+            "description": "Plain text content",
+            "ui_control": "textarea",
+            "help_text": "Enter text to convert to PDF"
+          },
+          "page_size": {
+            "type": "string",
+            "enum": ["letter", "a4"],
+            "default": "letter",
+            "description": "Page size"
+          },
+          "font": {
+            "type": "string",
+            "default": "Helvetica",
+            "description": "Font family"
+          },
+          "font_size": {
+            "type": "integer",
+            "minimum": 8,
+            "maximum": 72,
+            "default": 12,
+            "description": "Font size"
+          },
+          "line_spacing": {
+            "type": "number",
+            "minimum": 1.0,
+            "maximum": 3.0,
+            "default": 1.2,
+            "description": "Line spacing multiplier"
+          }
+        },
+        "required": ["text"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "pdf": {"type": "string", "format": "base64"},
+          "page_size": {"type": "string"},
+          "font": {"type": "string"},
+          "font_size": {"type": "integer"},
+          "line_count": {"type": "integer"},
+          "size": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "images_to_pdf",
+      "display_name": "Images to PDF",
+      "service_type": "file_operation",
+      "description": "Convert multiple images into a PDF document",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "images_to_pdf",
+            "enum": ["images_to_pdf"],
+            "ui_control": "hidden"
+          },
+          "images": {
+            "type": "array",
+            "description": "Images to convert to PDF",
+            "items": {
+              "type": "string",
+              "format": "base64"
+            },
+            "minItems": 1,
+            "ui_control": "file_array",
+            "accept": "image/*",
+            "help_text": "Upload images to convert to PDF (one image per page)"
+          },
+          "page_size": {
+            "type": "string",
+            "enum": ["letter", "a4"],
+            "default": "letter",
+            "description": "Page size for the PDF"
+          },
+          "fit_to_page": {
+            "type": "boolean",
+            "default": true,
+            "description": "Fit images to page size",
+            "help_text": "When enabled, images will be resized to fit the page"
+          }
+        },
+        "required": ["images"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "pdf": {"type": "string", "format": "base64"},
+          "image_count": {"type": "integer"},
+          "page_size": {"type": "string"},
+          "fit_to_page": {"type": "boolean"},
+          "size": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 60
+    },
+    {
+      "service_name": "extract_pdf_images",
+      "display_name": "Extract Images from PDF",
+      "service_type": "file_operation",
+      "description": "Extract all images from a PDF document",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "extract_images",
+            "enum": ["extract_images"],
+            "ui_control": "hidden"
+          },
+          "pdf": {
+            "type": "string",
+            "description": "PDF file to extract images from",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "application/pdf"
+          },
+          "pages": {
+            "type": ["string", "array"],
+            "default": "all",
+            "description": "Pages to extract images from",
+            "help_text": "Use 'all' or specify page numbers"
+          }
+        },
+        "required": ["pdf"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "image": {"type": "string", "format": "base64"},
+                "page": {"type": "integer"},
+                "index": {"type": "integer"},
+                "width": {"type": "integer"},
+                "height": {"type": "integer"}
+              }
+            }
+          },
+          "image_count": {"type": "integer"},
+          "extraction_method": {"type": "string"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 60
+    },
+    {
+      "service_name": "extract_pdf_tables",
+      "display_name": "Extract Tables from PDF",
+      "service_type": "file_operation",
+      "description": "Extract tables from a PDF document",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "extract_tables",
+            "enum": ["extract_tables"],
+            "ui_control": "hidden"
+          },
+          "pdf": {
+            "type": "string",
+            "description": "PDF file to extract tables from",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "application/pdf"
+          },
+          "pages": {
+            "type": ["string", "array"],
+            "default": "all",
+            "description": "Pages to extract tables from",
+            "help_text": "Use 'all' or specify page numbers"
+          }
+        },
+        "required": ["pdf"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "tables": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "page": {"type": "integer"},
+                "table_index": {"type": "integer"},
+                "data": {"type": "array"},
+                "rows": {"type": "integer"},
+                "columns": {"type": "integer"}
+              }
+            }
+          },
+          "table_count": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 60
+    },
+    {
+      "service_name": "ocr_pdf",
+      "display_name": "OCR Scanned PDF",
+      "service_type": "file_operation",
+      "description": "Perform OCR on a scanned PDF to extract text",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "ocr_pdf",
+            "enum": ["ocr_pdf"],
+            "ui_control": "hidden"
+          },
+          "pdf": {
+            "type": "string",
+            "description": "Scanned PDF file",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "application/pdf"
+          },
+          "language": {
+            "type": "string",
+            "default": "eng",
+            "description": "OCR language",
+            "enum": ["eng", "fra", "deu", "spa", "ita", "por", "rus", "jpn", "chi_sim", "chi_tra"],
+            "help_text": "Language of the text in the PDF"
+          },
+          "pages": {
+            "type": ["string", "array"],
+            "default": "all",
+            "description": "Pages to perform OCR on",
+            "help_text": "Use 'all' or specify page numbers"
+          }
+        },
+        "required": ["pdf"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "text": {"type": "string"},
+          "pages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "page": {"type": "integer"},
+                "text": {"type": "string"}
+              }
+            }
+          },
+          "page_count": {"type": "integer"},
+          "language": {"type": "string"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 120
+    },
+    {
+      "service_name": "fill_pdf_form",
+      "display_name": "Fill PDF Form",
+      "service_type": "file_operation",
+      "description": "Fill form fields in a PDF document",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "fill_form",
+            "enum": ["fill_form"],
+            "ui_control": "hidden"
+          },
+          "pdf": {
+            "type": "string",
+            "description": "PDF form to fill",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "application/pdf"
+          },
+          "form_data": {
+            "type": "object",
+            "description": "Form field values",
+            "additionalProperties": true,
+            "help_text": "Object with field names as keys and values to fill"
+          }
+        },
+        "required": ["pdf", "form_data"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "pdf": {"type": "string", "format": "base64"},
+          "fields_filled": {"type": "array", "items": {"type": "string"}},
+          "size": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "add_pdf_annotations",
+      "display_name": "Add PDF Annotations",
+      "service_type": "file_operation",
+      "description": "Add annotations and comments to a PDF document",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "add_annotations",
+            "enum": ["add_annotations"],
+            "ui_control": "hidden"
+          },
+          "pdf": {
+            "type": "string",
+            "description": "PDF file to annotate",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "application/pdf"
+          },
+          "annotations": {
+            "type": "array",
+            "description": "Annotations to add",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": ["text", "highlight", "note"],
+                  "default": "text"
+                },
+                "page": {"type": "integer", "minimum": 1},
+                "text": {"type": "string"},
+                "x": {"type": "number"},
+                "y": {"type": "number"}
+              },
+              "required": ["page", "text"]
+            }
+          }
+        },
+        "required": ["pdf", "annotations"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "pdf": {"type": "string", "format": "base64"},
+          "annotations_added": {"type": "integer"},
+          "size": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    }
+  ],
+  "events": []
+}

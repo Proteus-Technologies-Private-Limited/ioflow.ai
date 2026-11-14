@@ -1,0 +1,1127 @@
+{
+  "key": "x_twitter",
+  "application": {
+    "app_name": "X (Twitter)",
+    "app_type": "api",
+    "description": "X (formerly Twitter) API v2 integration for social media management, tweet posting, user interactions, and real-time streaming. Supports OAuth 2.0 with PKCE for user context operations.",
+    "category": "Communication",
+    "auth_type": "oauth2",
+    "auth_config": {
+      "authorization_url": "https://twitter.com/i/oauth2/authorize",
+      "token_url": "https://api.twitter.com/2/oauth2/token",
+      "revoke_url": "https://api.twitter.com/2/oauth2/revoke",
+      "scopes": [
+        "tweet.read",
+        "tweet.write",
+        "tweet.moderate.write",
+        "users.read",
+        "follows.read",
+        "follows.write",
+        "offline.access",
+        "space.read",
+        "mute.read",
+        "mute.write",
+        "like.read",
+        "like.write",
+        "list.read",
+        "list.write",
+        "block.read",
+        "block.write",
+        "bookmark.read",
+        "bookmark.write",
+        "dm.read",
+        "dm.write"
+      ],
+      "client_id_param": "client_id",
+      "client_secret_param": "client_secret",
+      "grant_type": "authorization_code",
+      "redirect_uri_required": true,
+      "pkce_required": true,
+      "state_required": true,
+      "response_type": "code",
+      "token_expiry": 7200,
+      "refresh_token_supported": true,
+      "header_prefix": "Bearer",
+      "code_challenge_method": "S256",
+      "additional_params": {
+        "scope_delimiter": " ",
+        "include_granted_scopes": true
+      }
+    },
+    "version": "2.3.0",
+    "base_url": "https://api.twitter.com",
+    "icon_url": "https://abs.twimg.com/responsive-web/client-web/icon-ios.77d25eba.png",
+    "auth_example": {
+      "client_id": "your_client_id",
+      "client_secret": "your_client_secret",
+      "redirect_uri": "http://localhost:8000/api/v1/oauth/callback"
+    },
+    "app_scope": "global"
+  },
+  "services": [
+    {
+      "service_name": "create_tweet",
+      "description": "Create a new tweet with text content",
+      "service_type": "api_call",
+      "endpoint_template": "/2/tweets",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        },
+        "body_template": {
+          "text": "{{text}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Text content of the tweet (max 280 characters)"
+          }
+        },
+        "required": [
+          "text"
+        ]
+      },
+      "sample_input": {
+        "text": "Hello X API v2! This is my first tweet from IOFlow 🚀"
+      },
+      "sample_output": {
+        "data": {
+          "id": "1445880548472328192",
+          "text": "Hello X API v2! This is my first tweet from IOFlow 🚀"
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "The id"
+              },
+              "text": {
+                "type": "string",
+                "description": "The text"
+              }
+            },
+            "description": "The data"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "delete_tweet",
+      "description": "Delete a tweet by its ID",
+      "service_type": "api_call",
+      "endpoint_template": "/2/tweets/{{tweet_id}}",
+      "request_config": {
+        "method": "DELETE"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "tweet_id": {
+            "type": "string",
+            "description": "ID of the tweet to delete"
+          }
+        },
+        "required": [
+          "tweet_id"
+        ]
+      },
+      "sample_input": {
+        "tweet_id": "1445880548472328192"
+      },
+      "sample_output": {
+        "data": {
+          "deleted": true
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "deleted": {
+                "type": "integer",
+                "description": "The deleted"
+              }
+            },
+            "description": "The data"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_tweets",
+      "description": "Get tweets by their IDs with expanded information",
+      "service_type": "api_call",
+      "endpoint_template": "/2/tweets",
+      "request_config": {
+        "method": "GET",
+        "query_params_template": {
+          "ids": "{{tweet_ids}}",
+          "expansions": "author_id,attachments.media_keys,referenced_tweets.id",
+          "tweet.fields": "created_at,public_metrics,lang,context_annotations,entities",
+          "user.fields": "name,username,profile_image_url,verified"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "tweet_ids": {
+            "type": "string",
+            "description": "Comma-separated list of tweet IDs (max 100)"
+          }
+        },
+        "required": [
+          "tweet_ids"
+        ]
+      },
+      "sample_input": {
+        "tweet_ids": "1445880548472328192,1445880548472328193"
+      },
+      "sample_output": {
+        "data": [
+          {
+            "id": "1445880548472328192",
+            "text": "Hello world!",
+            "created_at": "2024-10-07T09:00:00.000Z",
+            "public_metrics": {
+              "retweet_count": 10,
+              "reply_count": 5,
+              "like_count": 100,
+              "quote_count": 2
+            }
+          }
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "The id"
+                },
+                "text": {
+                  "type": "string",
+                  "description": "The text"
+                },
+                "created_at": {
+                  "type": "string",
+                  "description": "The created_at"
+                },
+                "public_metrics": {
+                  "type": "object",
+                  "properties": {
+                    "retweet_count": {
+                      "type": "integer",
+                      "description": "Number of retweet_s"
+                    },
+                    "reply_count": {
+                      "type": "integer",
+                      "description": "Number of reply_s"
+                    },
+                    "like_count": {
+                      "type": "integer",
+                      "description": "Number of like_s"
+                    },
+                    "quote_count": {
+                      "type": "integer",
+                      "description": "Number of quote_s"
+                    }
+                  },
+                  "description": "The public_metrics"
+                }
+              }
+            },
+            "description": "The data"
+          }
+        }
+      },
+      "response_config": {
+        "usage": {
+          "currency": "USD",
+          "price_note": "X API pay-per-use list price (docs.x.com/x-api/getting-started/pricing, Oct 2026): $0.005 per post read and $0.010 per user read, counted per resource returned, including posts and users attached through expansions. X does not charge a resource again within the same UTC day, so these figures are an upper bound; your X developer console shows what was billed.",
+          "meters": [
+            {
+              "meter": "post_read",
+              "label": "Posts read",
+              "unit": "post",
+              "count": "data",
+              "price": {
+                "amount": 0.005,
+                "per": 1
+              }
+            },
+            {
+              "meter": "post_read",
+              "label": "Posts read",
+              "unit": "post",
+              "count": "includes.tweets",
+              "price": {
+                "amount": 0.005,
+                "per": 1
+              }
+            },
+            {
+              "meter": "user_read",
+              "label": "Users read",
+              "unit": "user",
+              "count": "includes.users",
+              "price": {
+                "amount": 0.01,
+                "per": 1
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "service_name": "follow_user",
+      "description": "Follow a user",
+      "service_type": "api_call",
+      "endpoint_template": "/2/users/{{user_id}}/following",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        },
+        "body_template": {
+          "target_user_id": "{{target_user_id}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "description": "Your user ID"
+          },
+          "target_user_id": {
+            "type": "string",
+            "description": "ID of the user to follow"
+          }
+        },
+        "required": [
+          "user_id",
+          "target_user_id"
+        ]
+      },
+      "sample_input": {
+        "user_id": "123456789",
+        "target_user_id": "987654321"
+      },
+      "sample_output": {
+        "data": {
+          "following": true,
+          "pending_follow": false
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "following": {
+                "type": "integer",
+                "description": "The following"
+              },
+              "pending_follow": {
+                "type": "integer",
+                "description": "The pending_follow"
+              }
+            },
+            "description": "The data"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "unfollow_user",
+      "description": "Unfollow a user",
+      "service_type": "api_call",
+      "endpoint_template": "/2/users/{{user_id}}/following/{{target_user_id}}",
+      "request_config": {
+        "method": "DELETE"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "description": "Your user ID"
+          },
+          "target_user_id": {
+            "type": "string",
+            "description": "ID of the user to unfollow"
+          }
+        },
+        "required": [
+          "user_id",
+          "target_user_id"
+        ]
+      },
+      "sample_input": {
+        "user_id": "123456789",
+        "target_user_id": "987654321"
+      },
+      "sample_output": {
+        "data": {
+          "following": false
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "following": {
+                "type": "integer",
+                "description": "The following"
+              }
+            },
+            "description": "The data"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "like_tweet",
+      "description": "Like a tweet",
+      "service_type": "api_call",
+      "endpoint_template": "/2/users/{{user_id}}/likes",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        },
+        "body_template": {
+          "tweet_id": "{{tweet_id}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "description": "Your user ID"
+          },
+          "tweet_id": {
+            "type": "string",
+            "description": "ID of the tweet to like"
+          }
+        },
+        "required": [
+          "user_id",
+          "tweet_id"
+        ]
+      },
+      "sample_input": {
+        "user_id": "123456789",
+        "tweet_id": "1445880548472328192"
+      },
+      "sample_output": {
+        "data": {
+          "liked": true
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "liked": {
+                "type": "integer",
+                "description": "The liked"
+              }
+            },
+            "description": "The data"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "retweet",
+      "description": "Retweet a tweet",
+      "service_type": "api_call",
+      "endpoint_template": "/2/users/{{user_id}}/retweets",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        },
+        "body_template": {
+          "tweet_id": "{{tweet_id}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "description": "Your user ID"
+          },
+          "tweet_id": {
+            "type": "string",
+            "description": "ID of the tweet to retweet"
+          }
+        },
+        "required": [
+          "user_id",
+          "tweet_id"
+        ]
+      },
+      "sample_input": {
+        "user_id": "123456789",
+        "tweet_id": "1445880548472328192"
+      },
+      "sample_output": {
+        "data": {
+          "retweeted": true
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "retweeted": {
+                "type": "integer",
+                "description": "The retweeted"
+              }
+            },
+            "description": "The data"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "search_tweets",
+      "description": "Search tweets from the last 7 days. Returns the author's profile location (includes.users[].location) and tagged places; page with next_token, resume with since_id.",
+      "service_type": "api_call",
+      "endpoint_template": "/2/tweets/search/recent",
+      "request_config": {
+        "method": "GET",
+        "query_params_template": {
+          "query": "{{query}}",
+          "max_results": "{{max_results}}",
+          "since_id": "{{since_id}}",
+          "until_id": "{{until_id}}",
+          "start_time": "{{start_time}}",
+          "end_time": "{{end_time}}",
+          "next_token": "{{next_token}}",
+          "sort_order": "{{sort_order}}",
+          "expansions": "author_id,geo.place_id,referenced_tweets.id",
+          "tweet.fields": "created_at,author_id,lang,geo,public_metrics,entities,conversation_id,referenced_tweets,context_annotations",
+          "user.fields": "name,username,location,description,verified,public_metrics,profile_image_url",
+          "place.fields": "full_name,name,country,country_code,place_type,geo"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "X search query (max 512 characters), e.g. (@RBI OR @FinMinIndia OR @nsitharaman) -is:retweet lang:en"
+          },
+          "max_results": {
+            "type": "integer",
+            "description": "Results per page (10-100)",
+            "default": 100,
+            "minimum": 10,
+            "maximum": 100
+          },
+          "since_id": {
+            "type": "string",
+            "description": "Only tweets newer than this tweet id"
+          },
+          "until_id": {
+            "type": "string",
+            "description": "Only tweets older than this tweet id"
+          },
+          "start_time": {
+            "type": "string",
+            "description": "Oldest UTC timestamp, ISO 8601 (YYYY-MM-DDTHH:mm:ssZ); at most 7 days ago"
+          },
+          "end_time": {
+            "type": "string",
+            "description": "Newest UTC timestamp, ISO 8601"
+          },
+          "next_token": {
+            "type": "string",
+            "description": "meta.next_token from the previous page"
+          },
+          "sort_order": {
+            "type": "string",
+            "enum": [
+              "recency",
+              "relevancy"
+            ],
+            "description": "Result order"
+          }
+        },
+        "required": [
+          "query"
+        ]
+      },
+      "sample_input": {
+        "query": "(@RBI OR @FinMinIndia) -is:retweet",
+        "max_results": 100
+      },
+      "sample_output": {
+        "data": [
+          {
+            "id": "1445880548472328192",
+            "text": "@RBI my bank has not refunded a failed UPI transfer for 10 days",
+            "created_at": "2026-10-07T09:00:00.000Z",
+            "author_id": "2244994945",
+            "lang": "en"
+          }
+        ],
+        "includes": {
+          "users": [
+            {
+              "id": "2244994945",
+              "username": "someone",
+              "name": "Some One",
+              "location": "Pune, India"
+            }
+          ]
+        },
+        "meta": {
+          "newest_id": "1445880548472328192",
+          "oldest_id": "1445880548472328192",
+          "result_count": 1,
+          "next_token": "b26v89c19zqg8o3fo7"
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "description": "Matching tweets",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "created_at": {
+                  "type": "string"
+                },
+                "author_id": {
+                  "type": "string"
+                },
+                "lang": {
+                  "type": "string"
+                },
+                "geo": {
+                  "type": "object",
+                  "description": "place_id when the author tagged a place (rare)"
+                }
+              }
+            }
+          },
+          "includes": {
+            "type": "object",
+            "description": "Expanded objects: users (author location is users[].location, free text) and places",
+            "properties": {
+              "users": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "username": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "location": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "places": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "newest_id": {
+                "type": "string"
+              },
+              "oldest_id": {
+                "type": "string"
+              },
+              "result_count": {
+                "type": "integer"
+              },
+              "next_token": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "response_config": {
+        "usage": {
+          "currency": "USD",
+          "price_note": "X API pay-per-use list price (docs.x.com/x-api/getting-started/pricing, Oct 2026): $0.005 per post read and $0.010 per user read, counted per resource returned, including posts and users attached through expansions. X does not charge a resource again within the same UTC day, so these figures are an upper bound; your X developer console shows what was billed.",
+          "meters": [
+            {
+              "meter": "post_read",
+              "label": "Posts read",
+              "unit": "post",
+              "count": "data",
+              "price": {
+                "amount": 0.005,
+                "per": 1
+              }
+            },
+            {
+              "meter": "post_read",
+              "label": "Posts read",
+              "unit": "post",
+              "count": "includes.tweets",
+              "price": {
+                "amount": 0.005,
+                "per": 1
+              }
+            },
+            {
+              "meter": "user_read",
+              "label": "Users read",
+              "unit": "user",
+              "count": "includes.users",
+              "price": {
+                "amount": 0.01,
+                "per": 1
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "service_name": "get_user_by_username",
+      "description": "Get user information by username",
+      "service_type": "api_call",
+      "endpoint_template": "/2/users/by/username/{{username}}",
+      "request_config": {
+        "method": "GET",
+        "query_params_template": {
+          "user.fields": "id,name,username,created_at,description,profile_image_url,public_metrics,verified,location,url"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "Twitter username (without @)"
+          }
+        },
+        "required": [
+          "username"
+        ]
+      },
+      "sample_input": {
+        "username": "elonmusk"
+      },
+      "sample_output": {
+        "data": {
+          "id": "44196397",
+          "name": "Elon Musk",
+          "username": "elonmusk",
+          "created_at": "2009-06-02T20:12:29.000Z",
+          "public_metrics": {
+            "followers_count": 150000000,
+            "following_count": 500,
+            "tweet_count": 30000,
+            "listed_count": 100000
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "The id"
+              },
+              "name": {
+                "type": "string",
+                "description": "The name"
+              },
+              "username": {
+                "type": "string",
+                "description": "The username"
+              },
+              "created_at": {
+                "type": "string",
+                "description": "The created_at"
+              },
+              "public_metrics": {
+                "type": "object",
+                "properties": {
+                  "followers_count": {
+                    "type": "integer",
+                    "description": "Number of followers_s"
+                  },
+                  "following_count": {
+                    "type": "integer",
+                    "description": "Number of following_s"
+                  },
+                  "tweet_count": {
+                    "type": "integer",
+                    "description": "Number of tweet_s"
+                  },
+                  "listed_count": {
+                    "type": "integer",
+                    "description": "Number of listed_s"
+                  }
+                },
+                "description": "The public_metrics"
+              }
+            },
+            "description": "The data"
+          }
+        }
+      },
+      "response_config": {
+        "usage": {
+          "currency": "USD",
+          "price_note": "X API pay-per-use list price (docs.x.com/x-api/getting-started/pricing, Oct 2026): $0.005 per post read and $0.010 per user read, counted per resource returned, including posts and users attached through expansions. X does not charge a resource again within the same UTC day, so these figures are an upper bound; your X developer console shows what was billed.",
+          "meters": [
+            {
+              "meter": "user_read",
+              "label": "Users read",
+              "unit": "user",
+              "count": "data",
+              "price": {
+                "amount": 0.01,
+                "per": 1
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "service_name": "get_home_timeline",
+      "description": "Get home timeline tweets (tweets from accounts the user follows)",
+      "service_type": "api_call",
+      "endpoint_template": "/2/users/{{user_id}}/timelines/reverse_chronological",
+      "request_config": {
+        "method": "GET",
+        "query_params_template": {
+          "max_results": "{{max_results}}",
+          "expansions": "author_id,attachments.media_keys",
+          "tweet.fields": "created_at,public_metrics",
+          "user.fields": "name,username,profile_image_url"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "description": "Your user ID"
+          },
+          "max_results": {
+            "type": "integer",
+            "description": "Number of results (5-100, default 10)"
+          }
+        },
+        "required": [
+          "user_id"
+        ]
+      },
+      "sample_input": {
+        "user_id": "123456789",
+        "max_results": 25
+      },
+      "sample_output": {
+        "data": [
+          {
+            "id": "1445880548472328192",
+            "text": "Latest tweet from someone you follow",
+            "created_at": "2024-10-07T09:00:00.000Z"
+          }
+        ],
+        "meta": {
+          "result_count": 25
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "The id"
+                },
+                "text": {
+                  "type": "string",
+                  "description": "The text"
+                },
+                "created_at": {
+                  "type": "string",
+                  "description": "The created_at"
+                }
+              }
+            },
+            "description": "The data"
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "result_count": {
+                "type": "integer",
+                "description": "Number of result_s"
+              }
+            },
+            "description": "The meta"
+          }
+        }
+      },
+      "response_config": {
+        "usage": {
+          "currency": "USD",
+          "price_note": "X API pay-per-use list price (docs.x.com/x-api/getting-started/pricing, Oct 2026): $0.005 per post read and $0.010 per user read, counted per resource returned, including posts and users attached through expansions. X does not charge a resource again within the same UTC day, so these figures are an upper bound; your X developer console shows what was billed.",
+          "meters": [
+            {
+              "meter": "post_read",
+              "label": "Posts read",
+              "unit": "post",
+              "count": "data",
+              "price": {
+                "amount": 0.005,
+                "per": 1
+              }
+            },
+            {
+              "meter": "post_read",
+              "label": "Posts read",
+              "unit": "post",
+              "count": "includes.tweets",
+              "price": {
+                "amount": 0.005,
+                "per": 1
+              }
+            },
+            {
+              "meter": "user_read",
+              "label": "Users read",
+              "unit": "user",
+              "count": "includes.users",
+              "price": {
+                "amount": 0.01,
+                "per": 1
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "event_name": "tweet_created",
+      "description": "Webhook for receiving real-time tweet creation events",
+      "event_type": "webhook",
+      "event_configuration": {
+        "webhook_url": "{{webhook_url}}",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "validation": {
+          "type": "challenge_response",
+          "challenge_param": "crc_token",
+          "response_field": "response_token",
+          "signature_header": "X-Twitter-Webhooks-Signature",
+          "signature_method": "HMACSHA256",
+          "secret": "{{webhook_secret}}"
+        },
+        "retry_policy": {
+          "max_retries": 3,
+          "retry_on": [
+            500,
+            502,
+            503,
+            504
+          ],
+          "backoff_multiplier": 2
+        }
+      },
+      "sample_payload": {
+        "for_user_id": "123456789",
+        "tweet_create_events": [
+          {
+            "created_at": "2024-10-07T09:00:00.000Z",
+            "id": "1445880548472328192",
+            "text": "New tweet posted!",
+            "user": {
+              "id": "123456789",
+              "name": "John Doe",
+              "screen_name": "johndoe"
+            }
+          }
+        ]
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "new_timeline_tweets",
+      "description": "Poll for new tweets in home timeline every 5 minutes",
+      "event_type": "polling",
+      "event_configuration": {
+        "polling_service": "get_home_timeline",
+        "interval_seconds": 300,
+        "polling_parameters": {
+          "user_id": "{{monitored_user_id}}",
+          "max_results": 20
+        },
+        "change_detection": {
+          "method": "new_items",
+          "identifier_field": "id"
+        }
+      },
+      "sample_payload": {
+        "id": "1445880548472328192",
+        "text": "New tweet in timeline",
+        "created_at": "2024-10-07T09:00:00.000Z",
+        "author_id": "987654321"
+      }
+    },
+    {
+      "event_name": "new_search_results",
+      "description": "New tweets matching the trigger's polling_overrides query, every 10 min, as a BATCH {items, includes, meta, count}; author location = includes.users[].location.",
+      "event_type": "polling",
+      "event_configuration": {
+        "polling_service": "search_tweets",
+        "interval_seconds": 600,
+        "polling_parameters": {
+          "max_results": 100
+        },
+        "pagination": {
+          "token_path": "meta.next_token",
+          "param": "next_token",
+          "max_pages": 5
+        },
+        "change_detection": {
+          "method": "new_items",
+          "identifier_field": "id",
+          "cursor_field": "id",
+          "dispatch": "batch",
+          "batch_size": 100
+        }
+      },
+      "sample_payload": {
+        "items": [
+          {
+            "id": "1445880548472328192",
+            "text": "@RBI my bank has not refunded a failed UPI transfer",
+            "created_at": "2026-10-07T09:00:00.000Z",
+            "author_id": "2244994945",
+            "lang": "en"
+          }
+        ],
+        "includes": {
+          "users": [
+            {
+              "id": "2244994945",
+              "username": "someone",
+              "location": "Pune, India"
+            }
+          ]
+        },
+        "meta": {
+          "newest_id": "1445880548472328192",
+          "result_count": 1
+        },
+        "count": 1
+      },
+      "usage_notes": "Set the search in the flow trigger's polling_overrides, e.g. {\"query\": \"(@RBI OR @FinMinIndia) -is:retweet\"}. Join items[].author_id to includes.users[].id for the author's location. Follows up to 5 pages per poll and resumes from the newest tweet id seen."
+    },
+    {
+      "event_name": "daily_schedule",
+      "description": "Daily trigger at 9 AM UTC for scheduled tweets or analytics",
+      "event_type": "schedule",
+      "event_configuration": {
+        "schedule": "0 9 * * *",
+        "timezone": "UTC"
+      },
+      "sample_payload": {
+        "timestamp": "2024-10-07T09:00:00.000Z",
+        "schedule": "daily",
+        "timezone": "UTC"
+      }
+    }
+  ],
+  "metadata": {
+    "created_at": "2025-08-12T07:53:17.448365",
+    "created_by": "IOFlow",
+    "author": "IOFlow",
+    "tags": [
+      "communication"
+    ],
+    "documentation_url": "https://docs.example.com/x_twitter",
+    "support_email": "support@example.com",
+    "last_modified": "2026-10-28T20:29:17.785819",
+    "modified_by": "claude-code",
+    "services_count": 10,
+    "events_count": 4
+  },
+  "_validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": [],
+    "validated_at": "2025-08-12T13:27:55.236292"
+  }
+}

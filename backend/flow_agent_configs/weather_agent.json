@@ -1,0 +1,19 @@
+{
+  "agent_id": "weather_agent",
+  "model": "gemini-2.5-flash",
+  "description": "Agent that provides weather and time information for cities.",
+  "system_prompt": "You are a helpful assistant specialized in weather and time information. You have access to real-time weather and time data through your tools.",
+  "instruction": "IMPORTANT INSTRUCTIONS:\n1. When asked about weather or time for a city, use the appropriate tool to fetch the data.\n2. Use get_weather(city) for weather questions - pass ONLY the city name as a string.\n3. Use get_current_time(city) for time questions - pass ONLY the city name as a string.\n",
+  "tools": [
+    {
+      "name": "get_weather",
+      "description": "Get the current weather for a city",
+      "function": "get_weather"
+    },
+    {
+      "name": "get_current_time",
+      "description": "Get the current local time in a city",
+      "function": "get_current_time"
+    }
+  ]
+}

@@ -1,0 +1,389 @@
+{
+  "claude_desktop_config": {
+    "mcpServers": {
+      "ioflow-seed-manager": {
+        "command": "python",
+        "args": ["-m", "mcp_server.server"],
+        "cwd": "/path/to/ioflow/backend",
+        "env": {
+          "IOFLOW_BASE_URL": "http://localhost:8000",
+          "IOFLOW_API_KEY": "your-api-key-here",
+          "PYTHONPATH": "/path/to/ioflow/backend"
+        }
+      }
+    }
+  },
+  
+  "example_seed_application": {
+    "key": "example_api",
+    "application": {
+      "app_name": "Example API Integration",
+      "app_type": "global",
+      "description": "Example integration showing all features",
+      "category": "Integration",
+      "auth_type": "api_key",
+      "auth_config": {
+        "header_name": "X-API-Key",
+        "query_param": null
+      },
+      "version": "1.0.0",
+      "base_url": "https://api.example.com",
+      "icon_url": "https://example.com/icon.png"
+    },
+    "services": [
+      {
+        "service_name": "list_items",
+        "display_name": "List Items",
+        "description": "List all items with optional filters",
+        "service_type": "api_call",
+        "endpoint_url": "{{base_url}}/api/v1/items",
+        "http_method": "GET",
+        "request_config": {
+          "parameter_method": "query",
+          "headers_template": {
+            "Accept": "application/json",
+            "X-API-Key": "{{auth.api_key}}"
+          },
+          "query_params": {
+            "limit": "{{limit}}",
+            "status": "{{status}}"
+          }
+        },
+        "parameter_schema": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "number",
+              "description": "Maximum number of items to return",
+              "default": 10,
+              "minimum": 1,
+              "maximum": 100
+            },
+            "status": {
+              "type": "string",
+              "description": "Filter by status",
+              "enum": ["active", "inactive", "pending"]
+            }
+          },
+          "required": []
+        },
+        "output_schema": {
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "array",
+              "description": "List of items"
+            },
+            "total": {
+              "type": "number",
+              "description": "Total count"
+            }
+          }
+        },
+        "sample_input": {
+          "limit": 10,
+          "status": "active"
+        },
+        "sample_output": {
+          "items": [
+            {
+              "id": "123",
+              "name": "Example Item",
+              "status": "active"
+            }
+          ],
+          "total": 1
+        },
+        "response_config": {
+          "data_path": "$.items",
+          "error_path": "$.error"
+        },
+        "is_async": false,
+        "timeout_seconds": 30
+      },
+      {
+        "service_name": "create_item",
+        "display_name": "Create Item",
+        "description": "Create a new item",
+        "service_type": "api_call",
+        "endpoint_url": "{{base_url}}/api/v1/items",
+        "http_method": "POST",
+        "request_config": {
+          "parameter_method": "body",
+          "headers_template": {
+            "Content-Type": "application/json",
+            "X-API-Key": "{{auth.api_key}}"
+          },
+          "body_template": {
+            "name": "{{name}}",
+            "description": "{{description}}",
+            "tags": "{{tags}}"
+          }
+        },
+        "parameter_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Item name",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "description": {
+              "type": "string",
+              "description": "Item description"
+            },
+            "tags": {
+              "type": "array",
+              "description": "Item tags",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": ["name"]
+        },
+        "output_schema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Created item ID"
+            },
+            "name": {
+              "type": "string",
+              "description": "Item name"
+            },
+            "status": {
+              "type": "string",
+              "description": "Item status"
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Creation timestamp"
+            }
+          }
+        },
+        "sample_input": {
+          "name": "New Item",
+          "description": "A new item description",
+          "tags": ["example", "test"]
+        },
+        "sample_output": {
+          "id": "456",
+          "name": "New Item",
+          "status": "active",
+          "created_at": "2024-01-01T00:00:00Z"
+        },
+        "is_async": false,
+        "timeout_seconds": 30
+      },
+      {
+        "service_name": "send_notification",
+        "display_name": "Send Notification",
+        "description": "Send a notification webhook",
+        "service_type": "webhook",
+        "endpoint_url": "https://hooks.example.com/notify",
+        "http_method": "POST",
+        "request_config": {
+          "parameter_method": "body",
+          "headers_template": {
+            "X-Webhook-Secret": "{{webhook_secret}}",
+            "Content-Type": "application/json"
+          },
+          "body_template": {
+            "event_type": "{{event_type}}",
+            "payload": "{{payload}}"
+          }
+        },
+        "webhook_config": {
+          "retry_attempts": 3,
+          "retry_delay_seconds": 60
+        },
+        "parameter_schema": {
+          "type": "object",
+          "properties": {
+            "event_type": {
+              "type": "string",
+              "description": "Type of event"
+            },
+            "payload": {
+              "type": "object",
+              "description": "Event payload"
+            }
+          },
+          "required": ["event_type", "payload"]
+        },
+        "sample_input": {
+          "event_type": "item.created",
+          "payload": {
+            "item_id": "123",
+            "timestamp": "2024-01-01T00:00:00Z"
+          }
+        },
+        "is_async": true,
+        "timeout_seconds": 30
+      }
+    ],
+    "events": [
+      {
+        "event_name": "item_created",
+        "display_name": "Item Created",
+        "description": "Triggered when a new item is created",
+        "event_type": "webhook",
+        "configuration": {
+          "webhook_url": "/webhooks/items/created"
+        },
+        "sample_payload": {
+          "event": "item.created",
+          "timestamp": "2024-01-01T00:00:00Z",
+          "data": {
+            "id": "789",
+            "name": "Created Item"
+          }
+        },
+        "output_schema": {
+          "type": "object",
+          "properties": {
+            "event": {
+              "type": "string",
+              "description": "Event type"
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Event timestamp"
+            },
+            "data": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Item ID"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Item name"
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "event_name": "daily_sync",
+        "display_name": "Daily Sync",
+        "description": "Daily synchronization of items",
+        "event_type": "schedule",
+        "event_configuration": {
+          "schedule": "0 2 * * *",
+          "timezone": "UTC"
+        }
+      },
+      {
+        "event_name": "check_updates",
+        "display_name": "Check Updates",
+        "description": "Poll for updates every 5 minutes",
+        "event_type": "polling",
+        "event_configuration": {
+          "interval_seconds": 300,
+          "endpoint": "/api/v1/updates",
+          "method": "GET"
+        }
+      }
+    ],
+    "metadata": {
+      "author": "IOFlow Team",
+      "documentation_url": "https://docs.example.com/api",
+      "support_email": "support@example.com",
+      "tags": ["example", "integration", "api"],
+      "created_at": "2024-01-01T00:00:00Z",
+      "last_modified": "2024-01-01T00:00:00Z"
+    }
+  },
+  
+  "test_scenarios": {
+    "basic_api_test": {
+      "description": "Test basic API functionality",
+      "mock_auth": {
+        "api_key": "test-api-key-12345"
+      },
+      "test_cases": [
+        {
+          "service": "list_items",
+          "params": {
+            "limit": 5,
+            "status": "active"
+          },
+          "expected_status": 200
+        },
+        {
+          "service": "create_item",
+          "params": {
+            "name": "Test Item",
+            "description": "Created during test"
+          },
+          "expected_status": 201
+        }
+      ]
+    },
+    
+    "oauth_test": {
+      "description": "Test OAuth2 authentication",
+      "mock_auth": {
+        "access_token": "mock-oauth-token",
+        "token_type": "Bearer"
+      },
+      "test_endpoint": "/api/v1/user"
+    }
+  },
+  
+  "common_configurations": {
+    "auth_types": {
+      "api_key": {
+        "header_name": "X-API-Key",
+        "description": "API key sent in header"
+      },
+      "oauth2": {
+        "authorization_url": "https://example.com/oauth/authorize",
+        "token_url": "https://example.com/oauth/token",
+        "scopes": ["read", "write"],
+        "description": "OAuth 2.0 with authorization code flow"
+      },
+      "basic": {
+        "description": "HTTP Basic authentication"
+      }
+    },
+    
+    "service_types": {
+      "api_call": {
+        "description": "REST API call",
+        "required_config": ["method", "endpoint"]
+      },
+      "webhook": {
+        "description": "Send webhook to URL",
+        "required_config": ["url"]
+      },
+      "email_send": {
+        "description": "Send email",
+        "required_config": ["provider"]
+      }
+    },
+    
+    "event_types": {
+      "webhook": {
+        "description": "Incoming webhook trigger",
+        "required_config": ["webhook_url"]
+      },
+      "schedule": {
+        "description": "Cron-based schedule",
+        "required_config": ["schedule"]
+      },
+      "polling": {
+        "description": "Periodic polling",
+        "required_config": ["interval_seconds"]
+      }
+    }
+  }
+}

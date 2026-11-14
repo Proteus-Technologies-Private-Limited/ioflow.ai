@@ -1,0 +1,89 @@
+{
+  "key": "mqtt",
+  "application": {
+    "app_name": "MQTT",
+    "app_type": "mqtt",
+    "category": "Integration",
+    "auth_type": "basic",
+    "description": "Connect to an MQTT broker and trigger flows when messages are published to subscribed topics. Each connection targets one broker (set the broker URL on the connection); flows subscribe to topics via the New Message event.",
+    "base_url": "mqtt://localhost:1883",
+    "version": "1.1.0",
+    "auth_config": {
+      "description": "Username/password authentication for the MQTT broker. The user must have permission to SUBSCRIBE (read) on the topics you want to trigger from.",
+      "credential_help_text": "Broker username/password. The user must be allowed to subscribe (read) to the topics you want to trigger from."
+    }
+  },
+  "services": [],
+  "events": [
+    {
+      "event_name": "new_message",
+      "display_name": "New Message",
+      "description": "Fires every time a message is published to a subscribed MQTT topic. The listener holds a persistent connection to the broker; the broker pushes messages in real time (no polling).",
+      "event_type": "mqtt",
+      "event_configuration": {
+        "topic_filter": "#",
+        "qos": 1,
+        "payload_format": "json",
+        "mqtt_batch_size": 1,
+        "mqtt_batch_window_seconds": 0,
+        "mqtt_max_rate": 0,
+        "mqtt_rate_overflow": "fold",
+        "mqtt_max_concurrent": 0,
+        "mqtt_dedup": "off",
+        "mqtt_dedup_key": "",
+        "mqtt_dedup_window_seconds": 300,
+        "description": "Defaults for the subscription. Override per connection (subscription_config) or per flow (trigger config). Subscription keys: mqtt_topic_filter / mqtt_qos / mqtt_payload_format. Performance & Delivery keys (same names at every level): mqtt_batch_size (1 = no batching; >1 delivers variables.messages + variables.message_count), mqtt_batch_window_seconds (flush a partial batch after this window), mqtt_max_rate (max executions/sec, 0 = unlimited), mqtt_rate_overflow (fold excess into next batch | drop), mqtt_max_concurrent (per-flow concurrent execution cap, 0 = global pool only), mqtt_dedup (off | payload | key), mqtt_dedup_key (template like {{payload.device_id}}:{{payload.seq}}), mqtt_dedup_window_seconds (dedup lock TTL)."
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "topic": {
+            "type": "string",
+            "description": "Topic the message was published to"
+          },
+          "payload": {
+            "description": "Decoded payload (parsed object when payload_format is json, otherwise string)"
+          },
+          "payload_raw": {
+            "type": "string",
+            "description": "Raw payload string exactly as received"
+          },
+          "qos": {
+            "type": "integer",
+            "description": "QoS level of the received message (0/1/2)"
+          },
+          "retain": {
+            "type": "boolean",
+            "description": "Whether the message was a retained message"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "ISO timestamp when the message was received"
+          },
+          "messages": {
+            "type": "array",
+            "description": "Only present when mqtt_batch_size > 1: all messages in the batch (each with topic/payload/payload_raw/qos/retain/timestamp). topic/payload keep pointing at the first message for backward compatibility."
+          },
+          "message_count": {
+            "type": "integer",
+            "description": "Only present when mqtt_batch_size > 1: number of messages in the batch"
+          }
+        },
+        "required": ["topic", "payload_raw"]
+      },
+      "sample_payload": {
+        "topic": "home/pi_temp_01/state",
+        "payload": {"temperature": 23.5, "device_id": "pi_temp_01"},
+        "payload_raw": "{\"temperature\": 23.5, \"device_id\": \"pi_temp_01\"}",
+        "qos": 1,
+        "retain": false,
+        "timestamp": "2026-07-03T12:00:00.000000"
+      },
+      "sync_mode": "asynchronous"
+    }
+  ],
+  "metadata": {
+    "documentation": "docs/mqtt-trigger.md",
+    "notes": "Broker URL format: mqtt://host:1883 (plaintext) or mqtts://host:8883 (TLS). Set per connection via subscription_config.base_url; falls back to the application base_url."
+  }
+}

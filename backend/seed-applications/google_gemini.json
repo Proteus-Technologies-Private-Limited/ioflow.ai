@@ -1,0 +1,3106 @@
+{
+  "key": "google_gemini",
+  "application": {
+    "app_name": "Google Gemini",
+    "app_type": "api",
+    "description": "Google Gemini API - Access cutting-edge generative AI models including Gemini 2.5 Pro, Flash, and specialized variants for text, vision, audio, and video processing",
+    "category": "AI/ML",
+    "auth_type": "api_key",
+    "auth_config": {
+      "header_name": "x-goog-api-key",
+      "description": "Google AI API Key from Google AI Studio"
+    },
+    "version": "2.7.0",
+    "base_url": "https://generativelanguage.googleapis.com/v1beta",
+    "icon_url": "/static/app_icons/google_gemini.png",
+    "configuration_schema": {
+      "type": "object",
+      "properties": {
+        "api_key": {
+          "type": "string",
+          "title": "API Key",
+          "description": "Your Google AI API key from Google AI Studio (https://aistudio.google.com/apikey)",
+          "encrypted": true,
+          "required": true
+        },
+        "default_model": {
+          "type": "string",
+          "title": "Default Model",
+          "description": "Default Gemini model to use",
+          "enum": [
+            "gemini-2.5-pro",
+            "gemini-2.5-flash",
+            "gemini-2.5-flash-lite",
+            "gemini-1.5-pro",
+            "gemini-1.5-flash",
+            "gemini-1.0-pro"
+          ],
+          "default": "gemini-2.5-flash",
+          "required": false
+        },
+        "project_id": {
+          "type": "string",
+          "title": "Project ID",
+          "description": "Optional Google Cloud Project ID for Vertex AI",
+          "required": false
+        }
+      }
+    }
+  },
+  "services": [
+    {
+      "service_name": "generate_content",
+      "display_name": "Generate Content",
+      "service_type": "api_call",
+      "description": "Generate content using Gemini models with support for text, images, audio, video, and PDFs",
+      "endpoint_template": "/models/{{model}}:generateContent",
+      "request_config": {
+        "parameter_method": "hybrid",
+        "method": "POST",
+        "body_template": {
+          "contents": "{{contents}}",
+          "systemInstruction": "{{systemInstruction}}",
+          "tools": "{{tools}}",
+          "toolConfig": "{{toolConfig}}",
+          "safetySettings": "{{safetySettings}}",
+          "generationConfig": "{{generationConfig}}",
+          "cachedContent": "{{cachedContent}}"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "data_path": "candidates",
+        "error_extraction": {
+          "error_field": "error.code",
+          "message_field": "error.message"
+        },
+        "retry_config": {
+          "enabled": true,
+          "backoff_seconds": [10, 20, 40, 50],
+          "max_total_seconds": 120,
+          "transient_status_codes": [429, 500, 503],
+          "transient_message_patterns": [
+            "high demand",
+            "overloaded",
+            "try again later",
+            "unavailable",
+            "please try again"
+          ],
+          "exhausted_message": "Gemini remained unavailable due to high demand for more than 2 minutes."
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "Model to use for generation",
+            "enum": [
+              "gemini-2.5-pro",
+              "gemini-2.5-flash",
+              "gemini-2.5-flash-lite",
+              "gemini-2.5-flash-live",
+              "gemini-2.5-flash-image",
+              "gemini-3-pro-image-preview",
+              "gemini-3.1-flash-image-preview",
+              "gemini-1.5-pro",
+              "gemini-1.5-flash",
+              "gemini-1.5-flash-8b",
+              "gemini-1.0-pro"
+            ],
+            "default": "gemini-2.5-flash"
+          },
+          "contents": {
+            "type": "array",
+            "description": "The content of the current conversation with the model",
+            "items": {
+              "type": "object",
+              "properties": {
+                "parts": {
+                  "type": "array",
+                  "description": "Content parts (text, images, etc.)",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "text": {
+                            "type": "string",
+                            "description": "Text content"
+                          }
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "inlineData": {
+                            "type": "object",
+                            "properties": {
+                              "mimeType": {
+                                "type": "string",
+                                "description": "MIME type of data"
+                              },
+                              "data": {
+                                "type": "string",
+                                "description": "Base64-encoded data"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "fileData": {
+                            "type": "object",
+                            "properties": {
+                              "mimeType": {
+                                "type": "string",
+                                "description": "MIME type of file"
+                              },
+                              "fileUri": {
+                                "type": "string",
+                                "description": "URI of the file"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "functionCall": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string",
+                                "description": "Function name"
+                              },
+                              "args": {
+                                "type": "object",
+                                "description": "Function arguments"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "functionResponse": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string",
+                                "description": "Function name"
+                              },
+                              "response": {
+                                "type": "object",
+                                "description": "Function response"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "user",
+                    "model",
+                    "system"
+                  ],
+                  "description": "Role of the content author"
+                }
+              },
+              "required": [
+                "parts"
+              ]
+            }
+          },
+          "systemInstruction": {
+            "type": "object",
+            "description": "System instructions for the model",
+            "properties": {
+              "parts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "type": "string",
+                      "description": "System instruction text"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "generationConfig": {
+            "type": "object",
+            "description": "Configuration for the generation",
+            "properties": {
+              "temperature": {
+                "type": "number",
+                "description": "Controls randomness (0.0-2.0)",
+                "minimum": 0,
+                "maximum": 2,
+                "default": 0.9
+              },
+              "topP": {
+                "type": "number",
+                "description": "Nucleus sampling threshold",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 1
+              },
+              "topK": {
+                "type": "integer",
+                "description": "Top-k sampling parameter",
+                "minimum": 1,
+                "maximum": 100,
+                "default": 40
+              },
+              "candidateCount": {
+                "type": "integer",
+                "description": "Number of candidates to generate",
+                "minimum": 1,
+                "maximum": 8,
+                "default": 1
+              },
+              "maxOutputTokens": {
+                "type": "integer",
+                "description": "Maximum tokens in response",
+                "minimum": 1,
+                "maximum": 8192,
+                "default": 8192
+              },
+              "presencePenalty": {
+                "type": "number",
+                "description": "Penalty for token presence",
+                "minimum": -2,
+                "maximum": 2,
+                "default": 0
+              },
+              "frequencyPenalty": {
+                "type": "number",
+                "description": "Penalty for token frequency",
+                "minimum": -2,
+                "maximum": 2,
+                "default": 0
+              },
+              "stopSequences": {
+                "type": "array",
+                "description": "Sequences to stop generation",
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 5
+              },
+              "responseMimeType": {
+                "type": "string",
+                "description": "MIME type for response",
+                "enum": [
+                  "text/plain",
+                  "application/json",
+                  "text/x.enum"
+                ],
+                "default": "text/plain"
+              },
+              "responseSchema": {
+                "type": "object",
+                "description": "JSON schema for structured output"
+              },
+              "seed": {
+                "type": "integer",
+                "description": "Random seed for deterministic output"
+              },
+              "responseLogprobs": {
+                "type": "boolean",
+                "description": "Include log probabilities in response",
+                "default": false
+              },
+              "logprobs": {
+                "type": "integer",
+                "description": "Number of logprobs to return",
+                "minimum": 0,
+                "maximum": 10
+              },
+              "audioTimestamp": {
+                "type": "boolean",
+                "description": "Include audio timestamps",
+                "default": false
+              }
+            }
+          },
+          "safetySettings": {
+            "type": "array",
+            "description": "Safety settings for content filtering",
+            "items": {
+              "type": "object",
+              "properties": {
+                "category": {
+                  "type": "string",
+                  "enum": [
+                    "HARM_CATEGORY_HATE_SPEECH",
+                    "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                    "HARM_CATEGORY_DANGEROUS_CONTENT",
+                    "HARM_CATEGORY_HARASSMENT",
+                    "HARM_CATEGORY_CIVIC_INTEGRITY"
+                  ],
+                  "description": "Harm category"
+                },
+                "threshold": {
+                  "type": "string",
+                  "enum": [
+                    "BLOCK_NONE",
+                    "BLOCK_ONLY_HIGH",
+                    "BLOCK_MEDIUM_AND_ABOVE",
+                    "BLOCK_LOW_AND_ABOVE"
+                  ],
+                  "description": "Blocking threshold"
+                }
+              },
+              "required": [
+                "category",
+                "threshold"
+              ]
+            }
+          },
+          "tools": {
+            "type": "array",
+            "description": "Tools available for the model to use",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "functionDeclarations": {
+                      "type": "array",
+                      "description": "Function declarations",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "description": "Function name"
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Function description"
+                          },
+                          "parameters": {
+                            "type": "object",
+                            "description": "Function parameters schema"
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "description"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "codeExecution": {
+                      "type": "object",
+                      "description": "Enable code execution"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "googleSearchRetrieval": {
+                      "type": "object",
+                      "description": "Enable Google search grounding"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "toolConfig": {
+            "type": "object",
+            "description": "Configuration for tool usage",
+            "properties": {
+              "functionCallingConfig": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "AUTO",
+                      "ANY",
+                      "NONE"
+                    ],
+                    "description": "Function calling mode"
+                  },
+                  "allowedFunctionNames": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Allowed function names"
+                  }
+                }
+              }
+            }
+          },
+          "cachedContent": {
+            "type": "string",
+            "description": "Name of cached content to use"
+          }
+        },
+        "required": [
+          "model",
+          "contents"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "candidates": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "content": {
+                  "type": "object",
+                  "properties": {
+                    "parts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "text": {"type": "string"}
+                        }
+                      }
+                    },
+                    "role": {"type": "string"}
+                  }
+                },
+                "finishReason": {"type": "string", "enum": ["STOP", "MAX_TOKENS", "SAFETY", "RECITATION", "OTHER"]},
+                "index": {"type": "integer"},
+                "safetyRatings": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "category": {"type": "string"},
+                      "probability": {"type": "string", "enum": ["NEGLIGIBLE", "LOW", "MEDIUM", "HIGH"]},
+                      "blocked": {"type": "boolean"}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "usageMetadata": {
+            "type": "object",
+            "properties": {
+              "promptTokenCount": {"type": "integer"},
+              "candidatesTokenCount": {"type": "integer"},
+              "totalTokenCount": {"type": "integer"}
+            }
+          },
+          "modelVersion": {"type": "string"}
+        }
+      },
+      "sample_output": {
+        "candidates": [
+          {
+            "content": {
+              "parts": [
+                {
+                  "text": "The capital of France is Paris. Paris is not only the capital but also the largest city in France, known for its iconic landmarks such as the Eiffel Tower, the Louvre Museum, and Notre-Dame Cathedral."
+                }
+              ],
+              "role": "model"
+            },
+            "finishReason": "STOP",
+            "index": 0,
+            "safetyRatings": [
+              {
+                "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                "probability": "NEGLIGIBLE"
+              },
+              {
+                "category": "HARM_CATEGORY_HATE_SPEECH",
+                "probability": "NEGLIGIBLE"
+              },
+              {
+                "category": "HARM_CATEGORY_HARASSMENT",
+                "probability": "NEGLIGIBLE"
+              },
+              {
+                "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+                "probability": "NEGLIGIBLE"
+              }
+            ]
+          }
+        ],
+        "usageMetadata": {
+          "promptTokenCount": 8,
+          "candidatesTokenCount": 42,
+          "totalTokenCount": 50
+        },
+        "modelVersion": "gemini-2.5-flash"
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 120
+    },
+    {
+      "service_name": "stream_generate_content",
+      "display_name": "Stream Generate Content",
+      "service_type": "api_call",
+      "description": "Generate content with streaming response for real-time applications",
+      "endpoint_template": "/models/{{model}}:streamGenerateContent",
+      "request_config": {
+        "parameter_method": "hybrid",
+        "method": "POST",
+        "headers": {
+          "Accept": "text/event-stream"
+        },
+        "body_template": {
+          "contents": "{{contents}}",
+          "systemInstruction": "{{systemInstruction}}",
+          "tools": "{{tools}}",
+          "toolConfig": "{{toolConfig}}",
+          "safetySettings": "{{safetySettings}}",
+          "generationConfig": "{{generationConfig}}"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "stream_enabled": true,
+        "data_path": "candidates",
+        "error_extraction": {
+          "error_field": "error.code",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "Model to use for generation",
+            "enum": [
+              "gemini-2.5-flash",
+              "gemini-2.5-flash-live",
+              "gemini-1.5-flash",
+              "gemini-1.5-pro"
+            ],
+            "default": "gemini-2.5-flash"
+          },
+          "contents": {
+            "type": "array",
+            "description": "The content of the current conversation",
+            "items": {
+              "type": "object",
+              "properties": {
+                "parts": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "text": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "user",
+                    "model"
+                  ]
+                }
+              }
+            }
+          },
+          "systemInstruction": {
+            "type": "object",
+            "description": "System instructions",
+            "properties": {
+              "parts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "generationConfig": {
+            "type": "object",
+            "properties": {
+              "temperature": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 2,
+                "default": 0.9
+              },
+              "topP": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 1
+              },
+              "topK": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "default": 40
+              },
+              "maxOutputTokens": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 8192,
+                "default": 8192
+              },
+              "stopSequences": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 5
+              }
+            }
+          },
+          "safetySettings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "category": {
+                  "type": "string",
+                  "enum": [
+                    "HARM_CATEGORY_HATE_SPEECH",
+                    "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                    "HARM_CATEGORY_DANGEROUS_CONTENT",
+                    "HARM_CATEGORY_HARASSMENT"
+                  ]
+                },
+                "threshold": {
+                  "type": "string",
+                  "enum": [
+                    "BLOCK_NONE",
+                    "BLOCK_ONLY_HIGH",
+                    "BLOCK_MEDIUM_AND_ABOVE",
+                    "BLOCK_LOW_AND_ABOVE"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "model",
+          "contents"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "description": "Streaming response with Server-Sent Events format",
+        "properties": {
+          "candidates": {
+            "type": "array",
+            "description": "Streaming response candidates",
+            "items": {
+              "type": "object",
+              "properties": {
+                "content": {
+                  "type": "object",
+                  "properties": {
+                    "parts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "text": {
+                            "type": "string",
+                            "description": "Incremental text content"
+                          }
+                        }
+                      }
+                    },
+                    "role": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "finishReason": {
+                  "type": "string",
+                  "description": "Finish reason (only in final chunk)",
+                  "enum": ["STOP", "MAX_TOKENS", "SAFETY", "RECITATION", "OTHER"]
+                },
+                "index": {
+                  "type": "integer"
+                },
+                "safetyRatings": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "category": {"type": "string"},
+                      "probability": {"type": "string", "enum": ["NEGLIGIBLE", "LOW", "MEDIUM", "HIGH"]}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "usageMetadata": {
+            "type": "object",
+            "properties": {
+              "promptTokenCount": {"type": "integer"},
+              "candidatesTokenCount": {"type": "integer"},
+              "totalTokenCount": {"type": "integer"}
+            }
+          }
+        }
+      },
+      "sample_output": {
+        "candidates": [
+          {
+            "content": {
+              "parts": [
+                {
+                  "text": "Hello! How can I assist you today?"
+                }
+              ],
+              "role": "model"
+            },
+            "finishReason": "STOP",
+            "index": 0,
+            "safetyRatings": [
+              {
+                "category": "HARM_CATEGORY_HARASSMENT",
+                "probability": "NEGLIGIBLE"
+              }
+            ]
+          }
+        ],
+        "usageMetadata": {
+          "promptTokenCount": 5,
+          "candidatesTokenCount": 8,
+          "totalTokenCount": 13
+        }
+      },
+      "sync_mode": "streaming",
+      "timeout_seconds": 120
+    },
+    {
+      "service_name": "count_tokens",
+      "display_name": "Count Tokens",
+      "service_type": "api_call",
+      "description": "Count the tokens in input content before generation",
+      "endpoint_template": "/models/{{model}}:countTokens",
+      "request_config": {
+        "parameter_method": "hybrid",
+        "method": "POST",
+        "body_template": {
+          "contents": "{{contents}}",
+          "systemInstruction": "{{systemInstruction}}",
+          "tools": "{{tools}}",
+          "generateContentRequest": "{{generateContentRequest}}"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "data_path": "",
+        "error_extraction": {
+          "error_field": "error.code",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "Model to use for token counting",
+            "enum": [
+              "gemini-2.5-pro",
+              "gemini-2.5-flash",
+              "gemini-1.5-pro",
+              "gemini-1.5-flash"
+            ],
+            "default": "gemini-2.5-flash"
+          },
+          "contents": {
+            "type": "array",
+            "description": "Content to count tokens for",
+            "items": {
+              "type": "object",
+              "properties": {
+                "parts": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "text": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "user",
+                    "model"
+                  ]
+                }
+              }
+            }
+          },
+          "systemInstruction": {
+            "type": "object",
+            "properties": {
+              "parts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "tools": {
+            "type": "array",
+            "description": "Tools to include in token count"
+          },
+          "generateContentRequest": {
+            "type": "object",
+            "description": "Full generateContent request to count tokens for"
+          }
+        },
+        "required": [
+          "model"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "totalTokens": {
+            "type": "integer",
+            "description": "Total number of tokens"
+          },
+          "cachedContentTokenCount": {
+            "type": "integer",
+            "description": "Number of cached tokens"
+          }
+        }
+      },
+      "sample_output": {
+        "totalTokens": 157,
+        "cachedContentTokenCount": 0
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "embed_content",
+      "display_name": "Embed Content",
+      "service_type": "api_call",
+      "description": "Generate text embeddings for semantic search and similarity",
+      "endpoint_template": "/models/{{model}}:embedContent",
+      "request_config": {
+        "parameter_method": "hybrid",
+        "method": "POST",
+        "body_template": {
+          "content": "{{content}}",
+          "taskType": "{{taskType}}",
+          "title": "{{title}}",
+          "outputDimensionality": "{{outputDimensionality}}"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "data_path": "embedding",
+        "error_extraction": {
+          "error_field": "error.code",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "Embedding model to use",
+            "enum": [
+              "text-embedding-004",
+              "text-multilingual-embedding-002",
+              "embedding-001"
+            ],
+            "default": "text-embedding-004"
+          },
+          "content": {
+            "type": "object",
+            "description": "Content to embed",
+            "properties": {
+              "parts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "type": "string",
+                      "description": "Text to embed"
+                    }
+                  }
+                }
+              }
+            },
+            "required": [
+              "parts"
+            ]
+          },
+          "taskType": {
+            "type": "string",
+            "description": "The task type for which the embeddings will be used",
+            "enum": [
+              "RETRIEVAL_QUERY",
+              "RETRIEVAL_DOCUMENT",
+              "SEMANTIC_SIMILARITY",
+              "CLASSIFICATION",
+              "CLUSTERING",
+              "QUESTION_ANSWERING",
+              "FACT_VERIFICATION"
+            ],
+            "default": "RETRIEVAL_DOCUMENT"
+          },
+          "title": {
+            "type": "string",
+            "description": "Optional title for the content"
+          },
+          "outputDimensionality": {
+            "type": "integer",
+            "description": "Optional reduced dimension for output embedding",
+            "enum": [
+              1,
+              2,
+              4,
+              8,
+              16,
+              32,
+              64,
+              128,
+              256,
+              512,
+              768
+            ],
+            "default": 768
+          }
+        },
+        "required": [
+          "model",
+          "content"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "embedding": {
+            "type": "object",
+            "properties": {
+              "values": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "description": "The embedding vector"
+              }
+            }
+          }
+        }
+      },
+      "sample_output": {
+        "embedding": {
+          "values": [
+            0.025906276,
+            -0.21393557,
+            0.12838486,
+            -0.028842068,
+            0.06741224,
+            -0.014063838,
+            0.10135283,
+            -0.18763331
+          ]
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "batch_embed_contents",
+      "display_name": "Batch Embed Contents",
+      "service_type": "api_call",
+      "description": "Generate embeddings for multiple texts in a single request",
+      "endpoint_template": "/models/{{model}}:batchEmbedContents",
+      "request_config": {
+        "parameter_method": "hybrid",
+        "method": "POST",
+        "body_template": {
+          "requests": "{{requests}}"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "data_path": "embeddings",
+        "error_extraction": {
+          "error_field": "error.code",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "Embedding model to use",
+            "enum": [
+              "text-embedding-004",
+              "text-multilingual-embedding-002",
+              "embedding-001"
+            ],
+            "default": "text-embedding-004"
+          },
+          "requests": {
+            "type": "array",
+            "description": "Array of embedding requests",
+            "items": {
+              "type": "object",
+              "properties": {
+                "content": {
+                  "type": "object",
+                  "properties": {
+                    "parts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "text": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "taskType": {
+                  "type": "string",
+                  "enum": [
+                    "RETRIEVAL_QUERY",
+                    "RETRIEVAL_DOCUMENT",
+                    "SEMANTIC_SIMILARITY",
+                    "CLASSIFICATION",
+                    "CLUSTERING"
+                  ]
+                },
+                "title": {
+                  "type": "string"
+                },
+                "outputDimensionality": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "content"
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 100
+          }
+        },
+        "required": [
+          "model",
+          "requests"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "embeddings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "embedding": {
+                  "type": "object",
+                  "properties": {
+                    "values": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "description": "Embedding vector values"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "sample_output": {
+        "embeddings": [
+          {
+            "embedding": {
+              "values": [
+                0.025906276,
+                -0.21393557,
+                0.12838486,
+                -0.028842068,
+                0.06741224,
+                -0.014063838,
+                0.10135283,
+                -0.18763331
+              ]
+            }
+          },
+          {
+            "embedding": {
+              "values": [
+                0.15906276,
+                -0.31393557,
+                0.22838486,
+                -0.128842068,
+                0.16741224,
+                -0.114063838,
+                0.20135283,
+                -0.28763331
+              ]
+            }
+          }
+        ]
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 60
+    },
+    {
+      "service_name": "generate_answer",
+      "display_name": "Generate Answer (Grounded)",
+      "service_type": "api_call",
+      "description": "Generate grounded answers with inline passages or semantic retrieval",
+      "endpoint_template": "/models/{{model}}:generateAnswer",
+      "request_config": {
+        "parameter_method": "hybrid",
+        "method": "POST",
+        "body_template": {
+          "contents": "{{contents}}",
+          "answerStyle": "{{answerStyle}}",
+          "safetySettings": "{{safetySettings}}",
+          "inlinePassages": "{{inlinePassages}}",
+          "semanticRetriever": "{{semanticRetriever}}",
+          "temperature": "{{temperature}}"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "data_path": "answer",
+        "error_extraction": {
+          "error_field": "error.code",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "Model to use",
+            "enum": [
+              "gemini-2.5-pro",
+              "gemini-2.5-flash",
+              "gemini-1.5-pro",
+              "gemini-1.5-flash"
+            ],
+            "default": "gemini-2.5-flash"
+          },
+          "contents": {
+            "type": "array",
+            "description": "Query content",
+            "items": {
+              "type": "object",
+              "properties": {
+                "parts": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "text": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "role": {
+                  "type": "string",
+                  "default": "user"
+                }
+              }
+            }
+          },
+          "answerStyle": {
+            "type": "string",
+            "description": "Style of the answer",
+            "enum": [
+              "ANSWER_STYLE_UNSPECIFIED",
+              "ABSTRACTIVE",
+              "EXTRACTIVE",
+              "VERBOSE"
+            ],
+            "default": "ABSTRACTIVE"
+          },
+          "inlinePassages": {
+            "type": "object",
+            "description": "Inline passages for grounding",
+            "properties": {
+              "passages": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "object",
+                      "properties": {
+                        "parts": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "semanticRetriever": {
+            "type": "object",
+            "description": "Semantic retrieval configuration",
+            "properties": {
+              "source": {
+                "type": "string",
+                "description": "Corpus name"
+              },
+              "query": {
+                "type": "object",
+                "properties": {
+                  "parts": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "text": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "temperature": {
+            "type": "number",
+            "description": "Temperature for generation",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 0.5
+          },
+          "safetySettings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "category": {
+                  "type": "string"
+                },
+                "threshold": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "model",
+          "contents"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "answer": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "object",
+                "properties": {
+                  "parts": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "text": {
+                          "type": "string",
+                          "description": "Generated answer text"
+                        }
+                      }
+                    }
+                  },
+                  "role": {
+                    "type": "string"
+                  }
+                }
+              },
+              "groundingAttribution": {
+                "type": "object",
+                "description": "Attribution to grounding sources"
+              }
+            }
+          },
+          "inputFeedback": {
+            "type": "object",
+            "description": "Feedback on input quality"
+          }
+        }
+      },
+      "sample_output": {
+        "answer": {
+          "content": {
+            "parts": [
+              {
+                "text": "Based on the provided information, the capital of France is Paris. This is supported by multiple authoritative sources."
+              }
+            ],
+            "role": "model"
+          },
+          "groundingAttribution": {
+            "searchEntryPoint": {
+              "renderedContent": "Paris is the capital and largest city of France"
+            }
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 60
+    },
+    {
+      "service_name": "create_tuned_model",
+      "display_name": "Create Tuned Model",
+      "service_type": "api_call",
+      "description": "Create a fine-tuned model",
+      "endpoint_template": "/tunedModels",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "method": "POST",
+        "body_template": {
+          "displayName": "{{displayName}}",
+          "description": "{{description}}",
+          "tunedModelSource": {
+            "tunedModel": "{{baseModel}}",
+            "baseModel": "{{baseModel}}"
+          },
+          "tuningTask": {
+            "hyperparameters": {
+              "epochCount": "{{epochCount}}",
+              "batchSize": "{{batchSize}}",
+              "learningRate": "{{learningRate}}"
+            },
+            "trainingData": {
+              "examples": {
+                "examples": "{{trainingExamples}}"
+              }
+            }
+          }
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "data_path": "",
+        "error_extraction": {
+          "error_field": "error.code",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "description": "Display name for the tuned model"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the tuned model"
+          },
+          "baseModel": {
+            "type": "string",
+            "description": "Base model to tune",
+            "enum": [
+              "models/gemini-1.5-flash-001-tuning",
+              "models/gemini-1.5-pro-002"
+            ]
+          },
+          "epochCount": {
+            "type": "integer",
+            "description": "Number of training epochs",
+            "minimum": 1,
+            "maximum": 50,
+            "default": 5
+          },
+          "batchSize": {
+            "type": "integer",
+            "description": "Training batch size",
+            "minimum": 1,
+            "maximum": 128,
+            "default": 4
+          },
+          "learningRate": {
+            "type": "number",
+            "description": "Learning rate",
+            "minimum": 1e-05,
+            "maximum": 1,
+            "default": 0.001
+          },
+          "trainingExamples": {
+            "type": "array",
+            "description": "Training examples",
+            "items": {
+              "type": "object",
+              "properties": {
+                "textInput": {
+                  "type": "string"
+                },
+                "output": {
+                  "type": "string"
+                }
+              }
+            },
+            "minItems": 10
+          }
+        },
+        "required": [
+          "displayName",
+          "baseModel",
+          "trainingExamples"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Resource name of the tuned model"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Display name of the tuned model"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the tuned model"
+          },
+          "state": {
+            "type": "string",
+            "description": "State of the tuning job",
+            "enum": [
+              "STATE_UNSPECIFIED",
+              "CREATING",
+              "ACTIVE",
+              "FAILED"
+            ]
+          },
+          "createTime": {
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "updateTime": {
+            "type": "string",
+            "description": "Last update timestamp"
+          }
+        }
+      },
+      "sample_output": {
+        "name": "tunedModels/my-custom-model-abc123",
+        "displayName": "My Custom Model",
+        "description": "A fine-tuned model for specific tasks",
+        "state": "CREATING",
+        "createTime": "2024-01-15T10:30:00Z",
+        "updateTime": "2024-01-15T10:30:00Z"
+      },
+      "sync_mode": "asynchronous",
+      "timeout_seconds": 120
+    },
+    {
+      "service_name": "list_models",
+      "display_name": "List Models",
+      "service_type": "api_call",
+      "description": "List available Gemini models",
+      "endpoint_template": "/models",
+      "request_config": {
+        "parameter_method": "query_params",
+        "method": "GET",
+        "query_params_template": {
+          "pageSize": "{{pageSize}}",
+          "pageToken": "{{pageToken}}"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "data_path": "models",
+        "error_extraction": {
+          "error_field": "error.code",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "pageSize": {
+            "type": "integer",
+            "description": "Maximum number of models to return",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "pageToken": {
+            "type": "string",
+            "description": "Page token from previous list call"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "models": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "displayName": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "inputTokenLimit": {
+                  "type": "integer"
+                },
+                "outputTokenLimit": {
+                  "type": "integer"
+                },
+                "supportedGenerationMethods": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "nextPageToken": {
+            "type": "string"
+          }
+        }
+      },
+      "sample_output": {
+        "models": [
+          {
+            "name": "models/gemini-2.5-pro",
+            "displayName": "Gemini 2.5 Pro",
+            "description": "Latest and most capable Gemini model",
+            "inputTokenLimit": 1048576,
+            "outputTokenLimit": 8192,
+            "supportedGenerationMethods": [
+              "generateContent",
+              "countTokens"
+            ]
+          },
+          {
+            "name": "models/gemini-2.5-flash",
+            "displayName": "Gemini 2.5 Flash",
+            "description": "Fast and efficient Gemini model",
+            "inputTokenLimit": 1048576,
+            "outputTokenLimit": 8192,
+            "supportedGenerationMethods": [
+              "generateContent",
+              "countTokens"
+            ]
+          }
+        ],
+        "nextPageToken": "eyJwYWdlX3Rva2VuIjoiYWJjMTIzIn0="
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "get_model",
+      "display_name": "Get Model",
+      "service_type": "api_call",
+      "description": "Get information about a specific model",
+      "endpoint_template": "/models/{{name}}",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "data_path": "",
+        "error_extraction": {
+          "error_field": "error.code",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Model name (e.g., gemini-2.5-pro)",
+            "default": "gemini-2.5-flash"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "inputTokenLimit": {
+            "type": "integer"
+          },
+          "outputTokenLimit": {
+            "type": "integer"
+          },
+          "supportedGenerationMethods": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "temperature": {
+            "type": "number"
+          },
+          "topP": {
+            "type": "number"
+          },
+          "topK": {
+            "type": "integer"
+          }
+        }
+      },
+      "sample_output": {
+        "name": "models/gemini-2.5-flash",
+        "version": "001",
+        "displayName": "Gemini 2.5 Flash",
+        "description": "Fast and efficient Gemini model for various tasks",
+        "inputTokenLimit": 1048576,
+        "outputTokenLimit": 8192,
+        "supportedGenerationMethods": [
+          "generateContent",
+          "countTokens"
+        ],
+        "temperature": 0.9,
+        "topP": 1.0,
+        "topK": 40
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "list_tuned_models",
+      "display_name": "List Tuned Models",
+      "service_type": "api_call",
+      "description": "List your tuned models",
+      "endpoint_template": "/tunedModels",
+      "request_config": {
+        "parameter_method": "query_params",
+        "method": "GET",
+        "query_params_template": {
+          "pageSize": "{{pageSize}}",
+          "pageToken": "{{pageToken}}",
+          "filter": "{{filter}}"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "data_path": "tunedModels",
+        "error_extraction": {
+          "error_field": "error.code",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "pageSize": {
+            "type": "integer",
+            "description": "Maximum number to return",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 10
+          },
+          "pageToken": {
+            "type": "string",
+            "description": "Page token from previous call"
+          },
+          "filter": {
+            "type": "string",
+            "description": "Optional filter string"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "tunedModels": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "displayName": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "createTime": {
+                  "type": "string"
+                },
+                "updateTime": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "nextPageToken": {
+            "type": "string"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30,
+      "sample_output": {
+        "tunedModels": [
+          {
+            "name": "tunedModels/my-custom-model-abc123",
+            "displayName": "My Custom Model",
+            "description": "Fine-tuned for customer service responses",
+            "state": "ACTIVE",
+            "createTime": "2024-01-15T10:30:00Z",
+            "updateTime": "2024-01-15T12:45:00Z"
+          }
+        ],
+        "nextPageToken": "eyJwYWdlX3Rva2VuIjoiZGVmNDU2In0="
+      }
+    },
+    {
+      "service_name": "get_tuned_model",
+      "display_name": "Get Tuned Model",
+      "service_type": "api_call",
+      "description": "Get information about a specific tuned model",
+      "endpoint_template": "/tunedModels/{{name}}",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "data_path": "",
+        "error_extraction": {
+          "error_field": "error.code",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Tuned model name"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Resource name of the tuned model"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Display name of the tuned model"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the tuned model"
+          },
+          "state": {
+            "type": "string",
+            "description": "Current state of the model"
+          },
+          "createTime": {
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "updateTime": {
+            "type": "string",
+            "description": "Last update timestamp"
+          },
+          "tunedModelSource": {
+            "type": "object",
+            "description": "Source model information"
+          },
+          "tuningTask": {
+            "type": "object",
+            "description": "Tuning task configuration"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30,
+      "sample_output": {
+        "name": "tunedModels/my-custom-model-abc123",
+        "displayName": "My Custom Model",
+        "description": "Fine-tuned for customer service responses",
+        "state": "ACTIVE",
+        "createTime": "2024-01-15T10:30:00Z",
+        "updateTime": "2024-01-15T12:45:00Z",
+        "tunedModelSource": {
+          "baseModel": "models/gemini-1.5-flash-001-tuning"
+        },
+        "tuningTask": {
+          "hyperparameters": {
+            "epochCount": 5,
+            "batchSize": 4,
+            "learningRate": 0.001
+          }
+        }
+      }
+    },
+    {
+      "service_name": "delete_tuned_model",
+      "display_name": "Delete Tuned Model",
+      "service_type": "api_call",
+      "description": "Delete a tuned model",
+      "endpoint_template": "/tunedModels/{{name}}",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "method": "DELETE"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "data_path": "",
+        "error_extraction": {
+          "error_field": "error.code",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Tuned model name to delete"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the deletion was successful"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30,
+      "sample_output": {
+        "success": true
+      }
+    },
+    {
+      "service_name": "upload_file",
+      "display_name": "Upload File",
+      "service_type": "api_call",
+      "description": "Upload a file for use with Gemini models",
+      "endpoint_template": "https://generativelanguage.googleapis.com/upload/v1beta/files",
+      "request_config": {
+        "parameter_method": "multipart_related",
+        "method": "POST",
+        "headers": {
+          "X-Goog-Upload-Protocol": "multipart"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "data_path": "file",
+        "error_extraction": {
+          "error_field": "error.code",
+          "message_field": "error.message"
+        },
+        "retry_config": {
+          "enabled": true,
+          "backoff_seconds": [10, 20, 40, 50],
+          "max_total_seconds": 120,
+          "transient_status_codes": [429, 500, 503],
+          "transient_message_patterns": [
+            "high demand",
+            "overloaded",
+            "try again later",
+            "unavailable",
+            "please try again"
+          ],
+          "exhausted_message": "Gemini remained unavailable due to high demand for more than 2 minutes."
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "description": "File to upload"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Display name for the file"
+          }
+        },
+        "required": [
+          "file"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "displayName": {
+                "type": "string"
+              },
+              "mimeType": {
+                "type": "string"
+              },
+              "sizeBytes": {
+                "type": "string"
+              },
+              "createTime": {
+                "type": "string"
+              },
+              "updateTime": {
+                "type": "string"
+              },
+              "expirationTime": {
+                "type": "string"
+              },
+              "uri": {
+                "type": "string"
+              },
+              "state": {
+                "type": "string",
+                "enum": ["STATE_UNSPECIFIED", "PROCESSING", "ACTIVE", "FAILED"]
+              }
+            }
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 300,
+      "sample_output": {
+        "file": {
+          "name": "files/sample-document-abc123",
+          "displayName": "sample-document.pdf",
+          "mimeType": "application/pdf",
+          "sizeBytes": "2048576",
+          "createTime": "2024-01-15T10:30:00Z",
+          "updateTime": "2024-01-15T10:30:00Z",
+          "expirationTime": "2024-01-17T10:30:00Z",
+          "uri": "https://generativelanguage.googleapis.com/v1beta/files/sample-document-abc123",
+          "state": "ACTIVE"
+        }
+      }
+    },
+    {
+      "service_name": "list_files",
+      "display_name": "List Files",
+      "service_type": "api_call",
+      "description": "List uploaded files",
+      "endpoint_template": "/files",
+      "request_config": {
+        "parameter_method": "query_params",
+        "method": "GET",
+        "query_params_template": {
+          "pageSize": "{{pageSize}}",
+          "pageToken": "{{pageToken}}"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "data_path": "files",
+        "error_extraction": {
+          "error_field": "error.code",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "pageSize": {
+            "type": "integer",
+            "description": "Maximum number of files to return",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 10
+          },
+          "pageToken": {
+            "type": "string",
+            "description": "Page token from previous call"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "displayName": {
+                  "type": "string"
+                },
+                "mimeType": {
+                  "type": "string"
+                },
+                "sizeBytes": {
+                  "type": "string"
+                },
+                "createTime": {
+                  "type": "string"
+                },
+                "updateTime": {
+                  "type": "string"
+                },
+                "expirationTime": {
+                  "type": "string"
+                },
+                "uri": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "nextPageToken": {
+            "type": "string"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30,
+      "sample_output": {
+        "files": [
+          {
+            "name": "files/document1-abc123",
+            "displayName": "document1.pdf",
+            "mimeType": "application/pdf",
+            "sizeBytes": "1048576",
+            "createTime": "2024-01-15T10:30:00Z",
+            "updateTime": "2024-01-15T10:30:00Z",
+            "expirationTime": "2024-01-17T10:30:00Z",
+            "uri": "https://generativelanguage.googleapis.com/v1beta/files/document1-abc123",
+            "state": "ACTIVE"
+          },
+          {
+            "name": "files/image2-def456",
+            "displayName": "image2.jpg",
+            "mimeType": "image/jpeg",
+            "sizeBytes": "512000",
+            "createTime": "2024-01-15T11:15:00Z",
+            "updateTime": "2024-01-15T11:15:00Z",
+            "expirationTime": "2024-01-17T11:15:00Z",
+            "uri": "https://generativelanguage.googleapis.com/v1beta/files/image2-def456",
+            "state": "ACTIVE"
+          }
+        ],
+        "nextPageToken": "eyJwYWdlX3Rva2VuIjoiZ2hpNzg5In0="
+      }
+    },
+    {
+      "service_name": "get_file",
+      "display_name": "Get File",
+      "service_type": "api_call",
+      "description": "Get metadata for an uploaded file",
+      "endpoint_template": "/files/{{name}}",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "data_path": "",
+        "error_extraction": {
+          "error_field": "error.code",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "File name/ID"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "sizeBytes": {
+            "type": "string"
+          },
+          "createTime": {
+            "type": "string"
+          },
+          "updateTime": {
+            "type": "string"
+          },
+          "expirationTime": {
+            "type": "string"
+          },
+          "uri": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30,
+      "sample_output": {
+        "name": "files/document1-abc123",
+        "displayName": "document1.pdf",
+        "mimeType": "application/pdf",
+        "sizeBytes": "1048576",
+        "createTime": "2024-01-15T10:30:00Z",
+        "updateTime": "2024-01-15T10:30:00Z",
+        "expirationTime": "2024-01-17T10:30:00Z",
+        "uri": "https://generativelanguage.googleapis.com/v1beta/files/document1-abc123",
+        "state": "ACTIVE"
+      }
+    },
+    {
+      "service_name": "delete_file",
+      "display_name": "Delete File",
+      "service_type": "api_call",
+      "description": "Delete an uploaded file",
+      "endpoint_template": "/files/{{name}}",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "method": "DELETE"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "data_path": "",
+        "error_extraction": {
+          "error_field": "error.code",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "File name/ID to delete"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the deletion was successful"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30,
+      "sample_output": {
+        "success": true
+      }
+    },
+    {
+      "service_name": "create_cached_content",
+      "display_name": "Create Cached Content",
+      "service_type": "api_call",
+      "description": "Create cached content for faster repeated generations",
+      "endpoint_template": "/cachedContents",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "method": "POST",
+        "body_template": {
+          "model": "models/{{model}}",
+          "displayName": "{{displayName}}",
+          "systemInstruction": "{{systemInstruction}}",
+          "contents": "{{contents}}",
+          "tools": "{{tools}}",
+          "toolConfig": "{{toolConfig}}",
+          "ttl": "{{ttl}}"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "data_path": "",
+        "error_extraction": {
+          "error_field": "error.code",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "Model to use for caching",
+            "enum": [
+              "gemini-2.5-pro",
+              "gemini-2.5-flash",
+              "gemini-1.5-pro",
+              "gemini-1.5-flash"
+            ],
+            "default": "gemini-2.5-flash"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Display name for cached content"
+          },
+          "systemInstruction": {
+            "type": "object",
+            "description": "System instruction to cache"
+          },
+          "contents": {
+            "type": "array",
+            "description": "Content to cache"
+          },
+          "tools": {
+            "type": "array",
+            "description": "Tools to cache"
+          },
+          "toolConfig": {
+            "type": "object",
+            "description": "Tool configuration to cache"
+          },
+          "ttl": {
+            "type": "string",
+            "description": "Time to live (e.g., '3600s' for 1 hour)",
+            "default": "3600s"
+          }
+        },
+        "required": [
+          "model",
+          "contents"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Resource name of the cached content"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Display name of the cached content"
+          },
+          "model": {
+            "type": "string",
+            "description": "Model used for caching"
+          },
+          "createTime": {
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "updateTime": {
+            "type": "string",
+            "description": "Last update timestamp"
+          },
+          "expireTime": {
+            "type": "string",
+            "description": "Expiration timestamp"
+          },
+          "usageMetadata": {
+            "type": "object",
+            "description": "Usage metadata for the cached content"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 60,
+      "sample_output": {
+        "name": "cachedContents/my-cached-content-abc123",
+        "displayName": "My Cached Content",
+        "model": "models/gemini-2.5-flash",
+        "createTime": "2024-01-15T10:30:00Z",
+        "updateTime": "2024-01-15T10:30:00Z",
+        "expireTime": "2024-01-15T11:30:00Z",
+        "usageMetadata": {
+          "totalTokenCount": 1024
+        }
+      }
+    },
+    {
+      "service_name": "list_cached_contents",
+      "display_name": "List Cached Contents",
+      "service_type": "api_call",
+      "description": "List cached contents",
+      "endpoint_template": "/cachedContents",
+      "request_config": {
+        "parameter_method": "query_params",
+        "method": "GET",
+        "query_params_template": {
+          "pageSize": "{{pageSize}}",
+          "pageToken": "{{pageToken}}"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "data_path": "cachedContents",
+        "error_extraction": {
+          "error_field": "error.code",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "pageSize": {
+            "type": "integer",
+            "description": "Maximum number to return",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 10
+          },
+          "pageToken": {
+            "type": "string",
+            "description": "Page token from previous call"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "cachedContents": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "displayName": {
+                  "type": "string"
+                },
+                "model": {
+                  "type": "string"
+                },
+                "createTime": {
+                  "type": "string"
+                },
+                "updateTime": {
+                  "type": "string"
+                },
+                "expireTime": {
+                  "type": "string"
+                },
+                "usageMetadata": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "nextPageToken": {
+            "type": "string"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30,
+      "sample_output": {
+        "cachedContents": [
+          {
+            "name": "cachedContents/content1-abc123",
+            "displayName": "Content Cache 1",
+            "model": "models/gemini-2.5-flash",
+            "createTime": "2024-01-15T10:30:00Z",
+            "updateTime": "2024-01-15T10:30:00Z",
+            "expireTime": "2024-01-15T11:30:00Z",
+            "usageMetadata": {
+              "totalTokenCount": 512
+            }
+          },
+          {
+            "name": "cachedContents/content2-def456",
+            "displayName": "Content Cache 2",
+            "model": "models/gemini-2.5-pro",
+            "createTime": "2024-01-15T11:00:00Z",
+            "updateTime": "2024-01-15T11:00:00Z",
+            "expireTime": "2024-01-15T12:00:00Z",
+            "usageMetadata": {
+              "totalTokenCount": 1024
+            }
+          }
+        ],
+        "nextPageToken": "eyJwYWdlX3Rva2VuIjoiamlrMDEyIn0="
+      }
+    },
+    {
+      "service_name": "get_cached_content",
+      "display_name": "Get Cached Content",
+      "service_type": "api_call",
+      "description": "Get information about cached content",
+      "endpoint_template": "/cachedContents/{{name}}",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "data_path": "",
+        "error_extraction": {
+          "error_field": "error.code",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Cached content name/ID"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Resource name of the cached content"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Display name of the cached content"
+          },
+          "model": {
+            "type": "string",
+            "description": "Model used for caching"
+          },
+          "createTime": {
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "updateTime": {
+            "type": "string",
+            "description": "Last update timestamp"
+          },
+          "expireTime": {
+            "type": "string",
+            "description": "Expiration timestamp"
+          },
+          "usageMetadata": {
+            "type": "object",
+            "description": "Usage metadata for the cached content"
+          },
+          "systemInstruction": {
+            "type": "object",
+            "description": "System instruction content"
+          },
+          "contents": {
+            "type": "array",
+            "description": "Cached content array"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30,
+      "sample_output": {
+        "name": "cachedContents/content1-abc123",
+        "displayName": "Content Cache 1",
+        "model": "models/gemini-2.5-flash",
+        "createTime": "2024-01-15T10:30:00Z",
+        "updateTime": "2024-01-15T10:30:00Z",
+        "expireTime": "2024-01-15T11:30:00Z",
+        "usageMetadata": {
+          "totalTokenCount": 512
+        },
+        "systemInstruction": {
+          "parts": [
+            {
+              "text": "You are a helpful assistant."
+            }
+          ]
+        },
+        "contents": [
+          {
+            "parts": [
+              {
+                "text": "Hello, how can I help you?"
+              }
+            ],
+            "role": "user"
+          }
+        ]
+      }
+    },
+    {
+      "service_name": "update_cached_content",
+      "display_name": "Update Cached Content",
+      "service_type": "api_call",
+      "description": "Update cached content TTL",
+      "endpoint_template": "/cachedContents/{{name}}",
+      "request_config": {
+        "parameter_method": "hybrid",
+        "method": "PATCH",
+        "query_params_template": {
+          "updateMask": "ttl"
+        },
+        "body_template": {
+          "ttl": "{{ttl}}"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "data_path": "",
+        "error_extraction": {
+          "error_field": "error.code",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Cached content name/ID"
+          },
+          "ttl": {
+            "type": "string",
+            "description": "New time to live (e.g., '7200s')"
+          }
+        },
+        "required": [
+          "name",
+          "ttl"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Resource name of the updated cached content"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Display name of the cached content"
+          },
+          "model": {
+            "type": "string",
+            "description": "Model used for caching"
+          },
+          "createTime": {
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "updateTime": {
+            "type": "string",
+            "description": "Last update timestamp"
+          },
+          "expireTime": {
+            "type": "string",
+            "description": "New expiration timestamp"
+          },
+          "usageMetadata": {
+            "type": "object",
+            "description": "Usage metadata for the cached content"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30,
+      "sample_output": {
+        "name": "cachedContents/content1-abc123",
+        "displayName": "Content Cache 1",
+        "model": "models/gemini-2.5-flash",
+        "createTime": "2024-01-15T10:30:00Z",
+        "updateTime": "2024-01-15T10:45:00Z",
+        "expireTime": "2024-01-15T12:45:00Z",
+        "usageMetadata": {
+          "totalTokenCount": 512
+        }
+      }
+    },
+    {
+      "service_name": "generate_image",
+      "display_name": "Generate Image",
+      "service_type": "api_call",
+      "description": "Generate images using Gemini image generation models from text descriptions",
+      "endpoint_template": "/models/gemini-2.5-flash-image:generateContent",
+      "request_config": {
+        "parameter_method": "body",
+        "method": "POST"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "data_path": "candidates",
+        "error_extraction": {
+          "error_field": "error.code",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "contents": {
+            "type": "array",
+            "description": "Text prompt for image generation",
+            "items": {
+              "type": "object",
+              "properties": {
+                "parts": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "text": {
+                        "type": "string",
+                        "description": "Image generation prompt"
+                      }
+                    },
+                    "required": [
+                      "text"
+                    ]
+                  }
+                },
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "user"
+                  ],
+                  "default": "user"
+                }
+              },
+              "required": [
+                "parts"
+              ]
+            }
+          }
+        },
+        "required": [
+          "contents"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "candidates": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "content": {
+                  "type": "object",
+                  "properties": {
+                    "parts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "text": {
+                            "type": "string",
+                            "description": "Response text (if any)"
+                          },
+                          "inlineData": {
+                            "type": "object",
+                            "description": "Generated image data",
+                            "properties": {
+                              "mimeType": {
+                                "type": "string",
+                                "description": "MIME type of the image (e.g., image/png)"
+                              },
+                              "data": {
+                                "type": "string",
+                                "description": "Base64 encoded image data"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "role": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "finishReason": {
+                  "type": "string",
+                  "enum": ["STOP", "MAX_TOKENS", "SAFETY", "RECITATION", "OTHER"]
+                },
+                "index": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "usageMetadata": {
+            "type": "object",
+            "properties": {
+              "promptTokenCount": {"type": "integer"},
+              "candidatesTokenCount": {"type": "integer"},
+              "totalTokenCount": {"type": "integer"}
+            }
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 60,
+      "sample_output": {
+        "candidates": [
+          {
+            "content": {
+              "parts": [
+                {
+                  "inlineData": {
+                    "mimeType": "image/png",
+                    "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
+                  }
+                }
+              ],
+              "role": "model"
+            },
+            "finishReason": "STOP",
+            "index": 0
+          }
+        ],
+        "usageMetadata": {
+          "promptTokenCount": 12,
+          "candidatesTokenCount": 0,
+          "totalTokenCount": 12
+        }
+      }
+    },
+    {
+      "service_name": "delete_cached_content",
+      "display_name": "Delete Cached Content",
+      "service_type": "api_call",
+      "description": "Delete cached content",
+      "endpoint_template": "/cachedContents/{{name}}",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "method": "DELETE"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "data_path": "",
+        "error_extraction": {
+          "error_field": "error.code",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Cached content name/ID to delete"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the deletion was successful"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30,
+      "sample_output": {
+        "success": true
+      }
+    }
+  ],
+  "events": [],
+  "metadata": {
+    "documentation_url": "https://ai.google.dev/gemini-api/docs",
+    "rate_limits": {
+      "free_tier": {
+        "requests_per_minute": 10,
+        "tokens_per_minute": 32000,
+        "requests_per_day": 25
+      },
+      "tier_1": {
+        "requests_per_minute": 1000,
+        "tokens_per_minute": "varies by model"
+      },
+      "tier_2": {
+        "requests_per_minute": 2000,
+        "tokens_per_minute": "higher limits",
+        "qualification": "$250+ spend, 30+ days"
+      },
+      "tier_3": {
+        "requests_per_minute": "enterprise",
+        "tokens_per_minute": "enterprise limits",
+        "qualification": "$1000+ spend, 30+ days"
+      }
+    },
+    "supported_models": {
+      "generation": [
+        "gemini-2.5-pro",
+        "gemini-2.5-flash",
+        "gemini-2.5-flash-lite",
+        "gemini-2.5-flash-live",
+        "gemini-2.5-flash-image",
+        "gemini-3-pro-image-preview",
+        "gemini-3.1-flash-image-preview",
+        "gemini-2.5-flash-preview-tts",
+        "gemini-1.5-pro",
+        "gemini-1.5-flash",
+        "gemini-1.5-flash-8b",
+        "gemini-1.0-pro"
+      ],
+      "embedding": [
+        "text-embedding-004",
+        "text-multilingual-embedding-002",
+        "embedding-001"
+      ],
+      "tuning": [
+        "gemini-1.5-flash-001-tuning",
+        "gemini-1.5-pro-002"
+      ],
+      "specialized": [
+        "veo",
+        "imagen-3"
+      ]
+    },
+    "capabilities": {
+      "multimodal": true,
+      "languages": 40,
+      "max_context": 1048576,
+      "function_calling": true,
+      "code_execution": true,
+      "search_grounding": true,
+      "structured_output": true,
+      "audio_generation": true,
+      "video_generation": true,
+      "thinking_mode": true
+    }
+  }
+}

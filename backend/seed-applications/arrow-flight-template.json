@@ -1,0 +1,187 @@
+{
+  "key": "arrow_flight_database",
+  "application": {
+    "app_name": "Arrow Flight Database",
+    "app_type": "database",
+    "app_scope": "tenant",
+    "description": "Generic Apache Arrow Flight database connection for high-performance, non-blocking data retrieval",
+    "category": "Database",
+    "auth_type": "basic",
+    "auth_config": {
+      "database_type": "arrow_flight",
+      "connection_pool_size": 5,
+      "connection_timeout": 30,
+      "ssl_mode": "require",
+      "credential_fields": {
+        "endpoint": {
+          "label": "Arrow Flight Endpoint",
+          "type": "text",
+          "required": true,
+          "placeholder": "your-server:443 or localhost:32010",
+          "help_text": "Arrow Flight server endpoint (port only, protocol is determined by base_url)"
+        },
+        "auth_method": {
+          "label": "Authentication Method",
+          "type": "select",
+          "required": true,
+          "options": [
+            "none",
+            "bearer_token",
+            "pat_token",
+            "username_password",
+            "api_key"
+          ],
+          "default": "none",
+          "help_text": "Select authentication method for your Arrow Flight server"
+        },
+        "bearer_token": {
+          "label": "Bearer Token",
+          "type": "password",
+          "required": false,
+          "placeholder": "Enter bearer token",
+          "help_text": "Bearer token for authentication",
+          "depends_on": "auth_method=bearer_token"
+        },
+        "pat_token": {
+          "label": "Personal Access Token",
+          "type": "password",
+          "required": false,
+          "placeholder": "Enter PAT token",
+          "help_text": "Personal Access Token for authentication",
+          "depends_on": "auth_method=pat_token"
+        },
+        "username": {
+          "label": "Username",
+          "type": "text",
+          "required": false,
+          "placeholder": "Enter username",
+          "help_text": "Username for basic authentication",
+          "depends_on": "auth_method=username_password"
+        },
+        "password": {
+          "label": "Password",
+          "type": "password",
+          "required": false,
+          "placeholder": "Enter password",
+          "help_text": "Password for basic authentication",
+          "depends_on": "auth_method=username_password"
+        },
+        "api_key": {
+          "label": "API Key",
+          "type": "password",
+          "required": false,
+          "placeholder": "Enter API key",
+          "help_text": "API key for authentication",
+          "depends_on": "auth_method=api_key"
+        },
+        "api_key_header": {
+          "label": "API Key Header Name",
+          "type": "text",
+          "required": false,
+          "placeholder": "X-API-Key",
+          "default": "X-API-Key",
+          "help_text": "Header name for API key (default: X-API-Key)",
+          "depends_on": "auth_method=api_key"
+        }
+      },
+      "fetch_size": 1000,
+      "max_rows": 100000
+    },
+    "version": "1.0.0",
+    "base_url": "grpc+tls://your-server:443",
+    "icon_url": "https://arrow.apache.org/img/arrow-logo_horizontal_black-txt_white-bg.png"
+  },
+  "services": [
+    {
+      "service_name": "execute_query",
+      "description": "Execute a SQL query using Arrow Flight and return results as JSON array",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "query",
+        "result_format": "json_array",
+        "max_rows": 100000,
+        "timeout_seconds": 180
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "description": "SQL query to execute",
+            "example": "SELECT * FROM table_name LIMIT 100"
+          }
+        },
+        "required": ["sql"],
+        "additionalProperties": true
+      },
+      "sample_input": {
+        "sql": "SELECT * FROM users WHERE active = true LIMIT 10"
+      },
+      "sample_output": {
+        "success": true,
+        "data": [
+          {
+            "id": 1,
+            "name": "John Doe",
+            "active": true
+          }
+        ],
+        "row_count": 1,
+        "truncated": false,
+        "execution_time_ms": 150
+      }
+    },
+    {
+      "service_name": "query_single_row",
+      "description": "Execute a query that returns a single row as JSON object",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "query",
+        "result_format": "json_object",
+        "max_rows": 1,
+        "timeout_seconds": 60
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "description": "SQL query that returns a single row",
+            "example": "SELECT COUNT(*) as total FROM table_name"
+          }
+        },
+        "required": ["sql"],
+        "additionalProperties": true
+      },
+      "sample_input": {
+        "sql": "SELECT COUNT(*) as total_users FROM users"
+      },
+      "sample_output": {
+        "success": true,
+        "data": {
+          "total_users": 42
+        },
+        "row_count": 1,
+        "execution_time_ms": 100
+      }
+    }
+  ],
+  "events": [],
+  "metadata": {
+    "created_at": "2025-01-23T00:00:00.000000",
+    "created_by": "ioflow-system",
+    "author": "ioflow-system",
+    "tags": [
+      "database",
+      "arrow-flight",
+      "template",
+      "generic"
+    ],
+    "documentation_url": "https://arrow.apache.org/docs/format/Flight.html",
+    "support_email": "support@example.com",
+    "last_modified": "2025-01-23T00:00:00.000000",
+    "modified_by": "ioflow-system",
+    "services_count": 2,
+    "notes": "Generic template for Arrow Flight databases. Uses URL scheme (grpc:// or grpc+tls://) for detection. Standardized with timeout_seconds."
+  }
+}

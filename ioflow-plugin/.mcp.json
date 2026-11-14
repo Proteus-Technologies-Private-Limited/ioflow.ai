@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "ioflow": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/mcp-proxy.mjs"],
+      "env": {
+        "IOFLOW_API_KEY": "${IOFLOW_API_KEY}",
+        "IOFLOW_BASE_URL": "${IOFLOW_BASE_URL:-http://localhost:7001}"
+      }
+    }
+  }
+}

@@ -1,0 +1,464 @@
+{
+  "key": "twilio",
+  "application": {
+    "app_name": "Twilio",
+    "app_type": "api",
+    "description": "Cloud communications platform for SMS, Voice, WhatsApp, and more",
+    "category": "Communication",
+    "auth_type": "basic",
+    "auth_config": {
+      "username_field": "account_sid",
+      "password_field": "auth_token"
+    },
+    "version": "1.1.0",
+    "base_url": "https://api.twilio.com/2010-04-01",
+    "icon_url": "https://www.twilio.com/assets/images/brand/twilio-mark-red.png",
+    "app_scope": "global"
+  },
+  "services": [
+    {
+      "service_name": "Send SMS",
+      "service_type": "api_call",
+      "description": "Send an SMS message",
+      "request_config": {
+        "parameter_method": "form_data",
+        "body_template": {
+          "To": "{{to_number}}",
+          "From": "{{from_number}}",
+          "Body": "{{message_body}}",
+          "MediaUrl": "{{media_url}}",
+          "StatusCallback": "{{status_callback}}"
+        },
+        "method": "POST"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "value": [
+            201
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "to_number": {
+            "type": "string",
+            "pattern": "^\\+[1-9]\\d{1,14}$",
+            "description": "Destination phone number in E.164 format"
+          },
+          "from_number": {
+            "type": "string",
+            "pattern": "^\\+[1-9]\\d{1,14}$",
+            "description": "Twilio phone number in E.164 format"
+          },
+          "message_body": {
+            "type": "string",
+            "maxLength": 1600,
+            "description": "The text body of the message"
+          },
+          "media_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of media to send with the message"
+          },
+          "status_callback": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL for status callbacks"
+          }
+        },
+        "required": [
+          "to_number",
+          "from_number",
+          "message_body"
+        ]
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "{{base_url}}/Accounts/{{account_sid}}/Messages.json"
+    },
+    {
+      "service_name": "Send WhatsApp Message",
+      "service_type": "api_call",
+      "description": "Send a WhatsApp message",
+      "request_config": {
+        "parameter_method": "form_data",
+        "body_template": {
+          "To": "whatsapp:{{to_number}}",
+          "From": "whatsapp:{{from_number}}",
+          "Body": "{{message_body}}",
+          "MediaUrl": "{{media_url}}"
+        },
+        "method": "POST"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "value": [
+            201
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "to_number": {
+            "type": "string",
+            "pattern": "^\\+[1-9]\\d{1,14}$",
+            "description": "Destination WhatsApp number (without whatsapp: prefix)"
+          },
+          "from_number": {
+            "type": "string",
+            "pattern": "^\\+[1-9]\\d{1,14}$",
+            "description": "Twilio WhatsApp-enabled number (without whatsapp: prefix)"
+          },
+          "message_body": {
+            "type": "string",
+            "description": "The text body of the WhatsApp message"
+          },
+          "media_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of media to send with the message"
+          }
+        },
+        "required": [
+          "to_number",
+          "from_number",
+          "message_body"
+        ]
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "{{base_url}}/Accounts/{{account_sid}}/Messages.json"
+    },
+    {
+      "service_name": "Make Voice Call",
+      "service_type": "api_call",
+      "description": "Initiate an outbound voice call",
+      "request_config": {
+        "parameter_method": "form_data",
+        "body_template": {
+          "To": "{{to_number}}",
+          "From": "{{from_number}}",
+          "Url": "{{twiml_url}}",
+          "Method": "{{http_method}}",
+          "StatusCallback": "{{status_callback}}",
+          "Record": "{{record}}"
+        },
+        "method": "POST"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "value": [
+            201
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "to_number": {
+            "type": "string",
+            "pattern": "^\\+[1-9]\\d{1,14}$",
+            "description": "Phone number to call in E.164 format"
+          },
+          "from_number": {
+            "type": "string",
+            "pattern": "^\\+[1-9]\\d{1,14}$",
+            "description": "Twilio phone number in E.164 format"
+          },
+          "twiml_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL that returns TwiML instructions for the call"
+          },
+          "http_method": {
+            "type": "string",
+            "enum": [
+              "GET",
+              "POST"
+            ],
+            "default": "POST",
+            "description": "HTTP method to use when requesting the TwiML URL"
+          },
+          "status_callback": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL to receive call status updates"
+          },
+          "record": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether to record the call"
+          }
+        },
+        "required": [
+          "to_number",
+          "from_number",
+          "twiml_url"
+        ]
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "{{base_url}}/Accounts/{{account_sid}}/Calls.json"
+    },
+    {
+      "service_name": "Get Message",
+      "service_type": "api_call",
+      "description": "Retrieve details of a specific message",
+      "request_config": {
+        "parameter_method": "path_params",
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "value": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "message_sid": {
+            "type": "string",
+            "pattern": "^SM[0-9a-fA-F]{32}$",
+            "description": "The unique identifier of the message"
+          }
+        },
+        "required": [
+          "message_sid"
+        ]
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "{{base_url}}/Accounts/{{account_sid}}/Messages/{{message_sid}}.json"
+    },
+    {
+      "service_name": "List Messages",
+      "service_type": "api_call",
+      "description": "Retrieve a list of messages",
+      "request_config": {
+        "parameter_method": "query_params",
+        "query_template": {
+          "To": "{{to_number}}",
+          "From": "{{from_number}}",
+          "DateSent>": "{{date_sent_after}}",
+          "DateSent<": "{{date_sent_before}}",
+          "PageSize": "{{page_size}}",
+          "Page": "{{page}}"
+        },
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "value": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "to_number": {
+            "type": "string",
+            "description": "Filter by recipient phone number"
+          },
+          "from_number": {
+            "type": "string",
+            "description": "Filter by sender phone number"
+          },
+          "date_sent_after": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Filter messages sent after this date"
+          },
+          "date_sent_before": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Filter messages sent before this date"
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "default": 50,
+            "description": "Number of records to return"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0,
+            "description": "Page number"
+          }
+        },
+        "required": []
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "{{base_url}}/Accounts/{{account_sid}}/Messages.json"
+    },
+    {
+      "service_name": "Verify Phone Number",
+      "service_type": "api_call",
+      "description": "Send a verification code to a phone number",
+      "request_config": {
+        "parameter_method": "form_data",
+        "body_template": {
+          "To": "{{to_number}}",
+          "Channel": "{{channel}}",
+          "CustomFriendlyName": "{{friendly_name}}",
+          "Locale": "{{locale}}"
+        },
+        "method": "POST",
+        "base_url_override": "https://verify.twilio.com/v2"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "value": [
+            201
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "to_number": {
+            "type": "string",
+            "pattern": "^\\+[1-9]\\d{1,14}$",
+            "description": "Phone number to verify in E.164 format"
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "sms",
+              "call",
+              "whatsapp"
+            ],
+            "default": "sms",
+            "description": "Delivery channel for verification code"
+          },
+          "friendly_name": {
+            "type": "string",
+            "description": "Custom name for the verification"
+          },
+          "locale": {
+            "type": "string",
+            "default": "en",
+            "description": "Locale for the verification message"
+          },
+          "verify_service_sid": {
+            "type": "string",
+            "description": "Verify Service SID"
+          }
+        },
+        "required": [
+          "to_number",
+          "verify_service_sid"
+        ]
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "https://verify.twilio.com/v2/Services/{{verify_service_sid}}/Verifications"
+    }
+  ],
+  "events": [
+    {
+      "event_name": "Incoming SMS",
+      "event_type": "webhook",
+      "description": "Webhook triggered when an SMS is received",
+      "event_configuration": {
+        "webhook_url": "/webhooks/twilio/sms",
+        "verification_type": "signature",
+        "signature_header": "X-Twilio-Signature"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "event_name": "SMS Status Update",
+      "event_type": "webhook",
+      "description": "Webhook for SMS delivery status updates",
+      "event_configuration": {
+        "webhook_url": "/webhooks/twilio/sms-status",
+        "verification_type": "signature",
+        "signature_header": "X-Twilio-Signature"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "event_name": "Incoming WhatsApp Message",
+      "event_type": "webhook",
+      "description": "Webhook triggered when a WhatsApp message is received",
+      "event_configuration": {
+        "webhook_url": "/webhooks/twilio/whatsapp",
+        "verification_type": "signature",
+        "signature_header": "X-Twilio-Signature"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "event_name": "Voice Call Status",
+      "event_type": "webhook",
+      "description": "Webhook for voice call status updates",
+      "event_configuration": {
+        "webhook_url": "/webhooks/twilio/call-status",
+        "verification_type": "signature",
+        "signature_header": "X-Twilio-Signature"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "event_name": "Incoming Voice Call",
+      "event_type": "webhook",
+      "description": "Webhook triggered when a call is received",
+      "event_configuration": {
+        "webhook_url": "/webhooks/twilio/voice",
+        "verification_type": "signature",
+        "signature_header": "X-Twilio-Signature"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  ],
+  "metadata": {
+    "author": "IOFlow Team",
+    "created_at": "2025-01-03",
+    "tags": [
+      "sms",
+      "voice",
+      "whatsapp",
+      "communication",
+      "messaging",
+      "telephony",
+      "verification"
+    ],
+    "documentation_url": "https://www.twilio.com/docs",
+    "additional_config": {
+      "account_sid_note": "Account SID is used as part of the endpoint URL",
+      "auth_note": "Uses HTTP Basic authentication with Account SID as username and Auth Token as password",
+      "webhook_validation": "Twilio signs webhook requests with X-Twilio-Signature header"
+    },
+    "last_modified": "2025-08-23T12:53:14.110608",
+    "modified_by": "claude-code",
+    "events_count": 5
+  }
+}

@@ -1,0 +1,874 @@
+{
+  "key": "facebook_graph_api",
+  "application": {
+    "app_name": "Facebook Graph API",
+    "app_type": "api",
+    "description": "Comprehensive Facebook Graph API integration for managing pages, posts, insights, and user data. Provides full access to Facebook's social graph including creating/reading/updating/deleting posts, retrieving page analytics, user profile management, and real-time webhook notifications for page activities.",
+    "category": "Communication",
+    "auth_type": "oauth2",
+    "auth_config": {
+      "authorization_url": "https://www.facebook.com/v19.0/dialog/oauth",
+      "token_url": "https://graph.facebook.com/v19.0/oauth/access_token",
+      "scopes": [
+        "email",
+        "public_profile",
+        "pages_show_list",
+        "pages_read_engagement",
+        "pages_manage_posts",
+        "pages_read_user_content",
+        "read_insights",
+        "business_management"
+      ],
+      "client_id_param": "client_id",
+      "client_secret_param": "client_secret",
+      "redirect_uri_param": "redirect_uri",
+      "response_type": "code",
+      "grant_type": "authorization_code",
+      "scope_delimiter": ","
+    },
+    "version": "1.1.0",
+    "base_url": "https://graph.facebook.com/v19.0",
+    "icon_url": "https://cdn.cdnlogo.com/logos/f/83/facebook.svg",
+    "auth_example": {
+      "client_id": "your_client_id",
+      "client_secret": "your_client_secret",
+      "redirect_uri": "http://localhost:8000/api/v1/oauth/callback"
+    },
+    "app_scope": "global"
+  },
+  "services": [
+    {
+      "service_name": "get_user_profile",
+      "description": "Get the current user's profile information including name, email, and profile picture",
+      "service_type": "api_call",
+      "endpoint_template": "/me",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "Accept": "application/json"
+        },
+        "query_params": {
+          "fields": "{{fields}}",
+          "access_token": "{{access_token}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "fields": {
+            "type": "string",
+            "description": "Comma-separated list of fields to retrieve"
+          }
+        },
+        "required": []
+      },
+      "sample_input": {
+        "fields": "id,name,email,picture,first_name,last_name"
+      },
+      "sample_output": {
+        "id": "123456789",
+        "name": "John Doe",
+        "email": "john.doe@example.com",
+        "picture": {
+          "data": {
+            "url": "https://example.com/profile.jpg"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name"
+          },
+          "email": {
+            "type": "string",
+            "description": "The email"
+          },
+          "picture": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "description": "The url"
+                  }
+                },
+                "description": "The data"
+              }
+            },
+            "description": "The picture"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_user_pages",
+      "description": "Get a list of Facebook Pages that the user manages or has admin access to",
+      "service_type": "api_call",
+      "endpoint_template": "/me/accounts",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "Accept": "application/json"
+        },
+        "query_params": {
+          "fields": "{{fields}}",
+          "limit": "{{limit}}",
+          "access_token": "{{access_token}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "fields": {
+            "type": "string",
+            "description": "Fields to retrieve for each page"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum number of pages to return"
+          }
+        },
+        "required": []
+      },
+      "sample_input": {
+        "fields": "id,name,access_token,category",
+        "limit": 10
+      },
+      "sample_output": {
+        "data": [
+          {
+            "id": "page123",
+            "name": "My Business Page",
+            "access_token": "page_access_token",
+            "category": "Business"
+          }
+        ],
+        "paging": {
+          "cursors": {
+            "before": "xxx",
+            "after": "yyy"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "The id"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name"
+                },
+                "access_token": {
+                  "type": "string",
+                  "description": "The access_token"
+                },
+                "category": {
+                  "type": "string",
+                  "description": "The category"
+                }
+              }
+            },
+            "description": "The data"
+          },
+          "paging": {
+            "type": "object",
+            "properties": {
+              "cursors": {
+                "type": "object",
+                "properties": {
+                  "before": {
+                    "type": "string",
+                    "description": "The before"
+                  },
+                  "after": {
+                    "type": "string",
+                    "description": "The after"
+                  }
+                },
+                "description": "The cursors"
+              }
+            },
+            "description": "The paging"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "create_page_post",
+      "description": "Create a new post on a Facebook Page",
+      "service_type": "api_call",
+      "endpoint_template": "/{{page_id}}/feed",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        "body_template": {
+          "message": "{{message}}",
+          "link": "{{link}}",
+          "published": "{{published}}",
+          "scheduled_publish_time": "{{scheduled_publish_time}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "page_id": {
+            "type": "string",
+            "description": "The ID of the Facebook Page"
+          },
+          "message": {
+            "type": "string",
+            "description": "The text content of the post"
+          },
+          "link": {
+            "type": "string",
+            "description": "URL to attach to the post"
+          },
+          "published": {
+            "type": "boolean",
+            "description": "Whether to publish immediately or save as draft"
+          },
+          "scheduled_publish_time": {
+            "type": "integer",
+            "description": "Unix timestamp for scheduled publishing"
+          }
+        },
+        "required": [
+          "page_id",
+          "message"
+        ]
+      },
+      "sample_input": {
+        "page_id": "123456789",
+        "message": "Check out our latest update!",
+        "link": "https://example.com/article"
+      },
+      "sample_output": {
+        "id": "123456789_987654321",
+        "post_id": "123456789_987654321"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id"
+          },
+          "post_id": {
+            "type": "string",
+            "description": "The post_id"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_page_posts",
+      "description": "Get posts from a Facebook Page feed",
+      "service_type": "api_call",
+      "endpoint_template": "/{{page_id}}/feed",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "Accept": "application/json"
+        },
+        "query_params": {
+          "fields": "{{fields}}",
+          "limit": "{{limit}}",
+          "since": "{{since}}",
+          "until": "{{until}}",
+          "access_token": "{{access_token}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "page_id": {
+            "type": "string",
+            "description": "The ID of the Facebook Page"
+          },
+          "fields": {
+            "type": "string",
+            "description": "Fields to retrieve for each post"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum number of posts to return"
+          },
+          "since": {
+            "type": "string",
+            "description": "Unix timestamp or date for posts after this time"
+          },
+          "until": {
+            "type": "string",
+            "description": "Unix timestamp or date for posts before this time"
+          }
+        },
+        "required": [
+          "page_id"
+        ]
+      },
+      "sample_input": {
+        "page_id": "123456789",
+        "fields": "id,message,created_time,likes.summary(true)",
+        "limit": 10
+      },
+      "sample_output": {
+        "data": [
+          {
+            "id": "123456789_987654321",
+            "message": "Welcome to our page!",
+            "created_time": "2025-08-13T10:00:00+0000",
+            "likes": {
+              "summary": {
+                "total_count": 42
+              }
+            }
+          }
+        ],
+        "paging": {
+          "previous": "https://graph.facebook.com/...",
+          "next": "https://graph.facebook.com/..."
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "The id"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "The message"
+                },
+                "created_time": {
+                  "type": "string",
+                  "description": "The created_time"
+                },
+                "likes": {
+                  "type": "object",
+                  "properties": {
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "total_count": {
+                          "type": "integer",
+                          "description": "Number of total_s"
+                        }
+                      },
+                      "description": "The summary"
+                    }
+                  },
+                  "description": "The likes"
+                }
+              }
+            },
+            "description": "The data"
+          },
+          "paging": {
+            "type": "object",
+            "properties": {
+              "previous": {
+                "type": "string",
+                "description": "The previous"
+              },
+              "next": {
+                "type": "string",
+                "description": "The next"
+              }
+            },
+            "description": "The paging"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_page_insights",
+      "description": "Get insights and analytics for a Facebook Page",
+      "service_type": "api_call",
+      "endpoint_template": "/{{page_id}}/insights",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "Accept": "application/json"
+        },
+        "query_params": {
+          "metric": "{{metric}}",
+          "period": "{{period}}",
+          "since": "{{since}}",
+          "until": "{{until}}",
+          "access_token": "{{access_token}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "page_id": {
+            "type": "string",
+            "description": "The ID of the Facebook Page"
+          },
+          "metric": {
+            "type": "string",
+            "description": "Comma-separated list of metrics (e.g., page_views_total,page_fan_adds,page_engaged_users)"
+          },
+          "period": {
+            "type": "string",
+            "description": "Period for the metrics (day, week, days_28)"
+          },
+          "since": {
+            "type": "string",
+            "description": "Start date for insights (YYYY-MM-DD)"
+          },
+          "until": {
+            "type": "string",
+            "description": "End date for insights (YYYY-MM-DD)"
+          }
+        },
+        "required": [
+          "page_id",
+          "metric"
+        ]
+      },
+      "sample_input": {
+        "page_id": "123456789",
+        "metric": "page_views_total,page_fan_adds",
+        "period": "day",
+        "since": "2025-08-01",
+        "until": "2025-08-13"
+      },
+      "sample_output": {
+        "data": [
+          {
+            "name": "page_views_total",
+            "period": "day",
+            "values": [
+              {
+                "value": 150,
+                "end_time": "2025-08-13T07:00:00+0000"
+              }
+            ],
+            "title": "Daily Total Views",
+            "description": "Total daily views count"
+          }
+        ],
+        "paging": {
+          "previous": "...",
+          "next": "..."
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "The name"
+                },
+                "period": {
+                  "type": "string",
+                  "description": "The period"
+                },
+                "values": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "value": {
+                        "type": "integer",
+                        "description": "The values"
+                      },
+                      "end_time": {
+                        "type": "string",
+                        "description": "The end_time"
+                      }
+                    }
+                  },
+                  "description": "The valuess"
+                },
+                "title": {
+                  "type": "string",
+                  "description": "The title"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "The description"
+                }
+              }
+            },
+            "description": "The data"
+          },
+          "paging": {
+            "type": "object",
+            "properties": {
+              "previous": {
+                "type": "string",
+                "description": "The previous"
+              },
+              "next": {
+                "type": "string",
+                "description": "The next"
+              }
+            },
+            "description": "The paging"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_post_insights",
+      "description": "Get insights and analytics for a specific post",
+      "service_type": "api_call",
+      "endpoint_template": "/{{post_id}}/insights",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "Accept": "application/json"
+        },
+        "query_params": {
+          "metric": "{{metric}}",
+          "access_token": "{{access_token}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "post_id": {
+            "type": "string",
+            "description": "The ID of the post (format: pageId_postId)"
+          },
+          "metric": {
+            "type": "string",
+            "description": "Comma-separated list of metrics (e.g., post_impressions,post_engaged_users,post_clicks)"
+          }
+        },
+        "required": [
+          "post_id",
+          "metric"
+        ]
+      },
+      "sample_input": {
+        "post_id": "123456789_987654321",
+        "metric": "post_impressions,post_engaged_users,post_clicks"
+      },
+      "sample_output": {
+        "data": [
+          {
+            "name": "post_impressions",
+            "period": "lifetime",
+            "values": [
+              {
+                "value": 5000
+              }
+            ],
+            "title": "Lifetime Post Impressions",
+            "description": "Total number of times post was displayed"
+          },
+          {
+            "name": "post_engaged_users",
+            "period": "lifetime",
+            "values": [
+              {
+                "value": 250
+              }
+            ]
+          }
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "The name"
+                },
+                "period": {
+                  "type": "string",
+                  "description": "The period"
+                },
+                "values": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "value": {
+                        "type": "integer",
+                        "description": "The values"
+                      }
+                    }
+                  },
+                  "description": "The valuess"
+                },
+                "title": {
+                  "type": "string",
+                  "description": "The title"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "The description"
+                }
+              }
+            },
+            "description": "The data"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "delete_post",
+      "description": "Delete a post from a Facebook Page",
+      "service_type": "api_call",
+      "endpoint_template": "/{{post_id}}",
+      "request_config": {
+        "method": "DELETE",
+        "headers_template": {
+          "Accept": "application/json"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "post_id": {
+            "type": "string",
+            "description": "The ID of the post to delete (format: pageId_postId)"
+          }
+        },
+        "required": [
+          "post_id"
+        ]
+      },
+      "sample_input": {
+        "post_id": "123456789_987654321"
+      },
+      "sample_output": {
+        "success": true
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "integer",
+            "description": "The success"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "update_post",
+      "description": "Update an existing post on a Facebook Page",
+      "service_type": "api_call",
+      "endpoint_template": "/{{post_id}}",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        "body_template": {
+          "message": "{{message}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "post_id": {
+            "type": "string",
+            "description": "The ID of the post to update (format: pageId_postId)"
+          },
+          "message": {
+            "type": "string",
+            "description": "The new message content for the post"
+          }
+        },
+        "required": [
+          "post_id",
+          "message"
+        ]
+      },
+      "sample_input": {
+        "post_id": "123456789_987654321",
+        "message": "Updated: Check out our latest news!"
+      },
+      "sample_output": {
+        "success": true
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "integer",
+            "description": "The success"
+          }
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "event_name": "page_post_published",
+      "description": "Triggered when a new post is published on a Facebook Page",
+      "event_type": "webhook",
+      "event_configuration": {
+        "http_method": "POST",
+        "validation": {
+          "type": "signature",
+          "header": "X-Hub-Signature-256",
+          "algorithm": "sha256",
+          "secret_param": "webhook_secret"
+        },
+        "verification": {
+          "enabled": true,
+          "mode_param": "hub.mode",
+          "token_param": "hub.verify_token",
+          "challenge_param": "hub.challenge"
+        }
+      },
+      "sample_payload": {
+        "entry": [
+          {
+            "id": "page_id",
+            "time": 1628789012345,
+            "changes": [
+              {
+                "field": "feed",
+                "value": {
+                  "item": "status",
+                  "post_id": "123456789_987654321",
+                  "verb": "add",
+                  "published": 1,
+                  "created_time": 1628789012,
+                  "message": "New post content"
+                }
+              }
+            ]
+          }
+        ],
+        "object": "page"
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "page_comment_received",
+      "description": "Triggered when a comment is made on a Page post",
+      "event_type": "webhook",
+      "event_configuration": {
+        "http_method": "POST",
+        "validation": {
+          "type": "signature",
+          "header": "X-Hub-Signature-256",
+          "algorithm": "sha256",
+          "secret_param": "webhook_secret"
+        }
+      },
+      "sample_payload": {
+        "entry": [
+          {
+            "id": "page_id",
+            "time": 1628789012345,
+            "changes": [
+              {
+                "field": "feed",
+                "value": {
+                  "item": "comment",
+                  "comment_id": "123456789_987654321",
+                  "parent_id": "123456789_111222333",
+                  "verb": "add",
+                  "created_time": 1628789012,
+                  "message": "Great post!",
+                  "from": {
+                    "id": "user_id",
+                    "name": "John Doe"
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "object": "page"
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "manual_trigger",
+      "description": "Manually trigger Facebook API workflows for testing or on-demand execution",
+      "event_type": "manual",
+      "event_configuration": {},
+      "sample_payload": {
+        "trigger_time": "2025-08-13T12:00:00Z",
+        "triggered_by": "user@example.com"
+      }
+    }
+  ],
+  "metadata": {
+    "created_at": "2025-08-13T12:46:31.933589",
+    "created_by": "IOFlow",
+    "author": "IOFlow",
+    "tags": [
+      "communication"
+    ],
+    "documentation_url": "https://docs.example.com/facebook_graph_api",
+    "support_email": "support@example.com",
+    "last_modified": "2025-08-23T12:53:14.102778",
+    "services_count": 8,
+    "events_count": 3,
+    "modified_by": "claude-code"
+  },
+  "_validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": [
+      {
+        "path": [
+          "application",
+          "auth_config"
+        ],
+        "message": "OAuth2 configuration should include 'authorization_url'"
+      }
+    ],
+    "validated_at": "2025-08-13T18:19:37.360433"
+  }
+}

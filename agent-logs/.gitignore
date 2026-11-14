@@ -1,0 +1,8 @@
+# Ignore all user validation logs
+*
+
+# But keep this .gitignore file
+!.gitignore
+
+# And keep a README
+!README.md

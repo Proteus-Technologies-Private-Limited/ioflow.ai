@@ -1,0 +1,21 @@
+{
+  "key": "meta_whatsapp_928957563632442",
+  "application": {
+    "app_name": "META (928957563632442)",
+    "app_type": "api",
+    "category": "Messaging",
+    "auth_type": "api_key",
+    "description": "META WhatsApp Cloud API integration with phone number ID 928957563632442 embedded in endpoints. Sends template and session text messages and receives incoming webhooks.",
+    "base_url": "https://graph.facebook.com/v21.0",
+    "version": "1.0.0",
+    "auth_config": {
+      "header_name": "Authorization",
+      "token_prefix": "Bearer",
+      "token_env_var": "META_BEARER_TOKEN",
+      "phone_number_id": "928957563632442",
+      "notes": "META_BEARER_TOKEN must be set. Phone number ID is embedded in endpoints."
+    }
+  },
+  "services": [],
+  "events": []
+}

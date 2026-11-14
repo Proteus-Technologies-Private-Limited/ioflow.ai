@@ -1,0 +1,15 @@
+[Unit]
+Description=IOFlow backend health monitor (watchdog + email alerts)
+After=network.target ioflow.service
+# Don't fail the unit just because the backend is currently down -- that is
+# exactly the condition this watchdog exists to detect and recover from.
+
+[Service]
+Type=oneshot
+# Runs as root so it can `systemctl restart ioflow` and read journald logs
+# without a sudoers entry. __PROJECT_DIR__ is substituted by install_healthcheck.sh.
+EnvironmentFile=-/etc/ioflow-healthcheck.env
+ExecStart=/bin/bash __PROJECT_DIR__/scripts/health_monitor.sh
+# A failing health check is a handled event (script always exits 0); only a
+# genuine script error should mark this run failed.
+TimeoutStartSec=120

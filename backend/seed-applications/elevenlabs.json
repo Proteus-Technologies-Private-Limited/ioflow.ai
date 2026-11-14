@@ -1,0 +1,1068 @@
+{
+  "key": "elevenlabs",
+  "application": {
+    "app_name": "ElevenLabs",
+    "app_type": "api",
+    "category": "AI/ML",
+    "auth_type": "api_key",
+    "description": "AI-powered text-to-speech, voice cloning, speech-to-speech, sound generation, dubbing, and audio isolation platform",
+    "base_url": "https://api.elevenlabs.io",
+    "version": "1.0.13",
+    "auth_config": {
+      "header_name": "X-API-Key"
+    }
+  },
+  "services": [
+    {
+      "service_name": "text_to_speech",
+      "description": "Convert text to speech audio using a specified voice and model",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/text-to-speech/{{voice_id}}",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        },
+        "body_template": {
+          "text": "{{text}}",
+          "model_id": "{{model_id}}",
+          "language_code": "{{language_code}}",
+          "voice_settings": "{{voice_settings}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "voice_id": {
+            "type": "string",
+            "description": "ID of the voice to use for speech synthesis",
+            "required": true
+          },
+          "text": {
+            "type": "string",
+            "description": "The text to convert into speech",
+            "required": true
+          },
+          "model_id": {
+            "type": "string",
+            "description": "Model ID for text-to-speech (default: eleven_multilingual_v2)",
+            "default": "eleven_multilingual_v2"
+          },
+          "output_format": {
+            "type": "string",
+            "description": "Audio output format (e.g., mp3_44100_128, wav_48000, opus_48000_192)",
+            "default": "mp3_44100_128"
+          },
+          "language_code": {
+            "type": "string",
+            "description": "ISO 639-1 language code for language enforcement"
+          },
+          "voice_settings": {
+            "type": "object",
+            "description": "Voice settings including stability, similarity_boost, style, speed, use_speaker_boost",
+            "properties": {
+              "stability": {
+                "type": "number",
+                "description": "Voice stability (0-1)"
+              },
+              "similarity_boost": {
+                "type": "number",
+                "description": "Similarity boost (0-1)"
+              },
+              "style": {
+                "type": "number",
+                "description": "Style exaggeration (0-1)"
+              },
+              "speed": {
+                "type": "number",
+                "description": "Speech speed"
+              },
+              "use_speaker_boost": {
+                "type": "boolean",
+                "description": "Enable speaker boost"
+              }
+            }
+          },
+          "seed": {
+            "type": "integer",
+            "description": "Seed for deterministic output (0-4294967295)"
+          },
+          "previous_text": {
+            "type": "string",
+            "description": "Previous text for continuity context"
+          },
+          "next_text": {
+            "type": "string",
+            "description": "Next text for continuity context"
+          },
+          "apply_text_normalization": {
+            "type": "string",
+            "description": "Text normalization mode: auto, on, or off",
+            "default": "auto",
+            "enum": [
+              "auto",
+              "on",
+              "off"
+            ]
+          }
+        },
+        "required": [
+          "voice_id",
+          "text"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "output_schema": {
+        "type": "binary",
+        "content_type": "application/octet-stream",
+        "description": "Audio file in the specified output format"
+      }
+    },
+    {
+      "service_name": "text_to_speech_stream",
+      "description": "Stream text-to-speech audio in real-time using chunked transfer encoding",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/text-to-speech/{{voice_id}}/stream",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        },
+        "body_template": {
+          "text": "{{text}}",
+          "model_id": "{{model_id}}",
+          "language_code": "{{language_code}}",
+          "voice_settings": "{{voice_settings}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "voice_id": {
+            "type": "string",
+            "description": "ID of the voice to use for speech synthesis",
+            "required": true
+          },
+          "text": {
+            "type": "string",
+            "description": "The text to convert into streaming speech",
+            "required": true
+          },
+          "model_id": {
+            "type": "string",
+            "description": "Model ID for text-to-speech (default: eleven_multilingual_v2)",
+            "default": "eleven_multilingual_v2"
+          },
+          "output_format": {
+            "type": "string",
+            "description": "Audio output format (e.g., mp3_44100_128, pcm_16000, opus_48000_64)",
+            "default": "mp3_44100_128"
+          },
+          "language_code": {
+            "type": "string",
+            "description": "ISO 639-1 language code"
+          },
+          "voice_settings": {
+            "type": "object",
+            "description": "Voice settings: stability, similarity_boost, style, speed, use_speaker_boost",
+            "properties": {
+              "stability": {
+                "type": "number"
+              },
+              "similarity_boost": {
+                "type": "number"
+              },
+              "style": {
+                "type": "number"
+              },
+              "speed": {
+                "type": "number"
+              },
+              "use_speaker_boost": {
+                "type": "boolean"
+              }
+            }
+          },
+          "optimize_streaming_latency": {
+            "type": "integer",
+            "description": "Latency optimization level (0-4, higher reduces quality)",
+            "default": 0
+          }
+        },
+        "required": [
+          "voice_id",
+          "text"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "output_schema": {
+        "type": "binary",
+        "content_type": "application/octet-stream",
+        "description": "Streaming audio data in chunked transfer encoding"
+      }
+    },
+    {
+      "service_name": "text_to_speech_with_timestamps",
+      "description": "Convert text to speech and return audio with character-level timing alignment data",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/text-to-speech/{{voice_id}}/with-timestamps",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        },
+        "body_template": {
+          "text": "{{text}}",
+          "model_id": "{{model_id}}",
+          "language_code": "{{language_code}}",
+          "voice_settings": "{{voice_settings}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "voice_id": {
+            "type": "string",
+            "description": "ID of the voice to use",
+            "required": true
+          },
+          "text": {
+            "type": "string",
+            "description": "The text to convert into speech with timestamps",
+            "required": true
+          },
+          "model_id": {
+            "type": "string",
+            "description": "Model ID (default: eleven_multilingual_v2)",
+            "default": "eleven_multilingual_v2"
+          },
+          "output_format": {
+            "type": "string",
+            "description": "Audio output format",
+            "default": "mp3_44100_128"
+          },
+          "language_code": {
+            "type": "string",
+            "description": "ISO 639-1 language code"
+          },
+          "voice_settings": {
+            "type": "object",
+            "description": "Voice settings: stability, similarity_boost, style, speed",
+            "properties": {
+              "stability": {
+                "type": "number"
+              },
+              "similarity_boost": {
+                "type": "number"
+              },
+              "style": {
+                "type": "number"
+              },
+              "speed": {
+                "type": "number"
+              },
+              "use_speaker_boost": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "required": [
+          "voice_id",
+          "text"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "description": "Audio with character-level alignment timestamps",
+        "properties": {
+          "audio_base64": {
+            "type": "string",
+            "description": "Base64-encoded audio data"
+          },
+          "alignment": {
+            "type": "object",
+            "properties": {
+              "characters": {
+                "type": "array",
+                "description": "Array of characters"
+              },
+              "character_start_times_seconds": {
+                "type": "array",
+                "description": "Start times in seconds"
+              },
+              "character_end_times_seconds": {
+                "type": "array",
+                "description": "End times in seconds"
+              }
+            }
+          },
+          "normalized_alignment": {
+            "type": "object",
+            "properties": {
+              "characters": {
+                "type": "array"
+              },
+              "character_start_times_seconds": {
+                "type": "array"
+              },
+              "character_end_times_seconds": {
+                "type": "array"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "service_name": "list_voices",
+      "description": "List available voices with filtering, pagination, and search capabilities",
+      "service_type": "api_call",
+      "endpoint_template": "/v2/voices",
+      "request_config": {
+        "method": "GET"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "page_size": {
+            "type": "integer",
+            "description": "Maximum voices to return (1-100, default: 10)",
+            "default": 10
+          },
+          "next_page_token": {
+            "type": "string",
+            "description": "Pagination token from previous response"
+          },
+          "search": {
+            "type": "string",
+            "description": "Filter by name, description, labels, or category"
+          },
+          "sort": {
+            "type": "string",
+            "description": "Sort field: created_at_unix or name",
+            "enum": [
+              "created_at_unix",
+              "name"
+            ]
+          },
+          "sort_direction": {
+            "type": "string",
+            "description": "Sort direction",
+            "enum": [
+              "asc",
+              "desc"
+            ]
+          },
+          "voice_type": {
+            "type": "string",
+            "description": "Filter by voice type",
+            "enum": [
+              "personal",
+              "community",
+              "default",
+              "workspace",
+              "non-default",
+              "saved"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "description": "Filter by category",
+            "enum": [
+              "premade",
+              "cloned",
+              "generated",
+              "professional"
+            ]
+          },
+          "include_total_count": {
+            "type": "boolean",
+            "description": "Include total count in response",
+            "default": true
+          }
+        },
+        "required": []
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "voices": {
+            "type": "array",
+            "description": "List of voice objects with voice_id, name, category, description, preview_url, labels, settings"
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "total_count": {
+            "type": "integer"
+          },
+          "next_page_token": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_voice",
+      "description": "Get detailed information about a specific voice including settings, samples, and metadata",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/voices/{{voice_id}}",
+      "request_config": {
+        "method": "GET"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "voice_id": {
+            "type": "string",
+            "description": "ID of the voice to retrieve",
+            "required": true
+          }
+        },
+        "required": [
+          "voice_id"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "voice_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "description": "generated, cloned, premade, professional, famous, high_quality"
+          },
+          "description": {
+            "type": "string"
+          },
+          "preview_url": {
+            "type": "string"
+          },
+          "labels": {
+            "type": "object"
+          },
+          "settings": {
+            "type": "object",
+            "properties": {
+              "stability": {
+                "type": "number"
+              },
+              "similarity_boost": {
+                "type": "number"
+              },
+              "style": {
+                "type": "number"
+              },
+              "speed": {
+                "type": "number"
+              }
+            }
+          },
+          "samples": {
+            "type": "array"
+          },
+          "is_owner": {
+            "type": "boolean"
+          },
+          "created_at_unix": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "delete_voice",
+      "description": "Delete a specific voice by its ID",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/voices/{{voice_id}}",
+      "request_config": {
+        "method": "DELETE"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "voice_id": {
+            "type": "string",
+            "description": "ID of the voice to delete",
+            "required": true
+          }
+        },
+        "required": [
+          "voice_id"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Status of the deletion request (ok on success)"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "speech_to_speech",
+      "description": "Convert voice in an audio file to a different voice while preserving emotion and intonation",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/speech-to-speech/{{voice_id}}",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "multipart/form-data"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "voice_id": {
+            "type": "string",
+            "description": "ID of the target voice to apply",
+            "required": true
+          },
+          "audio": {
+            "type": "string",
+            "format": "binary",
+            "description": "Source audio file containing voice/emotion to transfer",
+            "required": true
+          },
+          "model_id": {
+            "type": "string",
+            "description": "Model ID (default: eleven_english_sts_v2)",
+            "default": "eleven_english_sts_v2"
+          },
+          "output_format": {
+            "type": "string",
+            "description": "Audio output format",
+            "default": "mp3_44100_128"
+          },
+          "voice_settings": {
+            "type": "string",
+            "description": "JSON-encoded voice settings string"
+          },
+          "seed": {
+            "type": "integer",
+            "description": "Deterministic sampling seed (0-4294967295)"
+          },
+          "remove_background_noise": {
+            "type": "boolean",
+            "description": "Remove background noise from input audio",
+            "default": false
+          }
+        },
+        "required": [
+          "voice_id",
+          "audio"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "output_schema": {
+        "type": "binary",
+        "content_type": "application/octet-stream",
+        "description": "Converted audio file"
+      }
+    },
+    {
+      "service_name": "audio_isolation",
+      "description": "Isolate vocals and speech from background noise in an audio file",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/audio-isolation",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "multipart/form-data"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "audio": {
+            "type": "string",
+            "format": "binary",
+            "description": "Audio file from which vocals/speech will be isolated",
+            "required": true
+          },
+          "file_format": {
+            "type": "string",
+            "description": "Input file format: pcm_s16le_16 or other",
+            "enum": [
+              "pcm_s16le_16",
+              "other"
+            ]
+          }
+        },
+        "required": [
+          "audio"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "output_schema": {
+        "type": "binary",
+        "content_type": "application/octet-stream",
+        "description": "Processed audio with isolated vocals"
+      }
+    },
+    {
+      "service_name": "audio_isolation_stream",
+      "description": "Stream audio isolation results in real-time for removing background noise from audio",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/audio-isolation/stream",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "multipart/form-data"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "audio": {
+            "type": "string",
+            "format": "binary",
+            "description": "Audio file from which vocals/speech will be isolated",
+            "required": true
+          },
+          "file_format": {
+            "type": "string",
+            "description": "Input file format: pcm_s16le_16 or other",
+            "enum": [
+              "pcm_s16le_16",
+              "other"
+            ]
+          }
+        },
+        "required": [
+          "audio"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "output_schema": {
+        "type": "binary",
+        "content_type": "application/octet-stream",
+        "description": "Streaming isolated audio data"
+      }
+    },
+    {
+      "service_name": "sound_generation",
+      "description": "Generate sound effects from a text description using AI",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/sound-generation",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        },
+        "body_template": {
+          "text": "{{text}}",
+          "duration_seconds": "{{duration_seconds}}",
+          "prompt_influence": "{{prompt_influence}}",
+          "model_id": "{{model_id}}",
+          "loop": "{{loop}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Text description of the sound effect to generate",
+            "required": true
+          },
+          "duration_seconds": {
+            "type": "number",
+            "description": "Duration in seconds (0.5-30, auto if omitted)"
+          },
+          "prompt_influence": {
+            "type": "number",
+            "description": "Adherence to prompt (0-1, default: 0.3)",
+            "default": 0.3
+          },
+          "model_id": {
+            "type": "string",
+            "description": "Model ID (default: eleven_text_to_sound_v2)",
+            "default": "eleven_text_to_sound_v2"
+          },
+          "loop": {
+            "type": "boolean",
+            "description": "Create a looping sound effect (v2 model only)",
+            "default": false
+          },
+          "output_format": {
+            "type": "string",
+            "description": "Audio output format",
+            "default": "mp3_44100_128"
+          }
+        },
+        "required": [
+          "text"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "output_schema": {
+        "type": "binary",
+        "content_type": "application/octet-stream",
+        "description": "Generated sound effect audio file"
+      }
+    },
+    {
+      "service_name": "list_models",
+      "description": "List all available ElevenLabs models with their capabilities and supported languages",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/models",
+      "request_config": {
+        "method": "GET"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "output_schema": {
+        "type": "array",
+        "description": "Array of model objects",
+        "items": {
+          "type": "object",
+          "properties": {
+            "model_id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "can_be_finetuned": {
+              "type": "boolean"
+            },
+            "can_do_text_to_speech": {
+              "type": "boolean"
+            },
+            "can_do_voice_conversion": {
+              "type": "boolean"
+            },
+            "can_use_style": {
+              "type": "boolean"
+            },
+            "can_use_speaker_boost": {
+              "type": "boolean"
+            },
+            "serves_pro_voices": {
+              "type": "boolean"
+            },
+            "token_cost_factor": {
+              "type": "number"
+            },
+            "description": {
+              "type": "string"
+            },
+            "max_characters_request_free_user": {
+              "type": "integer"
+            },
+            "max_characters_request_subscribed_user": {
+              "type": "integer"
+            },
+            "languages": {
+              "type": "array"
+            }
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_history",
+      "description": "Retrieve generation history with filtering by voice, model, date range, and source",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/history",
+      "request_config": {
+        "method": "GET"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "page_size": {
+            "type": "integer",
+            "description": "Max items to return (max 1000, default 100)",
+            "default": 100
+          },
+          "start_after_history_item_id": {
+            "type": "string",
+            "description": "Cursor for pagination"
+          },
+          "voice_id": {
+            "type": "string",
+            "description": "Filter by voice ID"
+          },
+          "model_id": {
+            "type": "string",
+            "description": "Filter by model ID"
+          },
+          "date_before_unix": {
+            "type": "integer",
+            "description": "Filter items before this Unix timestamp (exclusive)"
+          },
+          "date_after_unix": {
+            "type": "integer",
+            "description": "Filter items after this Unix timestamp (inclusive)"
+          },
+          "sort_direction": {
+            "type": "string",
+            "description": "Sort order",
+            "enum": [
+              "asc",
+              "desc"
+            ]
+          },
+          "search": {
+            "type": "string",
+            "description": "Text-based search filter"
+          },
+          "source": {
+            "type": "string",
+            "description": "Filter by source type",
+            "enum": [
+              "TTS",
+              "STS",
+              "Projects",
+              "PD",
+              "AN",
+              "Dubbing",
+              "PlayAPI",
+              "ConvAI",
+              "VoiceGeneration"
+            ]
+          }
+        },
+        "required": []
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "history": {
+            "type": "array",
+            "description": "Array of history item objects"
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "last_history_item_id": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "create_dubbing",
+      "description": "Dub a video or audio file into a target language with AI voice cloning",
+      "service_type": "api_call",
+      "endpoint_template": "/v1/dubbing",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "multipart/form-data"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "description": "Audio or video file to dub"
+          },
+          "source_url": {
+            "type": "string",
+            "description": "URL of the source media (alternative to file upload)"
+          },
+          "target_lang": {
+            "type": "string",
+            "description": "Target language ISO 639-1/3 code",
+            "required": true
+          },
+          "source_lang": {
+            "type": "string",
+            "description": "Source language code (default: auto for auto-detection)",
+            "default": "auto"
+          },
+          "name": {
+            "type": "string",
+            "description": "Project name"
+          },
+          "num_speakers": {
+            "type": "integer",
+            "description": "Number of speakers (0 for auto-detect)",
+            "default": 0
+          },
+          "mode": {
+            "type": "string",
+            "description": "Processing mode",
+            "enum": [
+              "automatic",
+              "manual"
+            ],
+            "default": "automatic"
+          },
+          "watermark": {
+            "type": "boolean",
+            "description": "Add watermark to output",
+            "default": false
+          },
+          "highest_resolution": {
+            "type": "boolean",
+            "description": "Use highest resolution processing",
+            "default": false
+          },
+          "drop_background_audio": {
+            "type": "boolean",
+            "description": "Remove background audio",
+            "default": false
+          },
+          "use_profanity_filter": {
+            "type": "boolean",
+            "description": "Censor profanities in output"
+          },
+          "dubbing_studio": {
+            "type": "boolean",
+            "description": "Prepare for studio editing",
+            "default": false
+          },
+          "start_time": {
+            "type": "integer",
+            "description": "Start time in seconds for partial dubbing"
+          },
+          "end_time": {
+            "type": "integer",
+            "description": "End time in seconds for partial dubbing"
+          }
+        },
+        "required": [
+          "target_lang"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "dubbing_id": {
+            "type": "string",
+            "description": "ID of the created dubbing project"
+          },
+          "expected_duration_sec": {
+            "type": "number",
+            "description": "Expected processing duration in seconds"
+          }
+        }
+      }
+    }
+  ],
+  "events": [],
+  "_validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": [],
+    "validated_at": "2026-03-17T23:31:12.928096"
+  },
+  "metadata": {
+    "last_modified": "2026-03-17T18:01:12.955149",
+    "services_count": 13
+  }
+}

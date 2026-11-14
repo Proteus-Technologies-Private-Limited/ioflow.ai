@@ -1,0 +1,719 @@
+{
+  "key": "google_calendar",
+  "application": {
+    "app_name": "Google Calendar",
+    "app_type": "api",
+    "category": "Productivity",
+    "auth_type": "oauth2",
+    "description": "Google Calendar integration for managing calendars, events, scheduling, and notifications. Supports creating, reading, updating, and deleting calendar events, managing attendees, and handling event reminders.",
+    "base_url": "https://www.googleapis.com/calendar/v3",
+    "version": "1.0.13",
+    "auth_config": {
+      "authorization_url": "https://example.com/oauth/authorize",
+      "token_url": "https://example.com/oauth/token",
+      "scopes": []
+    }
+  },
+  "services": [
+    {
+      "service_name": "list_events",
+      "description": "List events from a Google Calendar within a specified time range. Returns a list of calendar events with details like summary, start/end times, attendees, and location.",
+      "service_type": "api_call",
+      "endpoint_template": "/calendars/{{calendar_id}}/events",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "Accept": "application/json",
+          "Authorization": "Bearer {{access_token}}"
+        },
+        "query_params_template": {
+          "timeMin": "{{time_min}}",
+          "timeMax": "{{time_max}}",
+          "maxResults": "{{max_results}}",
+          "singleEvents": "true",
+          "orderBy": "startTime"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "calendar_id": {
+            "type": "string",
+            "description": "Calendar ID (use 'primary' for the main calendar)"
+          },
+          "time_min": {
+            "type": "string",
+            "description": "Lower bound (inclusive) for event start time (RFC3339 format)"
+          },
+          "time_max": {
+            "type": "string",
+            "description": "Upper bound (exclusive) for event end time (RFC3339 format)"
+          },
+          "max_results": {
+            "type": "integer",
+            "description": "Maximum number of events to return (default 250)"
+          }
+        },
+        "required": [
+          "calendar_id"
+        ],
+        "additionalProperties": false
+      },
+      "sample_output": {
+        "kind": "calendar#events",
+        "summary": "My Calendar",
+        "items": [
+          {
+            "id": "event123",
+            "summary": "Team Meeting",
+            "start": {
+              "dateTime": "2026-03-17T10:00:00-07:00"
+            },
+            "end": {
+              "dateTime": "2026-03-17T11:00:00-07:00"
+            },
+            "location": "Conference Room A",
+            "attendees": [
+              {
+                "email": "user@example.com",
+                "responseStatus": "accepted"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "service_name": "create_event",
+      "description": "Create a new event in a Google Calendar. Supports setting summary, description, start/end times, location, attendees, and reminders.",
+      "service_type": "api_call",
+      "endpoint_template": "/calendars/{{calendar_id}}/events",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer {{access_token}}"
+        },
+        "body_template": {
+          "summary": "{{summary}}",
+          "description": "{{description}}",
+          "location": "{{location}}",
+          "start": {
+            "dateTime": "{{start_datetime}}",
+            "timeZone": "{{timezone}}"
+          },
+          "end": {
+            "dateTime": "{{end_datetime}}",
+            "timeZone": "{{timezone}}"
+          },
+          "attendees": "{{attendees}}",
+          "reminders": {
+            "useDefault": false,
+            "overrides": "{{reminder_overrides}}"
+          }
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "calendar_id": {
+            "type": "string",
+            "description": "Calendar ID (use 'primary' for the main calendar)"
+          },
+          "summary": {
+            "type": "string",
+            "description": "Title of the event"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description or notes for the event"
+          },
+          "location": {
+            "type": "string",
+            "description": "Geographic location of the event"
+          },
+          "start_datetime": {
+            "type": "string",
+            "description": "Start date-time in RFC3339 format (e.g. 2026-03-17T10:00:00-07:00)"
+          },
+          "end_datetime": {
+            "type": "string",
+            "description": "End date-time in RFC3339 format"
+          },
+          "timezone": {
+            "type": "string",
+            "description": "IANA timezone (e.g. America/Los_Angeles)"
+          },
+          "attendees": {
+            "type": "array",
+            "description": "List of attendee objects with email addresses"
+          },
+          "reminder_overrides": {
+            "type": "array",
+            "description": "Custom reminder overrides (e.g. [{method: email, minutes: 30}])"
+          }
+        },
+        "required": [
+          "calendar_id",
+          "summary",
+          "start_datetime",
+          "end_datetime"
+        ],
+        "additionalProperties": false
+      },
+      "sample_input": {
+        "calendar_id": "primary",
+        "summary": "Project Review",
+        "description": "Quarterly project review meeting",
+        "location": "Meeting Room B",
+        "start_datetime": "2026-03-18T14:00:00-07:00",
+        "end_datetime": "2026-03-18T15:00:00-07:00",
+        "timezone": "America/Los_Angeles",
+        "attendees": [
+          {
+            "email": "colleague@example.com"
+          }
+        ]
+      },
+      "sample_output": {
+        "kind": "calendar#event",
+        "id": "event456",
+        "status": "confirmed",
+        "summary": "Project Review",
+        "start": {
+          "dateTime": "2026-03-18T14:00:00-07:00",
+          "timeZone": "America/Los_Angeles"
+        },
+        "end": {
+          "dateTime": "2026-03-18T15:00:00-07:00",
+          "timeZone": "America/Los_Angeles"
+        },
+        "htmlLink": "https://www.google.com/calendar/event?eid=event456"
+      }
+    },
+    {
+      "service_name": "get_event",
+      "description": "Retrieve details of a specific event from a Google Calendar by its event ID.",
+      "service_type": "api_call",
+      "endpoint_template": "/calendars/{{calendar_id}}/events/{{event_id}}",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "Accept": "application/json",
+          "Authorization": "Bearer {{access_token}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "calendar_id": {
+            "type": "string",
+            "description": "Calendar ID (use 'primary' for the main calendar)"
+          },
+          "event_id": {
+            "type": "string",
+            "description": "The unique event identifier"
+          }
+        },
+        "required": [
+          "calendar_id",
+          "event_id"
+        ],
+        "additionalProperties": false
+      },
+      "sample_output": {
+        "kind": "calendar#event",
+        "id": "event123",
+        "status": "confirmed",
+        "summary": "Team Meeting",
+        "description": "Weekly sync",
+        "start": {
+          "dateTime": "2026-03-17T10:00:00-07:00"
+        },
+        "end": {
+          "dateTime": "2026-03-17T11:00:00-07:00"
+        },
+        "location": "Conference Room A",
+        "creator": {
+          "email": "user@example.com"
+        },
+        "attendees": [
+          {
+            "email": "team@example.com",
+            "responseStatus": "accepted"
+          }
+        ]
+      }
+    },
+    {
+      "service_name": "update_event",
+      "description": "Update an existing event in a Google Calendar. Allows modifying summary, description, times, location, attendees, and other event properties.",
+      "service_type": "api_call",
+      "endpoint_template": "/calendars/{{calendar_id}}/events/{{event_id}}",
+      "request_config": {
+        "method": "PUT",
+        "headers_template": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer {{access_token}}"
+        },
+        "body_template": {
+          "summary": "{{summary}}",
+          "description": "{{description}}",
+          "location": "{{location}}",
+          "start": {
+            "dateTime": "{{start_datetime}}",
+            "timeZone": "{{timezone}}"
+          },
+          "end": {
+            "dateTime": "{{end_datetime}}",
+            "timeZone": "{{timezone}}"
+          },
+          "attendees": "{{attendees}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "calendar_id": {
+            "type": "string",
+            "description": "Calendar ID (use 'primary' for the main calendar)"
+          },
+          "event_id": {
+            "type": "string",
+            "description": "The unique event identifier"
+          },
+          "summary": {
+            "type": "string",
+            "description": "Updated title of the event"
+          },
+          "description": {
+            "type": "string",
+            "description": "Updated description"
+          },
+          "location": {
+            "type": "string",
+            "description": "Updated location"
+          },
+          "start_datetime": {
+            "type": "string",
+            "description": "Updated start date-time in RFC3339 format"
+          },
+          "end_datetime": {
+            "type": "string",
+            "description": "Updated end date-time in RFC3339 format"
+          },
+          "timezone": {
+            "type": "string",
+            "description": "IANA timezone"
+          },
+          "attendees": {
+            "type": "array",
+            "description": "Updated list of attendees"
+          }
+        },
+        "required": [
+          "calendar_id",
+          "event_id"
+        ],
+        "additionalProperties": false
+      },
+      "sample_output": {
+        "kind": "calendar#event",
+        "id": "event123",
+        "status": "confirmed",
+        "summary": "Updated Meeting Title",
+        "updated": "2026-03-17T12:00:00.000Z"
+      }
+    },
+    {
+      "service_name": "list_calendars",
+      "description": "List all calendars available to the authenticated user, including their IDs, names, and access roles.",
+      "service_type": "api_call",
+      "endpoint_template": "/users/me/calendarList",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "Accept": "application/json",
+          "Authorization": "Bearer {{access_token}}"
+        }
+      },
+      "sample_output": {
+        "kind": "calendar#calendarList",
+        "items": [
+          {
+            "id": "primary",
+            "summary": "My Calendar",
+            "primary": true,
+            "accessRole": "owner"
+          },
+          {
+            "id": "team@group.calendar.google.com",
+            "summary": "Team Calendar",
+            "accessRole": "writer"
+          }
+        ]
+      }
+    },
+    {
+      "service_name": "quick_add_event",
+      "description": "Create an event using natural language text (e.g., 'Meeting with John tomorrow at 3pm'). Google Calendar will parse the text to create the event.",
+      "service_type": "api_call",
+      "endpoint_template": "/calendars/{{calendar_id}}/events/quickAdd",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Authorization": "Bearer {{access_token}}"
+        },
+        "query_params_template": {
+          "text": "{{text}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "calendar_id": {
+            "type": "string",
+            "description": "Calendar ID (use 'primary' for the main calendar)"
+          },
+          "text": {
+            "type": "string",
+            "description": "Natural language text describing the event (e.g., 'Lunch with Sarah Friday at noon')"
+          }
+        },
+        "required": [
+          "calendar_id",
+          "text"
+        ],
+        "additionalProperties": false
+      },
+      "sample_input": {
+        "calendar_id": "primary",
+        "text": "Lunch with Sarah Friday at noon at Cafe Bistro"
+      },
+      "sample_output": {
+        "kind": "calendar#event",
+        "id": "event789",
+        "status": "confirmed",
+        "summary": "Lunch with Sarah",
+        "start": {
+          "dateTime": "2026-03-20T12:00:00-07:00"
+        },
+        "end": {
+          "dateTime": "2026-03-20T13:00:00-07:00"
+        }
+      }
+    },
+    {
+      "service_name": "delete_event",
+      "description": "Delete a specific event from a calendar by its event ID.",
+      "service_type": "api_call",
+      "endpoint_template": "/calendars/{{calendar_id}}/events/{{event_id}}",
+      "request_config": {
+        "method": "DELETE",
+        "headers_template": {
+          "Authorization": "Bearer {{access_token}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "calendar_id": {
+            "type": "string",
+            "description": "Calendar ID (use 'primary' for the main calendar)"
+          },
+          "event_id": {
+            "type": "string",
+            "description": "The unique identifier of the event to delete"
+          }
+        },
+        "required": [
+          "calendar_id",
+          "event_id"
+        ],
+        "additionalProperties": false
+      },
+      "sample_input": {
+        "calendar_id": "primary",
+        "event_id": "evt_abc123"
+      },
+      "sample_output": {
+        "status": 204,
+        "message": "Event successfully deleted"
+      }
+    }
+  ],
+  "events": [
+    {
+      "event_name": "event_created",
+      "description": "Triggered when a new event is created in a Google Calendar. Receives the full event details via webhook notification.",
+      "event_type": "webhook",
+      "event_configuration": {
+        "http_method": "POST",
+        "validation": {
+          "type": "token",
+          "header": "X-Goog-Channel-Token"
+        },
+        "output_schema": {
+          "type": "object",
+          "properties": {
+            "event_id": {
+              "type": "string",
+              "description": "ID of the created event"
+            },
+            "summary": {
+              "type": "string",
+              "description": "Title of the event"
+            },
+            "start": {
+              "type": "object",
+              "properties": {
+                "dateTime": {
+                  "type": "string"
+                },
+                "timeZone": {
+                  "type": "string"
+                }
+              }
+            },
+            "end": {
+              "type": "object",
+              "properties": {
+                "dateTime": {
+                  "type": "string"
+                },
+                "timeZone": {
+                  "type": "string"
+                }
+              }
+            },
+            "creator": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "type": "string"
+                }
+              }
+            },
+            "attendees": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "responseStatus": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "sample_payload": {
+        "event_id": "evt_abc123",
+        "summary": "New Team Meeting",
+        "start": {
+          "dateTime": "2026-03-18T10:00:00-07:00",
+          "timeZone": "America/Los_Angeles"
+        },
+        "end": {
+          "dateTime": "2026-03-18T11:00:00-07:00",
+          "timeZone": "America/Los_Angeles"
+        },
+        "creator": {
+          "email": "user@example.com"
+        },
+        "attendees": [
+          {
+            "email": "colleague@example.com",
+            "responseStatus": "needsAction"
+          }
+        ]
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "event_updated",
+      "description": "Triggered when an existing event is modified in a Google Calendar. Receives the updated event details via webhook notification.",
+      "event_type": "webhook",
+      "event_configuration": {
+        "http_method": "POST",
+        "validation": {
+          "type": "token",
+          "header": "X-Goog-Channel-Token"
+        },
+        "output_schema": {
+          "type": "object",
+          "properties": {
+            "event_id": {
+              "type": "string"
+            },
+            "summary": {
+              "type": "string"
+            },
+            "updated": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "start": {
+              "type": "object",
+              "properties": {
+                "dateTime": {
+                  "type": "string"
+                },
+                "timeZone": {
+                  "type": "string"
+                }
+              }
+            },
+            "end": {
+              "type": "object",
+              "properties": {
+                "dateTime": {
+                  "type": "string"
+                },
+                "timeZone": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "sample_payload": {
+        "event_id": "evt_abc123",
+        "summary": "Updated Team Meeting",
+        "updated": "2026-03-17T15:30:00.000Z",
+        "start": {
+          "dateTime": "2026-03-18T11:00:00-07:00",
+          "timeZone": "America/Los_Angeles"
+        },
+        "end": {
+          "dateTime": "2026-03-18T12:00:00-07:00",
+          "timeZone": "America/Los_Angeles"
+        }
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "event_cancelled",
+      "description": "Triggered when an event is deleted or cancelled in a Google Calendar.",
+      "event_type": "webhook",
+      "event_configuration": {
+        "http_method": "POST",
+        "validation": {
+          "type": "token",
+          "header": "X-Goog-Channel-Token"
+        },
+        "output_schema": {
+          "type": "object",
+          "properties": {
+            "event_id": {
+              "type": "string",
+              "description": "ID of the cancelled event"
+            },
+            "summary": {
+              "type": "string",
+              "description": "Title of the cancelled event"
+            },
+            "status": {
+              "type": "string",
+              "description": "Event status (cancelled)"
+            }
+          }
+        }
+      },
+      "sample_payload": {
+        "event_id": "evt_abc123",
+        "summary": "Cancelled Meeting",
+        "status": "cancelled"
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "event_reminder",
+      "description": "Triggered when a reminder notification fires for an upcoming calendar event.",
+      "event_type": "webhook",
+      "event_configuration": {
+        "http_method": "POST",
+        "validation": {
+          "type": "token",
+          "header": "X-Goog-Channel-Token"
+        },
+        "output_schema": {
+          "type": "object",
+          "properties": {
+            "event_id": {
+              "type": "string"
+            },
+            "summary": {
+              "type": "string"
+            },
+            "start": {
+              "type": "object",
+              "properties": {
+                "dateTime": {
+                  "type": "string"
+                },
+                "timeZone": {
+                  "type": "string"
+                }
+              }
+            },
+            "reminder_minutes": {
+              "type": "integer",
+              "description": "Minutes before the event that the reminder was triggered"
+            }
+          }
+        }
+      },
+      "sample_payload": {
+        "event_id": "evt_abc123",
+        "summary": "Team Meeting",
+        "start": {
+          "dateTime": "2026-03-18T10:00:00-07:00",
+          "timeZone": "America/Los_Angeles"
+        },
+        "reminder_minutes": 15
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    }
+  ],
+  "_validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": [],
+    "validated_at": "2026-03-17T16:12:52.975537"
+  },
+  "metadata": {
+    "last_modified": "2026-03-17T10:42:53.067337",
+    "services_count": 7,
+    "events_count": 4
+  }
+}

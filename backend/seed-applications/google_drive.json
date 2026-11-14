@@ -1,0 +1,1643 @@
+{
+  "key": "google_drive",
+  "application": {
+    "app_name": "Google Drive",
+    "app_type": "api",
+    "description": "Google Drive API v3 - Manage files and folders in Google Drive. Upload, download, search, share, and organize your cloud storage programmatically.",
+    "category": "Integration",
+    "auth_type": "oauth2",
+    "auth_config": {
+      "authorization_url": "https://accounts.google.com/o/oauth2/v2/auth",
+      "token_url": "https://oauth2.googleapis.com/token",
+      "scopes": [
+        "https://www.googleapis.com/auth/drive",
+        "https://www.googleapis.com/auth/drive.file",
+        "https://www.googleapis.com/auth/drive.readonly",
+        "https://www.googleapis.com/auth/drive.metadata.readonly",
+        "https://www.googleapis.com/auth/drive.appdata",
+        "https://www.googleapis.com/auth/drive.metadata"
+      ],
+      "grant_type": "authorization_code",
+      "authorization_params": {
+        "access_type": "offline",
+        "prompt": "consent"
+      }
+    },
+    "version": "2.1.1",
+    "base_url": "https://www.googleapis.com/drive/v3",
+    "icon_url": "https://ssl.gstatic.com/images/branding/product/2x/drive_2020q4_48dp.png",
+    "auth_example": {
+      "client_id": "your_client_id",
+      "client_secret": "your_client_secret",
+      "redirect_uri": "http://localhost:8000/api/v1/oauth/callback"
+    },
+    "app_scope": "global"
+  },
+  "services": [
+    {
+      "service_name": "list_files",
+      "description": "Lists or searches files and folders in Google Drive",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "query_params",
+        "query_params_template": {
+          "q": "{{q}}",
+          "pageSize": "{{pageSize}}",
+          "pageToken": "{{pageToken}}",
+          "orderBy": "{{orderBy}}",
+          "fields": "{{fields}}",
+          "spaces": "{{spaces}}",
+          "corpora": "{{corpora}}",
+          "includeItemsFromAllDrives": "{{includeItemsFromAllDrives}}",
+          "supportsAllDrives": "{{supportsAllDrives}}"
+        },
+        "method": "GET"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "q": {
+            "type": "string",
+            "description": "Query string for searching files. Examples: 'name contains \"hello\"', 'mimeType = \"application/vnd.google-apps.folder\"', 'modifiedTime > \"2023-01-01T00:00:00\"'"
+          },
+          "pageSize": {
+            "type": "integer",
+            "description": "Maximum number of files to return (1-1000)",
+            "default": 100,
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "pageToken": {
+            "type": "string",
+            "description": "Token for retrieving the next page of results"
+          },
+          "orderBy": {
+            "type": "string",
+            "description": "Sort order for results. Examples: 'folder,modifiedTime desc', 'name', 'createdTime'"
+          },
+          "fields": {
+            "type": "string",
+            "description": "Fields to include in the response",
+            "default": "nextPageToken, files(id, name, mimeType, size, modifiedTime, parents, webViewLink, webContentLink)"
+          },
+          "spaces": {
+            "type": "string",
+            "description": "Comma-separated list of spaces to query",
+            "default": "drive"
+          },
+          "corpora": {
+            "type": "string",
+            "description": "Bodies of items to search",
+            "enum": [
+              "user",
+              "domain",
+              "drive",
+              "allDrives"
+            ]
+          },
+          "includeItemsFromAllDrives": {
+            "type": "boolean",
+            "description": "Include items from all drives"
+          },
+          "supportsAllDrives": {
+            "type": "boolean",
+            "description": "Whether the requesting application supports both My Drives and shared drives"
+          }
+        }
+      },
+      "sample_input": {
+        "q": "mimeType != 'application/vnd.google-apps.folder'",
+        "pageSize": 10,
+        "orderBy": "modifiedTime desc"
+      },
+      "sample_output": {
+        "files": [
+          {
+            "id": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+            "name": "Project Report.docx",
+            "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "size": "245632",
+            "modifiedTime": "2024-01-15T10:30:00.000Z",
+            "parents": [
+              "0AMDaOqN0UqQUUk9PVA"
+            ],
+            "webViewLink": "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view",
+            "webContentLink": "https://drive.google.com/uc?id=1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms&export=download"
+          }
+        ],
+        "nextPageToken": "~!!~AI9FV7T..."
+      },
+      "endpoint_template": "/files",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "The id"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name"
+                },
+                "mimeType": {
+                  "type": "string",
+                  "description": "The mimeType"
+                },
+                "size": {
+                  "type": "string",
+                  "description": "The size"
+                },
+                "modifiedTime": {
+                  "type": "string",
+                  "description": "The modifiedTime"
+                },
+                "parents": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "The parents"
+                },
+                "webViewLink": {
+                  "type": "string",
+                  "description": "The webViewLink"
+                },
+                "webContentLink": {
+                  "type": "string",
+                  "description": "The webContentLink"
+                }
+              }
+            },
+            "description": "List of files"
+          },
+          "nextPageToken": {
+            "type": "string",
+            "description": "The nextPageToken"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_file",
+      "description": "Gets a file's metadata by ID",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "query_params_template": {
+          "fields": "{{fields}}",
+          "supportsAllDrives": "{{supportsAllDrives}}"
+        },
+        "method": "GET"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "fileId": {
+            "type": "string",
+            "description": "The ID of the file",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_files",
+              "parameters": {
+                "q": "mimeType != 'application/vnd.google-apps.folder'",
+                "fields": "files(id, name, mimeType)",
+                "pageSize": 100
+              },
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select from available files"
+            }
+          },
+          "fields": {
+            "type": "string",
+            "description": "Fields to include in the response",
+            "default": "*"
+          },
+          "supportsAllDrives": {
+            "type": "boolean",
+            "description": "Whether the requesting application supports both My Drives and shared drives"
+          }
+        },
+        "required": [
+          "fileId"
+        ]
+      },
+      "sample_input": {
+        "fileId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
+      },
+      "sample_output": {
+        "id": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+        "name": "Project Report.docx",
+        "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "size": "245632",
+        "createdTime": "2024-01-10T08:00:00.000Z",
+        "modifiedTime": "2024-01-15T10:30:00.000Z",
+        "parents": [
+          "0AMDaOqN0UqQUUk9PVA"
+        ],
+        "webViewLink": "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view",
+        "webContentLink": "https://drive.google.com/uc?id=1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms&export=download",
+        "shared": false,
+        "ownedByMe": true
+      },
+      "endpoint_template": "/files/{{fileId}}",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name"
+          },
+          "mimeType": {
+            "type": "string",
+            "description": "The mimeType"
+          },
+          "size": {
+            "type": "string",
+            "description": "The size"
+          },
+          "createdTime": {
+            "type": "string",
+            "description": "The createdTime"
+          },
+          "modifiedTime": {
+            "type": "string",
+            "description": "The modifiedTime"
+          },
+          "parents": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The parents"
+          },
+          "webViewLink": {
+            "type": "string",
+            "description": "The webViewLink"
+          },
+          "webContentLink": {
+            "type": "string",
+            "description": "The webContentLink"
+          },
+          "shared": {
+            "type": "integer",
+            "description": "The shared"
+          },
+          "ownedByMe": {
+            "type": "integer",
+            "description": "The ownedByMe"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "create_file",
+      "description": "Creates a new file or folder in Google Drive",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "multipart_related",
+        "query_params_template": {
+          "uploadType": "multipart",
+          "supportsAllDrives": "{{supportsAllDrives}}"
+        },
+        "body_template": {
+          "name": "{{name}}",
+          "mimeType": "{{mimeType}}",
+          "parents": "{{parents}}",
+          "description": "{{description}}",
+          "properties": "{{properties}}",
+          "appProperties": "{{appProperties}}"
+        },
+        "method": "POST"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the file"
+          },
+          "mimeType": {
+            "type": "string",
+            "description": "The MIME type of the file. Use 'application/vnd.google-apps.folder' for folders"
+          },
+          "parents": {
+            "type": "array",
+            "description": "IDs of parent folders",
+            "items": {
+              "type": "string"
+            },
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_files",
+              "parameters": {
+                "q": "mimeType = 'application/vnd.google-apps.folder'",
+                "fields": "files(id, name)",
+                "pageSize": 100
+              },
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select from available folders"
+            }
+          },
+          "description": {
+            "type": "string",
+            "description": "A short description of the file"
+          },
+          "content": {
+            "type": "string",
+            "description": "The content of the file (for text files)"
+          },
+          "properties": {
+            "type": "object",
+            "description": "Custom file properties"
+          },
+          "appProperties": {
+            "type": "object",
+            "description": "Application-specific properties"
+          },
+          "supportsAllDrives": {
+            "type": "boolean",
+            "description": "Whether the requesting application supports both My Drives and shared drives"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "sample_input": {
+        "name": "New Document.txt",
+        "mimeType": "text/plain",
+        "content": "Hello, World!",
+        "parents": [
+          "root"
+        ]
+      },
+      "sample_output": {
+        "id": "1aBcDeFgHiJkLmNoPqRsTuVwXyZ",
+        "name": "New Document.txt",
+        "mimeType": "text/plain",
+        "parents": [
+          "root"
+        ],
+        "createdTime": "2024-01-20T12:00:00.000Z"
+      },
+      "endpoint_template": "https://www.googleapis.com/upload/drive/v3/files",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name"
+          },
+          "mimeType": {
+            "type": "string",
+            "description": "The mimeType"
+          },
+          "parents": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The parents"
+          },
+          "createdTime": {
+            "type": "string",
+            "description": "The createdTime"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "update_file",
+      "description": "Updates a file's metadata and/or content",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "query_params_template": {
+          "addParents": "{{addParents}}",
+          "removeParents": "{{removeParents}}",
+          "supportsAllDrives": "{{supportsAllDrives}}"
+        },
+        "body_template": {
+          "name": "{{name}}",
+          "description": "{{description}}",
+          "mimeType": "{{mimeType}}",
+          "properties": "{{properties}}",
+          "appProperties": "{{appProperties}}"
+        },
+        "method": "PATCH"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "fileId": {
+            "type": "string",
+            "description": "The ID of the file to update",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_files",
+              "parameters": {
+                "fields": "files(id, name, mimeType)",
+                "pageSize": 100
+              },
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select from available files"
+            }
+          },
+          "name": {
+            "type": "string",
+            "description": "The new name of the file"
+          },
+          "description": {
+            "type": "string",
+            "description": "A new description of the file"
+          },
+          "mimeType": {
+            "type": "string",
+            "description": "The new MIME type of the file"
+          },
+          "addParents": {
+            "type": "string",
+            "description": "Comma-separated list of parent IDs to add",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_files",
+              "parameters": {
+                "q": "mimeType = 'application/vnd.google-apps.folder'",
+                "fields": "files(id, name)",
+                "pageSize": 100
+              },
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select folders to add as parents"
+            }
+          },
+          "removeParents": {
+            "type": "string",
+            "description": "Comma-separated list of parent IDs to remove",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_files",
+              "parameters": {
+                "q": "mimeType = 'application/vnd.google-apps.folder'",
+                "fields": "files(id, name)",
+                "pageSize": 100
+              },
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select folders to remove as parents"
+            }
+          },
+          "properties": {
+            "type": "object",
+            "description": "Custom file properties to update"
+          },
+          "appProperties": {
+            "type": "object",
+            "description": "Application-specific properties to update"
+          },
+          "supportsAllDrives": {
+            "type": "boolean",
+            "description": "Whether the requesting application supports both My Drives and shared drives"
+          }
+        },
+        "required": [
+          "fileId"
+        ]
+      },
+      "sample_input": {
+        "fileId": "1aBcDeFgHiJkLmNoPqRsTuVwXyZ",
+        "name": "Updated Document.txt",
+        "description": "This is an updated document"
+      },
+      "sample_output": {
+        "id": "1aBcDeFgHiJkLmNoPqRsTuVwXyZ",
+        "name": "Updated Document.txt",
+        "description": "This is an updated document",
+        "modifiedTime": "2024-01-20T14:00:00.000Z"
+      },
+      "endpoint_template": "/files/{{fileId}}",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name"
+          },
+          "description": {
+            "type": "string",
+            "description": "The description"
+          },
+          "modifiedTime": {
+            "type": "string",
+            "description": "The modifiedTime"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "delete_file",
+      "description": "Permanently deletes a file or folder",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "query_params_template": {
+          "supportsAllDrives": "{{supportsAllDrives}}"
+        },
+        "method": "DELETE"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "fileId": {
+            "type": "string",
+            "description": "The ID of the file to delete",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_files",
+              "parameters": {
+                "fields": "files(id, name, mimeType)",
+                "pageSize": 100
+              },
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select from available files"
+            }
+          },
+          "supportsAllDrives": {
+            "type": "boolean",
+            "description": "Whether the requesting application supports both My Drives and shared drives"
+          }
+        },
+        "required": [
+          "fileId"
+        ]
+      },
+      "sample_input": {
+        "fileId": "1aBcDeFgHiJkLmNoPqRsTuVwXyZ"
+      },
+      "sample_output": {},
+      "endpoint_template": "/files/{{fileId}}",
+      "output_schema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "service_name": "copy_file",
+      "description": "Creates a copy of a file",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "query_params_template": {
+          "supportsAllDrives": "{{supportsAllDrives}}"
+        },
+        "body_template": {
+          "name": "{{name}}",
+          "parents": "{{parents}}",
+          "description": "{{description}}"
+        },
+        "method": "POST"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "fileId": {
+            "type": "string",
+            "description": "The ID of the file to copy",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_files",
+              "parameters": {
+                "fields": "files(id, name, mimeType)",
+                "pageSize": 100
+              },
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select file to copy"
+            }
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the copy"
+          },
+          "parents": {
+            "type": "array",
+            "description": "IDs of parent folders for the copy",
+            "items": {
+              "type": "string"
+            },
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_files",
+              "parameters": {
+                "q": "mimeType = 'application/vnd.google-apps.folder'",
+                "fields": "files(id, name)",
+                "pageSize": 100
+              },
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select from available folders"
+            }
+          },
+          "description": {
+            "type": "string",
+            "description": "A description for the copy"
+          },
+          "supportsAllDrives": {
+            "type": "boolean",
+            "description": "Whether the requesting application supports both My Drives and shared drives"
+          }
+        },
+        "required": [
+          "fileId"
+        ]
+      },
+      "sample_input": {
+        "fileId": "1aBcDeFgHiJkLmNoPqRsTuVwXyZ",
+        "name": "Copy of Document.txt"
+      },
+      "sample_output": {
+        "id": "2bCdEfGhIjKlMnOpQrStUvWxYz",
+        "name": "Copy of Document.txt",
+        "mimeType": "text/plain",
+        "createdTime": "2024-01-20T15:00:00.000Z"
+      },
+      "endpoint_template": "/files/{{fileId}}/copy",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name"
+          },
+          "mimeType": {
+            "type": "string",
+            "description": "The mimeType"
+          },
+          "createdTime": {
+            "type": "string",
+            "description": "The createdTime"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "move_file",
+      "description": "Moves a file to a different folder",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "query_params_template": {
+          "addParents": "{{newParentId}}",
+          "removeParents": "{{oldParentId}}",
+          "supportsAllDrives": "{{supportsAllDrives}}"
+        },
+        "body_template": {},
+        "method": "PATCH"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "fileId": {
+            "type": "string",
+            "description": "The ID of the file to move",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_files",
+              "parameters": {
+                "fields": "files(id, name, mimeType)",
+                "pageSize": 100
+              },
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select file to move"
+            }
+          },
+          "newParentId": {
+            "type": "string",
+            "description": "The ID of the new parent folder",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_files",
+              "parameters": {
+                "q": "mimeType = 'application/vnd.google-apps.folder'",
+                "fields": "files(id, name)",
+                "pageSize": 100
+              },
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select destination folder"
+            }
+          },
+          "oldParentId": {
+            "type": "string",
+            "description": "The ID of the current parent folder to remove",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_files",
+              "parameters": {
+                "q": "mimeType = 'application/vnd.google-apps.folder'",
+                "fields": "files(id, name)",
+                "pageSize": 100
+              },
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select current parent folder"
+            }
+          },
+          "supportsAllDrives": {
+            "type": "boolean",
+            "description": "Whether the requesting application supports both My Drives and shared drives"
+          }
+        },
+        "required": [
+          "fileId",
+          "newParentId"
+        ]
+      },
+      "sample_input": {
+        "fileId": "1aBcDeFgHiJkLmNoPqRsTuVwXyZ",
+        "newParentId": "0B5HX6PJb3eRfTGRlTm5mTEU4ODg",
+        "oldParentId": "root"
+      },
+      "sample_output": {
+        "id": "1aBcDeFgHiJkLmNoPqRsTuVwXyZ",
+        "parents": [
+          "0B5HX6PJb3eRfTGRlTm5mTEU4ODg"
+        ],
+        "modifiedTime": "2024-01-20T16:00:00.000Z"
+      },
+      "endpoint_template": "/files/{{fileId}}",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id"
+          },
+          "parents": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The parents"
+          },
+          "modifiedTime": {
+            "type": "string",
+            "description": "The modifiedTime"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "download_file",
+      "description": "Downloads a file's content",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "query_params_template": {
+          "alt": "media",
+          "supportsAllDrives": "{{supportsAllDrives}}"
+        },
+        "method": "GET"
+      },
+      "response_config": {
+        "response_type": "binary"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "fileId": {
+            "type": "string",
+            "description": "The ID of the file to download",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_files",
+              "parameters": {
+                "fields": "files(id, name, mimeType)",
+                "pageSize": 100
+              },
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select file to download"
+            }
+          },
+          "supportsAllDrives": {
+            "type": "boolean",
+            "description": "Whether the requesting application supports both My Drives and shared drives"
+          }
+        },
+        "required": [
+          "fileId"
+        ]
+      },
+      "sample_input": {
+        "fileId": "1aBcDeFgHiJkLmNoPqRsTuVwXyZ"
+      },
+      "sample_output": {
+        "data": "<base64-encoded file bytes>",
+        "content_type": "application/pdf",
+        "encoding": "base64",
+        "size": 12345
+      },
+      "endpoint_template": "/files/{{fileId}}",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string",
+            "description": "Base64-encoded file content"
+          },
+          "content_type": {
+            "type": "string",
+            "description": "MIME type of the file (from response Content-Type)"
+          },
+          "encoding": {
+            "type": "string",
+            "description": "Encoding of data field; always 'base64'"
+          },
+          "size": {
+            "type": "integer",
+            "description": "Size of the original file in bytes"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "export_file",
+      "description": "Exports a Google Workspace document to a different format",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "query_params_template": {
+          "mimeType": "{{exportMimeType}}"
+        },
+        "method": "GET"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "fileId": {
+            "type": "string",
+            "description": "The ID of the file to export",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_files",
+              "parameters": {
+                "q": "mimeType = 'application/vnd.google-apps.document' or mimeType = 'application/vnd.google-apps.spreadsheet' or mimeType = 'application/vnd.google-apps.presentation'",
+                "fields": "files(id, name, mimeType)",
+                "pageSize": 100
+              },
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select Google Workspace document to export"
+            }
+          },
+          "exportMimeType": {
+            "type": "string",
+            "description": "The MIME type to export to",
+            "enum": [
+              "application/pdf",
+              "text/plain",
+              "application/rtf",
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+              "text/csv",
+              "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            ]
+          }
+        },
+        "required": [
+          "fileId",
+          "exportMimeType"
+        ]
+      },
+      "sample_input": {
+        "fileId": "1aBcDeFgHiJkLmNoPqRsTuVwXyZ",
+        "exportMimeType": "application/pdf"
+      },
+      "sample_output": {
+        "content": "Exported file content as binary data"
+      },
+      "endpoint_template": "/files/{{fileId}}/export",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The content"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "create_permission",
+      "description": "Shares a file or folder by creating a permission",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "query_params_template": {
+          "sendNotificationEmail": "{{sendNotificationEmail}}",
+          "emailMessage": "{{emailMessage}}",
+          "supportsAllDrives": "{{supportsAllDrives}}"
+        },
+        "body_template": {
+          "type": "{{type}}",
+          "role": "{{role}}",
+          "emailAddress": "{{emailAddress}}",
+          "domain": "{{domain}}",
+          "allowFileDiscovery": "{{allowFileDiscovery}}",
+          "expirationTime": "{{expirationTime}}"
+        },
+        "method": "POST"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "fileId": {
+            "type": "string",
+            "description": "The ID of the file or folder to share",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_files",
+              "parameters": {
+                "fields": "files(id, name, mimeType)",
+                "pageSize": 100
+              },
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select file or folder to share"
+            }
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of grantee",
+            "enum": [
+              "user",
+              "group",
+              "domain",
+              "anyone"
+            ]
+          },
+          "role": {
+            "type": "string",
+            "description": "The role to grant",
+            "enum": [
+              "owner",
+              "organizer",
+              "fileOrganizer",
+              "writer",
+              "commenter",
+              "reader"
+            ]
+          },
+          "emailAddress": {
+            "type": "string",
+            "description": "Email address of the user or group (required for type 'user' or 'group')"
+          },
+          "domain": {
+            "type": "string",
+            "description": "Domain name (required for type 'domain')"
+          },
+          "allowFileDiscovery": {
+            "type": "boolean",
+            "description": "Whether the file should be discoverable"
+          },
+          "sendNotificationEmail": {
+            "type": "boolean",
+            "description": "Whether to send notification email",
+            "default": true
+          },
+          "emailMessage": {
+            "type": "string",
+            "description": "Custom message to include in notification email"
+          },
+          "expirationTime": {
+            "type": "string",
+            "description": "Expiration time for the permission (RFC 3339 date-time)"
+          },
+          "supportsAllDrives": {
+            "type": "boolean",
+            "description": "Whether the requesting application supports both My Drives and shared drives"
+          }
+        },
+        "required": [
+          "fileId",
+          "type",
+          "role"
+        ]
+      },
+      "sample_input": {
+        "fileId": "1aBcDeFgHiJkLmNoPqRsTuVwXyZ",
+        "type": "user",
+        "role": "reader",
+        "emailAddress": "user@example.com",
+        "sendNotificationEmail": true,
+        "emailMessage": "Please review this document"
+      },
+      "sample_output": {
+        "id": "anyoneWithLink",
+        "type": "user",
+        "role": "reader",
+        "emailAddress": "user@example.com"
+      },
+      "endpoint_template": "/files/{{fileId}}/permissions",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id"
+          },
+          "type": {
+            "type": "string",
+            "description": "The type"
+          },
+          "role": {
+            "type": "string",
+            "description": "The role"
+          },
+          "emailAddress": {
+            "type": "string",
+            "description": "The emailAddress"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "list_permissions",
+      "description": "Lists a file's or folder's permissions",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "query_params_template": {
+          "fields": "{{fields}}",
+          "supportsAllDrives": "{{supportsAllDrives}}"
+        },
+        "method": "GET"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "fileId": {
+            "type": "string",
+            "description": "The ID of the file or folder",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_files",
+              "parameters": {
+                "fields": "files(id, name, mimeType)",
+                "pageSize": 100
+              },
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select file or folder"
+            }
+          },
+          "fields": {
+            "type": "string",
+            "description": "Fields to include in the response",
+            "default": "permissions(id, type, role, emailAddress, domain)"
+          },
+          "supportsAllDrives": {
+            "type": "boolean",
+            "description": "Whether the requesting application supports both My Drives and shared drives"
+          }
+        },
+        "required": [
+          "fileId"
+        ]
+      },
+      "sample_input": {
+        "fileId": "1aBcDeFgHiJkLmNoPqRsTuVwXyZ"
+      },
+      "sample_output": {
+        "permissions": [
+          {
+            "id": "12345",
+            "type": "user",
+            "role": "owner",
+            "emailAddress": "owner@example.com"
+          },
+          {
+            "id": "67890",
+            "type": "user",
+            "role": "reader",
+            "emailAddress": "reader@example.com"
+          }
+        ]
+      },
+      "endpoint_template": "/files/{{fileId}}/permissions",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "The id"
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The type"
+                },
+                "role": {
+                  "type": "string",
+                  "description": "The role"
+                },
+                "emailAddress": {
+                  "type": "string",
+                  "description": "The emailAddress"
+                }
+              }
+            },
+            "description": "The permissions"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "delete_permission",
+      "description": "Removes a permission from a file or folder",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "query_params_template": {
+          "supportsAllDrives": "{{supportsAllDrives}}"
+        },
+        "method": "DELETE"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "fileId": {
+            "type": "string",
+            "description": "The ID of the file or folder",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_files",
+              "parameters": {
+                "fields": "files(id, name, mimeType)",
+                "pageSize": 100
+              },
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select file or folder"
+            }
+          },
+          "permissionId": {
+            "type": "string",
+            "description": "The ID of the permission to remove"
+          },
+          "supportsAllDrives": {
+            "type": "boolean",
+            "description": "Whether the requesting application supports both My Drives and shared drives"
+          }
+        },
+        "required": [
+          "fileId",
+          "permissionId"
+        ]
+      },
+      "sample_input": {
+        "fileId": "1aBcDeFgHiJkLmNoPqRsTuVwXyZ",
+        "permissionId": "67890"
+      },
+      "sample_output": {},
+      "endpoint_template": "/files/{{fileId}}/permissions/{{permissionId}}",
+      "output_schema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "service_name": "create_folder",
+      "description": "Creates a new folder in Google Drive",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "query_params_template": {
+          "supportsAllDrives": "{{supportsAllDrives}}"
+        },
+        "body_template": {
+          "name": "{{name}}",
+          "mimeType": "application/vnd.google-apps.folder",
+          "parents": "{{parents}}",
+          "description": "{{description}}"
+        },
+        "method": "POST"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the folder"
+          },
+          "parents": {
+            "type": "array",
+            "description": "IDs of parent folders",
+            "items": {
+              "type": "string"
+            },
+            "default": [
+              "root"
+            ],
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_files",
+              "parameters": {
+                "q": "mimeType = 'application/vnd.google-apps.folder'",
+                "fields": "files(id, name)",
+                "pageSize": 100
+              },
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select from available folders"
+            }
+          },
+          "description": {
+            "type": "string",
+            "description": "A description of the folder"
+          },
+          "supportsAllDrives": {
+            "type": "boolean",
+            "description": "Whether the requesting application supports both My Drives and shared drives"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "sample_input": {
+        "name": "Project Files",
+        "parents": [
+          "root"
+        ],
+        "description": "Folder for project-related files"
+      },
+      "sample_output": {
+        "id": "0B5HX6PJb3eRfTGRlTm5mTEU4ODg",
+        "name": "Project Files",
+        "mimeType": "application/vnd.google-apps.folder",
+        "createdTime": "2024-01-20T17:00:00.000Z"
+      },
+      "endpoint_template": "/files",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name"
+          },
+          "mimeType": {
+            "type": "string",
+            "description": "The mimeType"
+          },
+          "createdTime": {
+            "type": "string",
+            "description": "The createdTime"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_storage_quota",
+      "description": "Gets information about the user's storage quota",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "query_params",
+        "query_params_template": {
+          "fields": "{{fields}}"
+        },
+        "method": "GET"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "fields": {
+            "type": "string",
+            "description": "Fields to include in the response",
+            "default": "storageQuota"
+          }
+        }
+      },
+      "sample_input": {},
+      "sample_output": {
+        "storageQuota": {
+          "limit": "16106127360",
+          "usage": "5368709120",
+          "usageInDrive": "3221225472",
+          "usageInDriveTrash": "1073741824"
+        }
+      },
+      "endpoint_template": "/about",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "storageQuota": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "string",
+                "description": "The limit"
+              },
+              "usage": {
+                "type": "string",
+                "description": "The usage"
+              },
+              "usageInDrive": {
+                "type": "string",
+                "description": "The usageInDrive"
+              },
+              "usageInDriveTrash": {
+                "type": "string",
+                "description": "The usageInDriveTrash"
+              }
+            },
+            "description": "The storageQuota"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "empty_trash",
+      "description": "Permanently deletes all files in the user's trash",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "method": "DELETE"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {}
+      },
+      "sample_input": {},
+      "sample_output": {},
+      "endpoint_template": "/files/trash",
+      "output_schema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "service_name": "generate_file_ids",
+      "description": "Generates a set of file IDs which can be used to upload files",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "query_params",
+        "query_params_template": {
+          "count": "{{count}}",
+          "space": "{{space}}"
+        },
+        "method": "GET"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "description": "The number of IDs to generate",
+            "default": 1,
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "space": {
+            "type": "string",
+            "description": "The space in which the IDs will be used",
+            "default": "drive"
+          }
+        }
+      },
+      "sample_input": {
+        "count": 3
+      },
+      "sample_output": {
+        "ids": [
+          "1aBcDeFgHiJkLmNoPqRsTuVwXyZ",
+          "2bCdEfGhIjKlMnOpQrStUvWxYzA",
+          "3cDeFgHiJkLmNoPqRsTuVwXyZaB"
+        ]
+      },
+      "endpoint_template": "/files/generateIds",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The ids"
+          }
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "event_name": "manual_trigger",
+      "description": "Manually trigger Google Drive operations",
+      "event_type": "manual",
+      "event_configuration": {
+        "description": "Use this to manually trigger Google Drive file operations"
+      },
+      "sample_payload": {},
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "event_name": "file_change_notification",
+      "description": "Receive notifications when files change in Google Drive. Requires setting up Google Drive API push notifications.",
+      "event_type": "webhook",
+      "event_configuration": {
+        "webhook_url": "/webhooks/google_drive/{{webhook_id}}",
+        "method": "POST",
+        "headers_validation": {
+          "Content-Type": "application/json"
+        },
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Unique identifier for this notification"
+            },
+            "resourceId": {
+              "type": "string",
+              "description": "An opaque ID that identifies the watched resource"
+            },
+            "resourceUri": {
+              "type": "string",
+              "description": "The URI of the watched resource"
+            },
+            "token": {
+              "type": "string",
+              "description": "An arbitrary string provided by the client"
+            },
+            "expiration": {
+              "type": "string",
+              "description": "Expiration time of the notification channel"
+            },
+            "resourceState": {
+              "type": "string",
+              "description": "The state of the resource",
+              "enum": [
+                "sync",
+                "add",
+                "remove",
+                "update",
+                "trash",
+                "untrash",
+                "change"
+              ]
+            },
+            "messageNumber": {
+              "type": "string",
+              "description": "A number that uniquely identifies this message"
+            }
+          }
+        }
+      },
+      "sample_payload": {
+        "id": "01234567-89ab-cdef-0123456789ab",
+        "resourceId": "o-AJmj5Ymv1234567890",
+        "resourceUri": "https://www.googleapis.com/drive/v3/files/1aBcDeFgHiJkLmNoPqRsTuVwXyZ",
+        "token": "target=myApp-myFilesChannelId",
+        "expiration": "1426325213000",
+        "resourceState": "update",
+        "messageNumber": "1"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.id",
+            "mapping": "$.id"
+          },
+          "event_type": {
+            "type": "string",
+            "description": "Parameter extracted from $.resourceState",
+            "mapping": "$.resourceState"
+          },
+          "resource_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.resourceId",
+            "mapping": "$.resourceId"
+          },
+          "data": {
+            "type": "string",
+            "description": "Parameter extracted from webhook payload",
+            "mapping": "$"
+          }
+        },
+        "required": [],
+        "parameter_extraction": {
+          "method": "json_path",
+          "mappings": {
+            "event_id": "$.id",
+            "event_type": "$.resourceState",
+            "resource_id": "$.resourceId",
+            "data": "$"
+          }
+        }
+      }
+    },
+    {
+      "event_name": "scheduled_sync",
+      "description": "Periodically sync or check Google Drive files at specified intervals",
+      "event_type": "schedule",
+      "event_configuration": {
+        "schedule": "0 0,30 * * *",
+        "timezone": "UTC",
+        "description": "Sync Google Drive files every 30 minutes"
+      },
+      "sample_payload": {
+        "timestamp": "2025-01-20T18:00:00Z",
+        "schedule_name": "google_drive_sync",
+        "execution_id": "exec_123456"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  ],
+  "metadata": {
+    "created_at": "2025-01-20T18:00:00.000000",
+    "created_by": "system",
+    "author": "system",
+    "tags": [
+      "storage",
+      "file-management",
+      "cloud-storage",
+      "google"
+    ],
+    "documentation_url": "https://developers.google.com/drive/api/v3/reference",
+    "support_email": "support@example.com",
+    "last_modified": "2025-08-23T12:53:14.104005",
+    "modified_by": "claude-code",
+    "changelog": {
+      "1.0.0": "Initial version with complete file management operations including list, get, create, update, delete, copy, move, download, export, permissions management, folder operations, storage quota, and trash management",
+      "2.0.0": "MAJOR UPDATE: Added comprehensive parameter lookup functionality for dynamic folder and file selection. All folder-related parameters (parents, addParents, removeParents, newParentId, oldParentId) and file-related parameters (fileId across all services) now support dropdown selection with real-time data from Google Drive API. This eliminates manual ID entry and significantly improves user experience.",
+      "2.0.4": "Fixed create_file service to use full upload URL in endpoint_template, removing dependency on hardcoded upload URL logic in service executor",
+      "2.0.5": "Changed parameter_method to 'multipart_related' for Google Drive uploads to specify the multipart encoding type, removing all hardcoded checks from service executor",
+      "2.0.6": "Fixed sample_payload fields in events to be proper JSON objects instead of strings, resolving API validation errors"
+    },
+    "services_count": 17,
+    "events_count": 3
+  }
+}

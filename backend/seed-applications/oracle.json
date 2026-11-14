@@ -1,0 +1,575 @@
+{
+  "key": "oracle",
+  "application": {
+    "app_name": "Oracle Database",
+    "app_type": "database",
+    "app_scope": "tenant",
+    "description": "Connect to Oracle databases and execute SQL queries with full transaction support",
+    "category": "Database",
+    "auth_type": "basic",
+    "auth_config": {
+      "database_type": "oracle",
+      "autocommit": true,
+      "connection_pool_size": 10,
+      "connection_timeout": 30,
+      "ssl_mode": "prefer",
+      "credential_fields": {
+        "username": {
+          "label": "Database Username",
+          "type": "text",
+          "required": true,
+          "placeholder": "system",
+          "help_text": "Oracle database user"
+        },
+        "password": {
+          "label": "Database Password",
+          "type": "password",
+          "required": true,
+          "placeholder": "Enter database password",
+          "help_text": "Password for the database user"
+        }
+      }
+    },
+    "version": "1.3.0",
+    "base_url": "oracle://localhost:1521/ORCL",
+    "icon_url": "https://www.oracle.com/a/ocom/img/oracle-logo.png"
+  },
+  "services": [
+    {
+      "service_name": "execute_query",
+      "description": "Execute a SELECT query and return results as JSON array",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "query",
+        "result_format": "json_array",
+        "max_rows": 10000,
+        "timeout_seconds": 180,
+        "fetch_size": 1000
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "description": "SQL SELECT query with :param placeholders",
+            "example": "SELECT * FROM users WHERE status = :status AND created_at > :start_date"
+          }
+        },
+        "required": [
+          "sql"
+        ],
+        "additionalProperties": true
+      },
+      "sample_input": {
+        "sql": "SELECT * FROM users WHERE status = :status",
+        "status": "active"
+      },
+      "sample_output": {
+        "success": true,
+        "data": [
+          {
+            "id": 1,
+            "name": "John Doe",
+            "status": "active"
+          }
+        ],
+        "row_count": 1,
+        "truncated": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "integer",
+            "description": "The success"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "description": "The id"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The name"
+                },
+                "status": {
+                  "type": "string",
+                  "description": "The status"
+                }
+              }
+            },
+            "description": "The data"
+          },
+          "row_count": {
+            "type": "integer",
+            "description": "Number of row_s"
+          },
+          "truncated": {
+            "type": "integer",
+            "description": "The truncated"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "execute_command",
+      "description": "Execute INSERT, UPDATE, DELETE, or DDL commands",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "execute",
+        "timeout_seconds": 180,
+        "transaction_mode": "auto"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "description": "SQL command (INSERT, UPDATE, DELETE, CREATE, ALTER, DROP) with :param_name placeholders",
+            "example": "INSERT INTO users (name, email, status, created_at) VALUES (:name, :email, :status, SYSDATE)"
+          }
+        },
+        "required": [
+          "sql"
+        ],
+        "additionalProperties": true
+      },
+      "sample_input": {
+        "sql": "UPDATE users SET status = :status WHERE user_id = :user_id",
+        "status": "inactive",
+        "user_id": 123
+      },
+      "sample_output": {
+        "success": true,
+        "affected_rows": 1,
+        "message": "Command executed successfully"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "integer",
+            "description": "The success"
+          },
+          "affected_rows": {
+            "type": "integer",
+            "description": "The affected_rows"
+          },
+          "message": {
+            "type": "string",
+            "description": "The message"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "execute_batch",
+      "description": "Execute multiple SQL commands in a single transaction with rollback on error",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "batch",
+        "timeout_seconds": 180,
+        "transaction_mode": "manual"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "batch_queries": {
+            "type": "array",
+            "description": "Array of SQL commands to execute in order within a transaction",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sql": {
+                  "type": "string",
+                  "description": "SQL command with :param_name placeholders"
+                },
+                "parameters": {
+                  "type": "object",
+                  "description": "Parameter values for this command"
+                }
+              },
+              "required": [
+                "sql"
+              ]
+            }
+          }
+        },
+        "required": [
+          "batch_queries"
+        ],
+        "additionalProperties": true
+      },
+      "sample_input": {
+        "batch_queries": [
+          {
+            "sql": "UPDATE accounts SET balance = balance - :amount WHERE account_id = :from_account",
+            "parameters": {
+              "amount": 100.0,
+              "from_account": "ACC001"
+            }
+          },
+          {
+            "sql": "UPDATE accounts SET balance = balance + :amount WHERE account_id = :to_account",
+            "parameters": {
+              "amount": 100.0,
+              "to_account": "ACC002"
+            }
+          },
+          {
+            "sql": "INSERT INTO transactions (from_account, to_account, amount, transaction_date) VALUES (:from_account, :to_account, :amount, SYSDATE)",
+            "parameters": {
+              "from_account": "ACC001",
+              "to_account": "ACC002",
+              "amount": 100.0
+            }
+          }
+        ]
+      },
+      "sample_output": {
+        "success": true,
+        "results": [
+          {
+            "query": "UPDATE accounts SET balance = balance - :amount WHERE account_id = :from_account",
+            "affected_rows": 1
+          },
+          {
+            "query": "UPDATE accounts SET balance = balance + :amount WHERE account_id = :to_account",
+            "affected_rows": 1
+          },
+          {
+            "query": "INSERT INTO transactions...",
+            "affected_rows": 1
+          }
+        ],
+        "total_queries": 3,
+        "message": "All commands executed successfully"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "integer",
+            "description": "The success"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "The query"
+                },
+                "affected_rows": {
+                  "type": "integer",
+                  "description": "The affected_rows"
+                }
+              }
+            },
+            "description": "The results"
+          },
+          "total_queries": {
+            "type": "integer",
+            "description": "The total_queries"
+          },
+          "message": {
+            "type": "string",
+            "description": "The message"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "query_single_row",
+      "description": "Execute a query that returns a single row as JSON object",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "query",
+        "result_format": "json_object",
+        "max_rows": 1,
+        "timeout_seconds": 180
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "description": "SQL query that returns a single row",
+            "example": "SELECT id, name, email, status FROM users WHERE id = :user_id"
+          }
+        },
+        "required": [
+          "sql"
+        ],
+        "additionalProperties": true
+      },
+      "sample_input": {
+        "sql": "SELECT id, name, email, status FROM users WHERE id = :user_id",
+        "user_id": 123
+      },
+      "sample_output": {
+        "success": true,
+        "data": {
+          "id": 123,
+          "name": "John Doe",
+          "email": "john@example.com",
+          "status": "active"
+        },
+        "row_count": 1
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "integer",
+            "description": "The success"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "description": "The id"
+              },
+              "name": {
+                "type": "string",
+                "description": "The name"
+              },
+              "email": {
+                "type": "string",
+                "description": "The email"
+              },
+              "status": {
+                "type": "string",
+                "description": "The status"
+              }
+            },
+            "description": "The data"
+          },
+          "row_count": {
+            "type": "integer",
+            "description": "Number of row_s"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "query_scalar",
+      "description": "Execute a query that returns a single scalar value",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "query",
+        "result_format": "json_object",
+        "max_rows": 1,
+        "timeout_seconds": 180
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "description": "SQL query that returns a single value",
+            "example": "SELECT COUNT(*) as count FROM users WHERE status = :status"
+          }
+        },
+        "required": [
+          "sql"
+        ],
+        "additionalProperties": true
+      },
+      "sample_input": {
+        "sql": "SELECT COUNT(*) as count FROM users WHERE status = :status",
+        "status": "active"
+      },
+      "sample_output": {
+        "success": true,
+        "data": {
+          "count": 42
+        },
+        "row_count": 1
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "integer",
+            "description": "The success"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "count": {
+                "type": "integer",
+                "description": "Number of s"
+              }
+            },
+            "description": "The data"
+          },
+          "row_count": {
+            "type": "integer",
+            "description": "Number of row_s"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "call_function",
+      "description": "Call an Oracle stored function or procedure",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "query",
+        "result_format": "json_array",
+        "timeout_seconds": 180
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "description": "SQL to call a stored function with :param_name placeholders",
+            "example": "SELECT calculate_order_total(:order_id, :discount_percent) FROM DUAL"
+          }
+        },
+        "required": [
+          "sql"
+        ],
+        "additionalProperties": true
+      },
+      "sample_input": {
+        "sql": "SELECT calculate_order_total(:order_id, :discount_percent) FROM DUAL",
+        "order_id": 1001,
+        "discount_percent": 10
+      },
+      "sample_output": {
+        "success": true,
+        "data": [
+          {
+            "CALCULATE_ORDER_TOTAL": 450.5
+          }
+        ],
+        "row_count": 1
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "integer",
+            "description": "The success"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "CALCULATE_ORDER_TOTAL": {
+                  "type": "number",
+                  "description": "The CALCULATE_ORDER_TOTAL"
+                }
+              }
+            },
+            "description": "The data"
+          },
+          "row_count": {
+            "type": "integer",
+            "description": "Number of row_s"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "commit_transaction",
+      "description": "Commit the flow-scoped Oracle Database transaction. Use with an explicit step when the application is configured with autocommit=false.",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "commit",
+        "timeout_seconds": 30,
+        "transaction_mode": "manual"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the commit step ran"
+          },
+          "committed": {
+            "type": "boolean",
+            "description": "True if an open transaction was committed"
+          },
+          "message": {
+            "type": "string",
+            "description": "Result message"
+          }
+        }
+      },
+      "timeout_seconds": 30,
+      "is_active": true
+    },
+    {
+      "service_name": "rollback_transaction",
+      "description": "Roll back the flow-scoped Oracle Database transaction. Use with an explicit step when the application is configured with autocommit=false.",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "rollback",
+        "timeout_seconds": 30,
+        "transaction_mode": "manual"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the rollback step ran"
+          },
+          "rolled_back": {
+            "type": "boolean",
+            "description": "True if an open transaction was rolled back"
+          },
+          "message": {
+            "type": "string",
+            "description": "Result message"
+          }
+        }
+      },
+      "timeout_seconds": 30,
+      "is_active": true
+    }
+  ],
+  "events": [],
+  "metadata": {
+    "created_at": "2025-08-22T14:11:34.866406",
+    "created_by": "IOFlow",
+    "author": "IOFlow",
+    "tags": [
+      "database"
+    ],
+    "documentation_url": "https://docs.example.com/oracle",
+    "support_email": "support@example.com",
+    "last_modified": "2025-08-22T14:13:08.583850",
+    "services_count": 6,
+    "modified_by": "IOFlow"
+  },
+  "_validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": [],
+    "validated_at": "2025-08-22T19:43:08.567733"
+  }
+}

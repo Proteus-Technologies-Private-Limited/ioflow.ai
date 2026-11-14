@@ -1,0 +1,37 @@
+{
+  "dxt_version": "0.1",
+  "name": "ioflow",
+  "version": "1.0.4",
+  "description": "IOFlow MCP Server - Lightweight",
+  "author": {
+    "name": "IOFlow",
+    "email": "support@ioflow.com"
+  },
+  "server": {
+    "type": "python",
+    "entry_point": "server/main.py",
+    "mcp_config": {
+      "command": "python3",
+      "args": ["${__dirname}/server/main.py"],
+      "env": {
+        "PYTHONPATH": "${__dirname}/server",
+        "IOFLOW_BASE_URL": "${user_config.ioflow_base_url}",
+        "IOFLOW_API_KEY": "${user_config.ioflow_api_key}"
+      }
+    }
+  },
+  "user_config": {
+    "ioflow_base_url": {
+      "type": "string",
+      "title": "IOFlow URL", 
+      "description": "IOFlow server URL",
+      "default": "http://localhost:7001"
+    },
+    "ioflow_api_key": {
+      "type": "string",
+      "title": "API Key",
+      "description": "IOFlow API key",
+      "required": true
+    }
+  }
+}

@@ -1,0 +1,79 @@
+# Local development infrastructure for IOFlow
+# - postgres: PostgreSQL 17 + TimescaleDB (time series support)
+# - redis:    Redis 7 (distributed locks / MQTT trigger queueing)
+#
+# Day-to-day (backend/frontend run natively from your terminal):
+#   docker compose up -d postgres redis
+#   docker compose down            (data persists in named volumes)
+#   docker compose down -v         (destroys data)
+
+services:
+  postgres:
+    image: timescale/timescaledb:latest-pg17
+    container_name: ioflow-postgres
+    environment:
+      POSTGRES_USER: ioflow
+      POSTGRES_PASSWORD: ioflow_local_pass
+      POSTGRES_DB: ioflow
+    # Host port 5433: the machine's native EDB PostgreSQL 17 occupies 5432
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ioflow -d ioflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: ioflow-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # Optional containerized app services (normally run natively instead)
+  backend:
+    build: ./backend
+    profiles: ["app"]
+    ports:
+      - "7001:7001"
+    environment:
+      DATABASE_URL: postgresql://ioflow:ioflow_local_pass@postgres:5432/ioflow
+      REDIS_URL: redis://redis:6379
+      SECRET_KEY: your-secret-key-here-change-in-production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    command: python run.py
+
+  frontend:
+    build: ./frontend
+    profiles: ["app"]
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - REACT_APP_API_URL=http://localhost:7001
+
+volumes:
+  postgres_data:
+  redis_data:

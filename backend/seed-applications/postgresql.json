@@ -1,0 +1,475 @@
+{
+  "key": "postgresql",
+  "application": {
+    "app_name": "PostgreSQL Database",
+    "app_type": "database",
+    "description": "Connect to PostgreSQL databases and execute SQL queries with full transaction support",
+    "icon_url": "https://wiki.postgresql.org/images/a/a4/PostgreSQL_logo.3colors.svg",
+    "category": "Database",
+    "base_url": "postgresql://localhost:5432/postgres",
+    "auth_type": "basic",
+    "auth_config": {
+      "database_type": "postgresql",
+      "autocommit": true,
+      "connection_pool_size": 10,
+      "connection_timeout": 30,
+      "ssl_mode": "prefer",
+      "credential_fields": {
+        "username": {
+          "label": "Database Username",
+          "type": "text",
+          "required": true,
+          "placeholder": "postgres",
+          "help_text": "PostgreSQL database user"
+        },
+        "password": {
+          "label": "Database Password",
+          "type": "password",
+          "required": true,
+          "placeholder": "Enter database password",
+          "help_text": "Password for the database user"
+        }
+      }
+    },
+    "version": "1.3.0",
+    "app_scope": "tenant"
+  },
+  "events": [],
+  "services": [
+    {
+      "service_name": "execute_query",
+      "description": "Execute a SELECT query and return results as JSON array",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "query",
+        "result_format": "json_array",
+        "max_rows": 10000,
+        "timeout_seconds": 180,
+        "fetch_size": 1000
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "format": "sql",
+            "description": "SQL SELECT query with :param placeholders",
+            "example": "SELECT * FROM users WHERE status = :status AND created_at > :start_date"
+          }
+        },
+        "required": [
+          "sql"
+        ],
+        "additionalProperties": true
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the query executed successfully"
+          },
+          "data": {
+            "type": "array",
+            "description": "Query results as array of objects",
+            "items": {
+              "type": "object"
+            }
+          },
+          "row_count": {
+            "type": "integer",
+            "description": "Number of rows returned"
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "Whether results were truncated due to max_rows limit"
+          },
+          "error": {
+            "type": "boolean",
+            "description": "Whether an error occurred"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message if error occurred"
+          }
+        }
+      },
+      "timeout_seconds": 30,
+      "is_active": true
+    },
+    {
+      "service_name": "execute_command",
+      "description": "Execute INSERT, UPDATE, DELETE, or DDL commands",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "execute",
+        "timeout_seconds": 180,
+        "transaction_mode": "auto"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "description": "SQL command (INSERT, UPDATE, DELETE, CREATE, ALTER, DROP) with :param_name placeholders",
+            "example": "INSERT INTO users (name, email, status, created_at) VALUES (:name, :email, :status, CURRENT_TIMESTAMP)"
+          }
+        },
+        "required": [
+          "sql"
+        ],
+        "additionalProperties": true
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the command executed successfully"
+          },
+          "affected_rows": {
+            "type": "integer",
+            "description": "Number of rows affected by the command"
+          },
+          "message": {
+            "type": "string",
+            "description": "Success or error message"
+          },
+          "error": {
+            "type": "boolean",
+            "description": "Whether an error occurred"
+          }
+        }
+      },
+      "timeout_seconds": 30,
+      "is_active": true
+    },
+    {
+      "service_name": "execute_batch",
+      "description": "Execute multiple SQL commands in a single transaction with rollback on error",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "batch",
+        "timeout_seconds": 180,
+        "transaction_mode": "manual"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "batch_queries": {
+            "type": "array",
+            "description": "Array of SQL commands to execute in order within a transaction",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sql": {
+                  "type": "string",
+                  "description": "SQL command with :param_name placeholders"
+                },
+                "parameters": {
+                  "type": "object",
+                  "description": "Parameter values for this command"
+                }
+              },
+              "required": [
+                "sql"
+              ]
+            },
+            "example": [
+              {
+                "sql": "UPDATE accounts SET balance = balance - :amount WHERE account_id = :from_account",
+                "parameters": {
+                  "amount": 100.0,
+                  "from_account": "ACC001"
+                }
+              },
+              {
+                "sql": "UPDATE accounts SET balance = balance + :amount WHERE account_id = :to_account",
+                "parameters": {
+                  "amount": 100.0,
+                  "to_account": "ACC002"
+                }
+              },
+              {
+                "sql": "INSERT INTO transactions (from_account, to_account, amount, transaction_date) VALUES (:from_account, :to_account, :amount, CURRENT_TIMESTAMP)",
+                "parameters": {
+                  "from_account": "ACC001",
+                  "to_account": "ACC002",
+                  "amount": 100.0
+                }
+              }
+            ]
+          }
+        },
+        "required": [
+          "batch_queries"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether all commands executed successfully"
+          },
+          "results": {
+            "type": "array",
+            "description": "Results for each command",
+            "items": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "The SQL command that was executed"
+                },
+                "affected_rows": {
+                  "type": "integer",
+                  "description": "Number of rows affected"
+                }
+              }
+            }
+          },
+          "total_queries": {
+            "type": "integer",
+            "description": "Total number of queries executed"
+          },
+          "message": {
+            "type": "string",
+            "description": "Success or error message"
+          },
+          "error": {
+            "type": "boolean",
+            "description": "Whether an error occurred (transaction rolled back)"
+          }
+        }
+      },
+      "timeout_seconds": 60,
+      "is_active": true
+    },
+    {
+      "service_name": "query_single_row",
+      "description": "Execute a query that returns a single row as JSON object",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "query",
+        "result_format": "json_object",
+        "max_rows": 1,
+        "timeout_seconds": 180
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "description": "SQL query that returns a single row",
+            "example": "SELECT id, name, email, status FROM users WHERE id = :user_id"
+          }
+        },
+        "required": [
+          "sql"
+        ],
+        "additionalProperties": true
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the query executed successfully"
+          },
+          "data": {
+            "type": "object",
+            "description": "First row of query results as object (null if no rows)"
+          },
+          "row_count": {
+            "type": "integer",
+            "description": "Number of rows returned (0 or 1)"
+          },
+          "error": {
+            "type": "boolean",
+            "description": "Whether an error occurred"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message if error occurred"
+          }
+        }
+      },
+      "timeout_seconds": 30,
+      "is_active": true
+    },
+    {
+      "service_name": "query_scalar",
+      "description": "Execute a query that returns a single scalar value",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "query",
+        "result_format": "json_object",
+        "max_rows": 1,
+        "timeout_seconds": 180
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "description": "SQL query that returns a single value",
+            "example": "SELECT COUNT(*) as count FROM users WHERE status = :status"
+          }
+        },
+        "required": [
+          "sql"
+        ],
+        "additionalProperties": true
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the query executed successfully"
+          },
+          "data": {
+            "type": "object",
+            "description": "Object containing the scalar value"
+          },
+          "row_count": {
+            "type": "integer",
+            "description": "Number of rows returned (should be 1)"
+          },
+          "error": {
+            "type": "boolean",
+            "description": "Whether an error occurred"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message if error occurred"
+          }
+        }
+      },
+      "timeout_seconds": 30,
+      "is_active": true
+    },
+    {
+      "service_name": "call_function",
+      "description": "Call a PostgreSQL stored function or procedure",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "query",
+        "result_format": "json_array",
+        "timeout_seconds": 180
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "description": "SQL to call a stored function with :param_name placeholders",
+            "example": "SELECT * FROM calculate_order_total(:order_id, :discount_percent)"
+          }
+        },
+        "required": [
+          "sql"
+        ],
+        "additionalProperties": true
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the function executed successfully"
+          },
+          "data": {
+            "type": "array",
+            "description": "Function results"
+          },
+          "row_count": {
+            "type": "integer",
+            "description": "Number of rows returned"
+          },
+          "error": {
+            "type": "boolean",
+            "description": "Whether an error occurred"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message if error occurred"
+          }
+        }
+      },
+      "timeout_seconds": 30,
+      "is_active": true
+    },
+    {
+      "service_name": "commit_transaction",
+      "description": "Commit the flow-scoped PostgreSQL Database transaction. Use with an explicit step when the application is configured with autocommit=false.",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "commit",
+        "timeout_seconds": 30,
+        "transaction_mode": "manual"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the commit step ran"
+          },
+          "committed": {
+            "type": "boolean",
+            "description": "True if an open transaction was committed"
+          },
+          "message": {
+            "type": "string",
+            "description": "Result message"
+          }
+        }
+      },
+      "timeout_seconds": 30,
+      "is_active": true
+    },
+    {
+      "service_name": "rollback_transaction",
+      "description": "Roll back the flow-scoped PostgreSQL Database transaction. Use with an explicit step when the application is configured with autocommit=false.",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "rollback",
+        "timeout_seconds": 30,
+        "transaction_mode": "manual"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the rollback step ran"
+          },
+          "rolled_back": {
+            "type": "boolean",
+            "description": "True if an open transaction was rolled back"
+          },
+          "message": {
+            "type": "string",
+            "description": "Result message"
+          }
+        }
+      },
+      "timeout_seconds": 30,
+      "is_active": true
+    }
+  ]
+}

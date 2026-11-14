@@ -1,0 +1,98 @@
+{
+  "key": "ask_openai",
+  "application": {
+    "app_name": "ask-openai App",
+    "app_type": "api",
+    "description": "Auto-generated application from ask-openai flow",
+    "category": "Flow Applications",
+    "auth_type": "none",
+    "auth_config": {
+      "description": "No authentication required for flow-based applications"
+    },
+    "version": "1.1.0",
+    "base_url": "http://localhost:7001",
+    "icon_url": "https://via.placeholder.com/64x64.png?text=Flow",
+    "flow_based": true,
+    "source_flow_id": "2b58fcd9-1736-4c9c-8148-ad6d6a9489d6",
+    "created_at": "2025-08-17T23:30:14.858896",
+    "complexity_score": 15,
+    "estimated_execution_time": 6,
+    "app_scope": "global"
+  },
+  "services": [
+    {
+      "service_name": "execute_ask-openai",
+      "display_name": "Execute ask-openai",
+      "service_type": "api_call",
+      "description": "Execute the ask-openai flow with provided parameters",
+      "endpoint_template": "/api/v1/flows/2b58fcd9-1736-4c9c-8148-ad6d6a9489d6/execute-internal-sync",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body_template": {
+          "variables": {
+            "question": "{{question}}"
+          }
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "value": 200
+        },
+        "data_path": "data",
+        "error_path": "error"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "question": {
+            "type": "string",
+            "description": "Parameter question",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "question"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {}
+      },
+      "sync_mode": "sync",
+      "timeout_seconds": 30,
+      "flow_based": true,
+      "source_flow_id": "2b58fcd9-1736-4c9c-8148-ad6d6a9489d6"
+    }
+  ],
+  "events": [
+    {
+      "event_name": "ask-openai_completed",
+      "display_name": "ask-openai Completed",
+      "trigger_type": "flow_completion",
+      "description": "Triggered when ask-openai flow completes",
+      "trigger_config": {
+        "flow_id": "2b58fcd9-1736-4c9c-8148-ad6d6a9489d6",
+        "status": "completed"
+      },
+      "sync_mode": "async",
+      "flow_based": true,
+      "source_flow_id": "2b58fcd9-1736-4c9c-8148-ad6d6a9489d6"
+    }
+  ],
+  "metadata": {
+    "generated_from_flow": true,
+    "flow_id": "2b58fcd9-1736-4c9c-8148-ad6d6a9489d6",
+    "flow_name": "ask-openai",
+    "generated_at": "2025-08-17T23:30:14.858930",
+    "dependencies": [],
+    "transformations_count": 1,
+    "error_handling_nodes": [],
+    "last_modified": "2025-08-23T12:53:14.100763",
+    "modified_by": "claude-code"
+  }
+}

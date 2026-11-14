@@ -1,0 +1,142 @@
+{
+  "key": "basic_node_red",
+  "application": {
+    "app_name": "Basic Node Red",
+    "app_type": "api",
+    "description": "Node-RED Application with custom API endpoints",
+    "category": "Automation",
+    "auth_type": "api_key",
+    "auth_config": {
+      "header_name": "Authorization",
+      "query_param": null,
+      "header_prefix": "Bearer"
+    },
+    "version": "1.1.0",
+    "base_url": "http://localhost:1880",
+    "icon_url": "https://example.com/basic_node_red-icon.png",
+    "auth_example": {
+      "api_key": "your_api_key_here"
+    },
+    "app_scope": "global"
+  },
+  "services": [
+    {
+      "service_name": "test_api",
+      "description": "Test API endpoint that processes sample data with description",
+      "service_type": "api_call",
+      "request_config": {
+        "headers_template": {
+          "Content-Type": "application/json"
+        },
+        "method": "POST"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "sample_data": {
+            "type": "string",
+            "description": "Sample data to process"
+          },
+          "data_description": {
+            "type": "string",
+            "description": "Description of the sample data"
+          }
+        },
+        "required": [
+          "sample_data",
+          "data_description"
+        ]
+      },
+      "sample_input": {
+        "sample_data": "Example text data",
+        "data_description": "This is a sample description"
+      },
+      "sample_output": {
+        "status": "success",
+        "result": "Processing completed"
+      },
+      "endpoint_template": "/api/test",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "The status"
+          },
+          "result": {
+            "type": "string",
+            "description": "The result"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "check_callback",
+      "description": "Trigger service that checks callback with customer information and sales data",
+      "service_type": "api_call",
+      "request_config": {
+        "headers_template": {
+          "Content-Type": "application/json"
+        },
+        "method": "POST"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "arg_data": {
+            "type": "object",
+            "description": "JSON object containing customer information and sales data"
+          }
+        },
+        "required": [
+          "arg_data"
+        ]
+      },
+      "sample_input": {
+        "arg_data": {
+          "name": "John Doe",
+          "phone_no": "+1-234-567-8900",
+          "email": "john.doe@example.com",
+          "todays_sales_amount": 1250.5
+        }
+      },
+      "sample_output": {
+        "status": "success",
+        "callback_scheduled": true,
+        "message": "Callback check completed successfully"
+      },
+      "endpoint_template": "/api/check_callback",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "The status"
+          },
+          "callback_scheduled": {
+            "type": "integer",
+            "description": "The callback_scheduled"
+          },
+          "message": {
+            "type": "string",
+            "description": "The message"
+          }
+        }
+      }
+    }
+  ],
+  "events": [],
+  "metadata": {
+    "created_at": "2025-07-27T16:32:12.526944",
+    "created_by": "IOFlow",
+    "author": "IOFlow",
+    "tags": [
+      "automation"
+    ],
+    "documentation_url": "https://docs.example.com/basic_node_red",
+    "support_email": "support@example.com",
+    "last_modified": "2025-08-23T12:53:14.101490",
+    "services_count": 2,
+    "modified_by": "claude-code"
+  }
+}

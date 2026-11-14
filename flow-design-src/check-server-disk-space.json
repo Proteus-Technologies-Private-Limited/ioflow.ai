@@ -1,0 +1,156 @@
+{
+  "version": "1.0",
+  "export_timestamp": "2026-03-30T00:00:00.000000Z",
+  "flow": {
+    "flow_name": "Check Server Disk Space",
+    "description": "Connect to a remote server via SSH and check disk storage usage. Returns filesystem details including size, used space, available space, and usage percentage.",
+    "category": "DevOps & Monitoring",
+    "trigger_config": {
+      "type": "manual",
+      "app_id": null,
+      "event_name": null,
+      "schedule": null,
+      "manual_variables": [
+        {
+          "id": "mount_path",
+          "name": "mount_path",
+          "displayName": "Mount Path (optional)",
+          "dataType": "string",
+          "uiControl": "text",
+          "required": false,
+          "defaultValue": "/"
+        }
+      ],
+      "execute_immediately": null,
+      "folder_path": null,
+      "listener_type": null,
+      "file_pattern": null,
+      "recursive": null,
+      "debounce_seconds": null
+    },
+    "flow_definition": {
+      "nodes": [
+        {
+          "id": "trigger_1",
+          "type": "trigger",
+          "position": {
+            "x": 400,
+            "y": 0
+          },
+          "data": {
+            "label": "Start",
+            "triggerType": "manual",
+            "manualVariables": [
+              {
+                "id": "mount_path",
+                "name": "mount_path",
+                "displayName": "Mount Path (optional)",
+                "dataType": "string",
+                "uiControl": "text",
+                "required": false,
+                "defaultValue": "/"
+              }
+            ],
+            "executeImmediately": null,
+            "width": 200,
+            "height": 100
+          }
+        },
+        {
+          "id": "check_disk",
+          "type": "action",
+          "position": {
+            "x": 400,
+            "y": 160
+          },
+          "data": {
+            "label": "Check Disk Space",
+            "appName": "SSH Command",
+            "service": "check_disk_space",
+            "serviceDisplayName": "Check Disk Space",
+            "useParameterMapping": true,
+            "parameterMapping": {
+              "path": {
+                "source": "expression",
+                "value": "{{input.mount_path}}"
+              }
+            },
+            "parameters": {},
+            "parametersRaw": "",
+            "width": 200,
+            "height": 100
+          }
+        },
+        {
+          "id": "format_output",
+          "type": "transform",
+          "position": {
+            "x": 400,
+            "y": 320
+          },
+          "data": {
+            "label": "Format Disk Report",
+            "script": "disk_result = node_outputs.get('check_disk', {})\nstdout = disk_result.get('stdout', '')\nsuccess = disk_result.get('success', False)\nhost = disk_result.get('host', 'unknown')\nexit_code = disk_result.get('exit_code', -1)\n\nif not success:\n    error_msg = disk_result.get('stderr', '') or disk_result.get('message', 'Unknown error')\n    output = {\n        'success': False,\n        'error': f'Failed to check disk space: {error_msg}',\n        'host': host\n    }\nelse:\n    lines = [l for l in stdout.strip().split('\\n') if l.strip()]\n    filesystems = []\n    if len(lines) > 1:\n        headers = lines[0].split()\n        for line in lines[1:]:\n            parts = line.split()\n            if len(parts) >= 6:\n                filesystems.append({\n                    'filesystem': parts[0],\n                    'size': parts[1],\n                    'used': parts[2],\n                    'available': parts[3],\n                    'use_percent': parts[4],\n                    'mounted_on': parts[5]\n                })\n    output = {\n        'success': True,\n        'host': host,\n        'filesystem_count': len(filesystems),\n        'filesystems': filesystems,\n        'raw_output': stdout\n    }",
+            "width": 200,
+            "height": 100
+          }
+        },
+        {
+          "id": "show_result",
+          "type": "response",
+          "position": {
+            "x": 400,
+            "y": 480
+          },
+          "data": {
+            "label": "Disk Usage Report",
+            "variable": "{{node_outputs.format_output}}",
+            "statusCode": 200,
+            "width": 200,
+            "height": 100
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "e1",
+          "source": "trigger_1",
+          "target": "check_disk",
+          "sourceHandle": null,
+          "targetHandle": null,
+          "label": null
+        },
+        {
+          "id": "e2",
+          "source": "check_disk",
+          "target": "format_output",
+          "sourceHandle": null,
+          "targetHandle": null,
+          "label": null
+        },
+        {
+          "id": "e3",
+          "source": "format_output",
+          "target": "show_result",
+          "sourceHandle": null,
+          "targetHandle": null,
+          "label": null
+        }
+      ]
+    },
+    "is_synchronous": true,
+    "sync_timeout": 60
+  },
+  "metadata": {
+    "required_applications": [
+      {
+        "app_key": "ssh_command",
+        "app_name": "SSH Command"
+      }
+    ],
+    "source_instance": {
+      "name": "IOFlow",
+      "version": "1.0"
+    }
+  }
+}

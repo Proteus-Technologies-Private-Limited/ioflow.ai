@@ -1,0 +1,199 @@
+{
+  "key": "github",
+  "application": {
+    "app_name": "GitHub",
+    "app_type": "api",
+    "description": "Code hosting and collaboration platform",
+    "category": "Development",
+    "auth_type": "oauth2",
+    "auth_config": {
+      "authorization_url": "https://github.com/login/oauth/authorize",
+      "token_url": "https://github.com/login/oauth/access_token",
+      "scopes": [
+        "repo",
+        "user",
+        "workflow"
+      ],
+      "grant_type": "authorization_code"
+    },
+    "version": "1.1.0",
+    "base_url": "https://api.github.com",
+    "icon_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
+    "app_scope": "global"
+  },
+  "services": [
+    {
+      "service_name": "Create Issue",
+      "service_type": "api_call",
+      "description": "Create a new issue in a repository",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "body_template": {
+          "title": "{{title}}",
+          "body": "{{body}}",
+          "labels": "{{labels}}",
+          "assignees": "{{assignees}}"
+        },
+        "method": "POST"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "value": [
+            201
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "owner": {
+            "type": "string",
+            "description": "Repository owner (user or organization)"
+          },
+          "repo": {
+            "type": "string",
+            "description": "Repository name"
+          },
+          "title": {
+            "type": "string",
+            "description": "Issue title"
+          },
+          "body": {
+            "type": "string",
+            "description": "Issue description"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Labels to add to the issue"
+          },
+          "assignees": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Users to assign to the issue"
+          }
+        },
+        "required": [
+          "owner",
+          "repo",
+          "title"
+        ]
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "{{base_url}}/repos/{{owner}}/{{repo}}/issues"
+    },
+    {
+      "service_name": "List Repositories",
+      "service_type": "api_call",
+      "description": "List repositories for the authenticated user",
+      "request_config": {
+        "parameter_method": "query_params",
+        "query_template": {
+          "type": "{{type}}",
+          "sort": "{{sort}}",
+          "per_page": "{{per_page}}"
+        },
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "value": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "all",
+              "owner",
+              "public",
+              "private",
+              "member"
+            ],
+            "default": "all",
+            "description": "Type of repositories to list"
+          },
+          "sort": {
+            "type": "string",
+            "enum": [
+              "created",
+              "updated",
+              "pushed",
+              "full_name"
+            ],
+            "default": "created",
+            "description": "Sort order"
+          },
+          "per_page": {
+            "type": "integer",
+            "default": 30,
+            "description": "Results per page"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "{{base_url}}/user/repos"
+    }
+  ],
+  "events": [
+    {
+      "event_name": "Push",
+      "event_type": "webhook",
+      "description": "Triggered when commits are pushed",
+      "event_configuration": {
+        "webhook_url": "/webhooks/github/push",
+        "verification_method": "hmac",
+        "signature_header": "X-Hub-Signature-256",
+        "signature_algorithm": "sha256",
+        "signature_format": "sha256={{signature}}",
+        "signature_base_format": "{{body}}"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "event_name": "Pull Request",
+      "event_type": "webhook",
+      "description": "Triggered on pull request events",
+      "event_configuration": {
+        "webhook_url": "/webhooks/github/pull-request",
+        "verification_method": "hmac",
+        "signature_header": "X-Hub-Signature-256",
+        "signature_algorithm": "sha256",
+        "signature_format": "sha256={{signature}}",
+        "signature_base_format": "{{body}}"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  ],
+  "metadata": {
+    "author": "IOFlow Team",
+    "created_at": "2024-01-01",
+    "tags": [
+      "development",
+      "git",
+      "oauth2",
+      "webhooks"
+    ],
+    "last_modified": "2025-08-23T12:53:14.103505",
+    "modified_by": "claude-code",
+    "events_count": 2
+  }
+}

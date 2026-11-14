@@ -1,0 +1,503 @@
+{
+  "key": "ai_agent",
+  "application": {
+    "app_name": "AI Agent",
+    "app_type": "ai_agent",
+    "app_scope": "tenant",
+    "description": "Execute AI agents with Large Language Models (LLMs). Supports Google Gemini, OpenAI, and other models with tool calling capabilities.",
+    "category": "AI/ML",
+    "auth_type": "api_key",
+    "auth_config": {
+      "api_key_field": "api_key",
+      "description": "Enter your API key for the LLM provider (Google AI, OpenAI, etc.)",
+      "optional_fields": {
+        "default_model": {
+          "label": "Default Model",
+          "type": "select",
+          "required": false,
+          "options": [
+            { "value": "gemini-2.0-flash-exp", "label": "Gemini 2.0 Flash (Experimental)" },
+            { "value": "gemini-1.5-flash", "label": "Gemini 1.5 Flash" },
+            { "value": "gemini-1.5-pro", "label": "Gemini 1.5 Pro" },
+            { "value": "gpt-4", "label": "GPT-4" },
+            { "value": "gpt-3.5-turbo", "label": "GPT-3.5 Turbo" }
+          ],
+          "default": "gemini-2.0-flash-exp",
+          "help_text": "Default model to use for agent execution"
+        },
+        "temperature": {
+          "label": "Temperature",
+          "type": "number",
+          "required": false,
+          "default": 0.7,
+          "min": 0,
+          "max": 2,
+          "step": 0.1,
+          "help_text": "Controls randomness in responses (0 = deterministic, 2 = very random)"
+        },
+        "max_tokens": {
+          "label": "Max Tokens",
+          "type": "number",
+          "required": false,
+          "default": 2048,
+          "min": 100,
+          "max": 8192,
+          "help_text": "Maximum number of tokens in the response"
+        }
+      }
+    },
+    "version": "1.1.0",
+    "base_url": "internal://ai-agent",
+    "icon_url": "https://cdn.jsdelivr.net/npm/heroicons@2.0.18/24/solid/sparkles.svg",
+    "base_url_placeholder": "internal://ai-agent",
+    "base_url_help_text": "This is an internal IOFlow service that executes AI agents locally."
+  },
+  "services": [
+    {
+      "service_name": "execute_agent",
+      "display_name": "Execute AI Agent",
+      "service_type": "ai_agent_execute",
+      "description": "Execute an AI agent with specified parameters and input. Supports both pre-configured and dynamic agents.",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "execute",
+            "enum": ["execute"],
+            "description": "Operation type",
+            "ui_control": "hidden"
+          },
+          "agent_id": {
+            "type": "string",
+            "description": "ID of a pre-configured agent to execute",
+            "example": "weather_agent",
+            "placeholder": "Select or enter agent ID",
+            "help_text": "Choose a pre-configured agent or leave empty for dynamic configuration",
+            "ui_control": "select",
+            "required": false
+          },
+          "input": {
+            "type": "string",
+            "description": "Input text/prompt for the agent",
+            "example": "What's the weather in New York?",
+            "placeholder": "Enter your question or command",
+            "help_text": "The input that will be processed by the AI agent",
+            "ui_control": "textarea",
+            "required": true
+          },
+          "use_dynamic": {
+            "type": "boolean",
+            "default": false,
+            "description": "Use dynamic agent configuration instead of pre-configured",
+            "ui_control": "checkbox",
+            "help_text": "Enable to configure agent parameters dynamically"
+          },
+          "system_prompt": {
+            "type": "string",
+            "description": "System prompt for dynamic agent (used when use_dynamic is true)",
+            "placeholder": "You are a helpful assistant...",
+            "ui_control": "textarea",
+            "required": false,
+            "condition": "use_dynamic === true"
+          },
+          "instruction": {
+            "type": "string",
+            "description": "Additional instructions for the agent",
+            "placeholder": "Please be concise and accurate...",
+            "ui_control": "textarea",
+            "required": false
+          },
+          "model": {
+            "type": "string",
+            "description": "LLM model to use",
+            "enum": [
+              "gemini-2.0-flash-exp",
+              "gemini-1.5-flash",
+              "gemini-1.5-pro",
+              "gpt-4",
+              "gpt-3.5-turbo"
+            ],
+            "default": "gemini-2.0-flash-exp",
+            "ui_control": "select",
+            "required": false
+          },
+          "tools": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of tool names the agent can use",
+            "example": ["get_weather", "get_current_time"],
+            "ui_control": "tags",
+            "required": false,
+            "help_text": "Tools available to the agent for function calling"
+          },
+          "api_key": {
+            "type": "string",
+            "description": "API key for the LLM provider (overrides subscription key)",
+            "ui_control": "password",
+            "required": false,
+            "help_text": "Optional: Override the default API key for this execution"
+          }
+        },
+        "required": ["input"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the execution was successful"
+          },
+          "agent_id": {
+            "type": "string",
+            "description": "ID of the agent that was executed"
+          },
+          "response": {
+            "type": "string",
+            "description": "The agent's response to the input"
+          },
+          "model": {
+            "type": "string",
+            "description": "Model used for the execution"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of the execution"
+          },
+          "error": {
+            "type": "boolean",
+            "description": "Whether an error occurred"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message if an error occurred"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 120,
+      "sample_input": {
+        "input": "What's the weather in Tokyo?",
+        "agent_id": "weather_agent"
+      },
+      "sample_output": {
+        "success": true,
+        "agent_id": "weather_agent",
+        "response": "The weather in Tokyo is currently clear with a temperature of 22°C.",
+        "model": "gemini-2.0-flash-exp",
+        "timestamp": "2025-01-21T10:30:00Z"
+      }
+    },
+    {
+      "service_name": "list_agents",
+      "display_name": "List Available Agents",
+      "service_type": "ai_agent_execute",
+      "description": "List all available pre-configured agents and their status.",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "list",
+            "enum": ["list"],
+            "description": "Operation type",
+            "ui_control": "hidden"
+          },
+          "include_loaded": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include information about which agents are loaded in memory",
+            "ui_control": "checkbox"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the operation was successful"
+          },
+          "agents": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "agent_id": {
+                  "type": "string",
+                  "description": "Unique identifier for the agent"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of what the agent does"
+                },
+                "model": {
+                  "type": "string",
+                  "description": "Default model for the agent"
+                },
+                "is_loaded": {
+                  "type": "boolean",
+                  "description": "Whether the agent is currently loaded in memory"
+                }
+              }
+            }
+          },
+          "total": {
+            "type": "integer",
+            "description": "Total number of agents"
+          },
+          "loaded_count": {
+            "type": "integer",
+            "description": "Number of agents currently loaded"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 10,
+      "sample_output": {
+        "success": true,
+        "agents": [
+          {
+            "agent_id": "weather_agent",
+            "description": "Agent that provides weather and time information for cities",
+            "model": "gemini-2.0-flash-exp",
+            "is_loaded": false
+          },
+          {
+            "agent_id": "math_agent",
+            "description": "Agent that can solve mathematical problems",
+            "model": "gemini-1.5-pro",
+            "is_loaded": true
+          }
+        ],
+        "total": 2,
+        "loaded_count": 1
+      }
+    },
+    {
+      "service_name": "create_agent_config",
+      "display_name": "Create Agent Configuration",
+      "service_type": "ai_agent_execute",
+      "description": "Create a new agent configuration that can be reused.",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "create_config",
+            "enum": ["create_config"],
+            "description": "Operation type",
+            "ui_control": "hidden"
+          },
+          "agent_id": {
+            "type": "string",
+            "description": "Unique ID for the new agent",
+            "placeholder": "my_custom_agent",
+            "pattern": "^[a-z0-9_]+$",
+            "help_text": "Use lowercase letters, numbers, and underscores only",
+            "ui_control": "text",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of what the agent does",
+            "placeholder": "An agent that helps with...",
+            "ui_control": "textarea",
+            "required": true
+          },
+          "system_prompt": {
+            "type": "string",
+            "description": "System prompt defining the agent's behavior",
+            "placeholder": "You are a helpful assistant specialized in...",
+            "ui_control": "textarea",
+            "required": true
+          },
+          "instruction": {
+            "type": "string",
+            "description": "Additional instructions for the agent",
+            "ui_control": "textarea",
+            "required": false
+          },
+          "model": {
+            "type": "string",
+            "description": "Default model for the agent",
+            "enum": [
+              "gemini-2.0-flash-exp",
+              "gemini-1.5-flash",
+              "gemini-1.5-pro",
+              "gpt-4",
+              "gpt-3.5-turbo"
+            ],
+            "default": "gemini-2.0-flash-exp",
+            "ui_control": "select"
+          },
+          "tools": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Display name of the tool"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "What the tool does"
+                },
+                "function": {
+                  "type": "string",
+                  "description": "Function name to call"
+                }
+              }
+            },
+            "description": "Tools available to the agent",
+            "ui_control": "json",
+            "required": false
+          }
+        },
+        "required": ["agent_id", "description", "system_prompt"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the configuration was created successfully"
+          },
+          "agent_id": {
+            "type": "string",
+            "description": "ID of the created agent configuration"
+          },
+          "message": {
+            "type": "string",
+            "description": "Success or error message"
+          },
+          "path": {
+            "type": "string",
+            "description": "File path where configuration was saved"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 10,
+      "sample_input": {
+        "agent_id": "translator_agent",
+        "description": "An agent that translates text between languages",
+        "system_prompt": "You are a professional translator. Translate text accurately while preserving meaning and tone.",
+        "model": "gemini-1.5-pro"
+      },
+      "sample_output": {
+        "success": true,
+        "agent_id": "translator_agent",
+        "message": "Agent configuration created: translator_agent",
+        "path": "backend/agent_configs/translator_agent.json"
+      }
+    },
+    {
+      "service_name": "load_agent",
+      "display_name": "Load Agent into Memory",
+      "service_type": "ai_agent_execute",
+      "description": "Pre-load an agent configuration into memory for faster execution.",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "load",
+            "enum": ["load"],
+            "description": "Operation type",
+            "ui_control": "hidden"
+          },
+          "agent_id": {
+            "type": "string",
+            "description": "ID of the agent to load",
+            "placeholder": "weather_agent",
+            "ui_control": "text",
+            "required": true
+          },
+          "api_key": {
+            "type": "string",
+            "description": "API key for the LLM provider",
+            "ui_control": "password",
+            "required": false
+          }
+        },
+        "required": ["agent_id"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the agent was loaded successfully"
+          },
+          "message": {
+            "type": "string",
+            "description": "Status message"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 10,
+      "sample_input": {
+        "agent_id": "weather_agent"
+      },
+      "sample_output": {
+        "success": true,
+        "message": "Agent 'weather_agent' loaded successfully"
+      }
+    },
+    {
+      "service_name": "unload_agent",
+      "display_name": "Unload Agent from Memory",
+      "service_type": "ai_agent_execute",
+      "description": "Remove an agent from memory to free up resources.",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "unload",
+            "enum": ["unload"],
+            "description": "Operation type",
+            "ui_control": "hidden"
+          },
+          "agent_id": {
+            "type": "string",
+            "description": "ID of the agent to unload",
+            "placeholder": "weather_agent",
+            "ui_control": "text",
+            "required": true
+          }
+        },
+        "required": ["agent_id"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the agent was unloaded successfully"
+          },
+          "message": {
+            "type": "string",
+            "description": "Status message"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 10,
+      "sample_input": {
+        "agent_id": "weather_agent"
+      },
+      "sample_output": {
+        "success": true,
+        "message": "Agent 'weather_agent' unloaded from memory"
+      }
+    }
+  ],
+  "events": []
+}

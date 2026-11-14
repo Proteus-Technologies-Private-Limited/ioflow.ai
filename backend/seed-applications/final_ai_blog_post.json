@@ -1,0 +1,97 @@
+{
+  "key": "final_ai_blog_post",
+  "application": {
+    "app_name": "final_ai_blog_post App",
+    "app_type": "flow",
+    "description": "Generate blog post given a topic",
+    "category": "Flow Applications",
+    "auth_type": "none",
+    "auth_config": {
+      "description": "No authentication required for flow-based applications"
+    },
+    "version": "1.0.0",
+    "base_url": "http://localhost:7001",
+    "icon_url": "https://via.placeholder.com/64x64.png?text=Flow",
+    "flow_based": true,
+    "source_flow_id": "a4ad7b88-14a2-46af-ad2a-e220d232d773",
+    "created_at": "2025-11-21T16:26:19.677756",
+    "complexity_score": 60,
+    "estimated_execution_time": 27
+  },
+  "services": [
+    {
+      "service_name": "execute_final_ai_blog_post",
+      "display_name": "Execute final_ai_blog_post",
+      "service_type": "api_call",
+      "description": "Execute the final_ai_blog_post flow with provided parameters",
+      "endpoint_template": "/api/v1/flows/a4ad7b88-14a2-46af-ad2a-e220d232d773/execute-internal-sync",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body_template": {
+          "variables": {
+            "topic": "{{topic}}"
+          }
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "value": 200
+        },
+        "data_path": "data",
+        "error_path": "error"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "topic": {
+            "type": "string",
+            "description": "Parameter topic",
+            "minLength": 1
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "final_output_action_wordpress": {
+            "type": "object",
+            "description": "Output from final node action_wordpress"
+          }
+        }
+      },
+      "sync_mode": "sync",
+      "timeout_seconds": 37,
+      "flow_based": true,
+      "source_flow_id": "a4ad7b88-14a2-46af-ad2a-e220d232d773"
+    }
+  ],
+  "events": [
+    {
+      "event_name": "final_ai_blog_post_completed",
+      "display_name": "final_ai_blog_post Completed",
+      "trigger_type": "flow_completion",
+      "description": "Triggered when final_ai_blog_post flow completes",
+      "trigger_config": {
+        "flow_id": "a4ad7b88-14a2-46af-ad2a-e220d232d773",
+        "status": "completed"
+      },
+      "sync_mode": "async",
+      "flow_based": true,
+      "source_flow_id": "a4ad7b88-14a2-46af-ad2a-e220d232d773"
+    }
+  ],
+  "metadata": {
+    "generated_from_flow": true,
+    "flow_id": "a4ad7b88-14a2-46af-ad2a-e220d232d773",
+    "flow_name": "final_ai_blog_post",
+    "generated_at": "2025-11-21T16:26:19.677790",
+    "dependencies": [],
+    "transformations_count": 4,
+    "error_handling_nodes": []
+  }
+}

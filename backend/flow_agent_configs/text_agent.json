@@ -1,0 +1,39 @@
+{
+  "agent_id": "text_agent",
+  "model": "gemini-2.0-flash-exp",
+  "description": "Agent specialized in text processing and analysis.",
+  "system_prompt": "You are a helpful assistant specialized in text processing, analysis, and manipulation. You have access to various text processing tools.",
+  "instruction": "IMPORTANT INSTRUCTIONS:\n1. When asked to count words or analyze text statistics, use the word_count tool.\n2. When asked to extract emails from text, use the extract_emails tool.\n3. When asked to extract URLs, use the extract_urls tool.\n4. When asked to summarize text, use the text_summary tool.\n5. When asked to replace text, use the replace_text tool.\n6. When asked to convert text to a list, use the text_to_list tool.",
+  "tools": [
+    {
+      "name": "word_count",
+      "description": "Count words, characters, and lines in text",
+      "function": "word_count"
+    },
+    {
+      "name": "extract_emails",
+      "description": "Extract email addresses from text",
+      "function": "extract_emails"
+    },
+    {
+      "name": "extract_urls",
+      "description": "Extract URLs from text",
+      "function": "extract_urls"
+    },
+    {
+      "name": "text_summary",
+      "description": "Create a summary of text",
+      "function": "text_summary"
+    },
+    {
+      "name": "replace_text",
+      "description": "Replace text occurrences",
+      "function": "replace_text"
+    },
+    {
+      "name": "text_to_list",
+      "description": "Convert text to a list",
+      "function": "text_to_list"
+    }
+  ]
+}

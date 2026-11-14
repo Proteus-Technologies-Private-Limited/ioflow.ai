@@ -1,0 +1,261 @@
+{
+  "key": "ssh_command",
+  "application": {
+    "app_name": "SSH Command",
+    "app_type": "ssh",
+    "app_scope": "tenant",
+    "description": "Execute commands on remote servers via SSH. Supports running shell commands, checking system resources, managing services, and automating server administration tasks.",
+    "category": "Integration",
+    "auth_type": "basic",
+    "auth_config": {
+      "username_field": "username",
+      "password_field": "password",
+      "description": "Enter SSH credentials for the remote server. You can use password or private key authentication.",
+      "optional_fields": {
+        "private_key": {
+          "label": "Private Key",
+          "type": "textarea",
+          "required": false,
+          "placeholder": "-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----",
+          "help_text": "SSH private key for key-based authentication (optional, use instead of password)"
+        }
+      }
+    },
+    "version": "2.0.0",
+    "base_url": "ssh://localhost:22",
+    "icon_url": "https://cdn.jsdelivr.net/npm/heroicons@2.0.18/24/solid/command-line.svg",
+    "base_url_placeholder": "ssh://your-server.com:22",
+    "base_url_help_text": "Enter the SSH server address in the format ssh://hostname:port (default port is 22)"
+  },
+  "events": [],
+  "services": [
+    {
+      "service_name": "execute_command",
+      "display_name": "Execute Command",
+      "service_type": "ssh_command",
+      "description": "Execute a shell command on the remote server via SSH and return stdout, stderr, and exit code.",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "The shell command to execute on the remote server",
+            "placeholder": "ls -la /var/log",
+            "help_text": "Enter the command to run on the remote server. Supports any valid shell command.",
+            "ui_control": "textarea"
+          },
+          "timeout": {
+            "type": "integer",
+            "description": "Command timeout in seconds",
+            "default": 30,
+            "minimum": 1,
+            "maximum": 300,
+            "help_text": "Maximum time to wait for command completion (1-300 seconds)",
+            "ui_control": "number"
+          }
+        },
+        "required": ["command"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the command executed successfully (exit code 0)"
+          },
+          "exit_code": {
+            "type": "integer",
+            "description": "Command exit code (0 = success)"
+          },
+          "stdout": {
+            "type": "string",
+            "description": "Standard output from the command"
+          },
+          "stderr": {
+            "type": "string",
+            "description": "Standard error output from the command"
+          },
+          "host": {
+            "type": "string",
+            "description": "The host the command was executed on"
+          },
+          "command": {
+            "type": "string",
+            "description": "The command that was executed"
+          }
+        }
+      },
+      "timeout_seconds": 60,
+      "is_active": true
+    },
+    {
+      "service_name": "check_disk_space",
+      "display_name": "Check Disk Space",
+      "service_type": "ssh_command",
+      "description": "Check disk space usage on the remote server. Returns filesystem usage details including size, used, available, and percentage.",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "default": "df -h",
+            "description": "Disk space check command",
+            "ui_control": "hidden"
+          },
+          "path": {
+            "type": "string",
+            "description": "Optional: specific mount point or path to check (e.g., /, /home, /var)",
+            "placeholder": "/",
+            "help_text": "Leave empty to check all filesystems, or specify a path like / or /home",
+            "ui_control": "text"
+          }
+        },
+        "required": []
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the command executed successfully"
+          },
+          "stdout": {
+            "type": "string",
+            "description": "Disk space usage output"
+          },
+          "exit_code": {
+            "type": "integer",
+            "description": "Command exit code"
+          }
+        }
+      },
+      "timeout_seconds": 30,
+      "is_active": true
+    },
+    {
+      "service_name": "check_memory",
+      "display_name": "Check Memory Usage",
+      "service_type": "ssh_command",
+      "description": "Check memory (RAM) usage on the remote server including total, used, free, and swap information.",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "default": "free -h",
+            "description": "Memory check command",
+            "ui_control": "hidden"
+          }
+        },
+        "required": []
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "stdout": {
+            "type": "string",
+            "description": "Memory usage output"
+          },
+          "exit_code": {
+            "type": "integer"
+          }
+        }
+      },
+      "timeout_seconds": 30,
+      "is_active": true
+    },
+    {
+      "service_name": "check_system_uptime",
+      "display_name": "Check System Uptime",
+      "service_type": "ssh_command",
+      "description": "Check how long the remote server has been running, along with load averages.",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "default": "uptime",
+            "description": "Uptime command",
+            "ui_control": "hidden"
+          }
+        },
+        "required": []
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "stdout": {
+            "type": "string",
+            "description": "Uptime and load average output"
+          },
+          "exit_code": {
+            "type": "integer"
+          }
+        }
+      },
+      "timeout_seconds": 30,
+      "is_active": true
+    },
+    {
+      "service_name": "list_processes",
+      "display_name": "List Running Processes",
+      "service_type": "ssh_command",
+      "description": "List running processes on the remote server sorted by CPU or memory usage.",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "default": "ps aux --sort=-%mem | head -20",
+            "description": "Process listing command",
+            "ui_control": "hidden"
+          },
+          "sort_by": {
+            "type": "string",
+            "description": "Sort processes by CPU or memory usage",
+            "enum": ["memory", "cpu"],
+            "default": "memory",
+            "ui_control": "select"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Number of top processes to show",
+            "default": 20,
+            "minimum": 5,
+            "maximum": 100,
+            "ui_control": "number"
+          }
+        },
+        "required": []
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "stdout": {
+            "type": "string",
+            "description": "Process listing output"
+          },
+          "exit_code": {
+            "type": "integer"
+          }
+        }
+      },
+      "timeout_seconds": 30,
+      "is_active": true
+    }
+  ],
+  "metadata": {
+    "author": "IOFlow",
+    "tags": ["ssh", "server", "devops", "monitoring", "remote", "command"],
+    "documentation_url": ""
+  }
+}

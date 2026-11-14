@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  weaviate:
+    image: semitechnologies/weaviate:latest
+    container_name: weaviate-with-auth
+    ports:
+      - "8080:8080"
+    environment:
+      # Basic Configuration
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'false'
+      AUTHENTICATION_APIKEY_ENABLED: 'true'
+      AUTHENTICATION_APIKEY_ALLOWED_KEYS: 'weaviate-api-key-ioflow-2024'
+      AUTHENTICATION_APIKEY_USERS: 'ioflow-user'
+      
+      # Persistence
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      
+      # Query settings
+      QUERY_DEFAULTS_LIMIT: '25'
+      
+      # Performance settings
+      DEFAULT_VECTORIZER_MODULE: 'none'
+      ENABLE_MODULES: ''
+      
+      # Cluster settings
+      CLUSTER_HOSTNAME: 'node1'
+    
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    
+    restart: unless-stopped
+    
+    command:
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8080"
+      - --scheme
+      - http
+
+volumes:
+  weaviate_data:
+    driver: local

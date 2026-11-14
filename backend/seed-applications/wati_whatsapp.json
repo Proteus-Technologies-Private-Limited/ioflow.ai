@@ -1,0 +1,1709 @@
+{
+  "key": "wati_whatsapp",
+  "application": {
+    "app_name": "WATI WhatsApp",
+    "app_type": "api",
+    "description": "WATI WhatsApp Business API integration for sending template messages, session messages, interactive messages (buttons, lists), media attachments (images, documents, videos), managing templates, contacts and receiving inbound messages via webhooks. WATI is a no-code WhatsApp Business solution built on the official WhatsApp Business API.",
+    "category": "Communication",
+    "auth_type": "api_key",
+    "auth_config": {
+      "header_name": "Authorization",
+      "header_prefix": "Bearer",
+      "description": "WATI Access Token (Bearer) from your WATI dashboard under API Docs / Integration. The token already includes the 'Bearer ' prefix when copied from WATI - remove the prefix when entering it here.",
+      "credential_fields": {
+        "api_key": {
+          "label": "WATI Access Token",
+          "type": "password",
+          "required": true,
+          "description": "Access token from WATI Dashboard > API Docs. Do NOT include the 'Bearer ' prefix."
+        }
+      }
+    },
+    "version": "1.0.3",
+    "base_url": "https://live-mt-server.wati.io/YOUR_TENANT_ID",
+    "icon_url": "https://www.wati.io/wp-content/uploads/2023/04/wati-icon.svg",
+    "auth_example": {
+      "api_key": "your_wati_access_token_here"
+    },
+    "app_scope": "global",
+    "notes": "Set base_url to your tenant-specific WATI endpoint. Find this in WATI Dashboard > API Docs - it looks like https://live-mt-server.wati.io/{tenant_id} where {tenant_id} is your unique tenant identifier."
+  },
+  "webhook_config": {
+    "api_key_query_param": "api_key",
+    "notes": "WATI's webhook UI does not allow setting custom HTTP headers, so the IOFlow invocation API key is accepted via the 'api_key' query string on the webhook URL. Append ?api_key=<your-invocation-api-key> to each webhook URL when configuring WATI."
+  },
+  "services": [
+    {
+      "service_name": "send_template_message",
+      "description": "Send a pre-approved WhatsApp template message to a single recipient. Use this to initiate conversations with end users outside the 24-hour session window.",
+      "service_type": "api_call",
+      "endpoint_template": "{{base_url}}/api/v1/sendTemplateMessage",
+      "request_config": {
+        "method": "POST",
+        "parameter_method": "json_payload",
+        "headers_template": {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        "query_template": {
+          "whatsappNumber": "{{whatsapp_number}}"
+        },
+        "body_template": {
+          "template_name": "{{template_name}}",
+          "broadcast_name": "{{broadcast_name}}",
+          "parameters": [
+            {
+              "name": "1",
+              "value": "{{var1}}"
+            },
+            {
+              "name": "2",
+              "value": "{{var2}}"
+            }
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "whatsapp_number": {
+            "type": "string",
+            "description": "Recipient's WhatsApp number with country code (e.g., 919999999999)"
+          },
+          "template_name": {
+            "type": "string",
+            "description": "Pre-approved WATI template name (must already be approved by WhatsApp)"
+          },
+          "broadcast_name": {
+            "type": "string",
+            "description": "Name to identify this broadcast in WATI dashboard",
+            "default": "ioflow_broadcast"
+          },
+          "var1": {
+            "type": "string",
+            "description": "First template variable value (replaces {{1}} in template)"
+          },
+          "var2": {
+            "type": "string",
+            "description": "Second template variable value (replaces {{2}} in template)"
+          }
+        },
+        "required": [
+          "whatsapp_number",
+          "template_name",
+          "broadcast_name"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200,
+            201
+          ]
+        }
+      },
+      "sample_input": {
+        "whatsapp_number": "918888888888",
+        "template_name": "order_confirmation",
+        "broadcast_name": "order_broadcast_2026",
+        "var1": "John Doe",
+        "var2": "Order #12345"
+      }
+    },
+    {
+      "service_name": "send_template_message_v2",
+      "description": "Send a pre-approved WhatsApp template message using the V2 endpoint which supports richer parameter types including header media (image/document/video) and button parameters.",
+      "service_type": "api_call",
+      "endpoint_template": "{{base_url}}/api/v2/sendTemplateMessage",
+      "request_config": {
+        "method": "POST",
+        "parameter_method": "json_payload",
+        "headers_template": {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        "query_template": {
+          "whatsappNumber": "{{whatsapp_number}}"
+        },
+        "body_template": {
+          "template_name": "{{template_name}}",
+          "broadcast_name": "{{broadcast_name}}",
+          "channel_number": "{{channel_number}}",
+          "parameters": "{{parameters}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "whatsapp_number": {
+            "type": "string",
+            "description": "Recipient's WhatsApp number with country code"
+          },
+          "template_name": {
+            "type": "string",
+            "description": "Pre-approved WATI template name"
+          },
+          "broadcast_name": {
+            "type": "string",
+            "description": "Identifier for this broadcast in WATI dashboard"
+          },
+          "channel_number": {
+            "type": "string",
+            "description": "Optional. WhatsApp channel number to send from (required only if account has multiple numbers)"
+          },
+          "parameters": {
+            "type": "array",
+            "description": "Array of template parameters. Each item: {name, value} for text params, or {name, mediaUrl, fileName} for header media.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Variable name or position (e.g., '1', '2', or 'name')"
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Text value for the variable"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "whatsapp_number",
+          "template_name",
+          "broadcast_name"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200,
+            201
+          ]
+        }
+      },
+      "sample_input": {
+        "whatsapp_number": "918888888888",
+        "template_name": "order_confirmation_with_image",
+        "broadcast_name": "order_broadcast_v2_2026",
+        "parameters": [
+          {
+            "name": "1",
+            "value": "John Doe"
+          },
+          {
+            "name": "2",
+            "value": "Order #12345"
+          }
+        ]
+      }
+    },
+    {
+      "service_name": "send_template_messages_bulk",
+      "description": "Send a pre-approved WhatsApp template message to multiple recipients in a single API call. Supports per-recipient personalized parameters.",
+      "service_type": "api_call",
+      "endpoint_template": "{{base_url}}/api/v1/sendTemplateMessages",
+      "request_config": {
+        "method": "POST",
+        "parameter_method": "json_payload",
+        "headers_template": {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        "body_template": {
+          "template_name": "{{template_name}}",
+          "broadcast_name": "{{broadcast_name}}",
+          "receivers": "{{receivers}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "template_name": {
+            "type": "string",
+            "description": "Pre-approved WATI template name"
+          },
+          "broadcast_name": {
+            "type": "string",
+            "description": "Identifier for this broadcast in WATI dashboard"
+          },
+          "receivers": {
+            "type": "array",
+            "description": "Array of recipient objects",
+            "items": {
+              "type": "object",
+              "properties": {
+                "whatsappNumber": {
+                  "type": "string",
+                  "description": "Recipient's WhatsApp number with country code"
+                },
+                "customParams": {
+                  "type": "array",
+                  "description": "Array of custom parameter objects for personalization",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "Parameter name or position"
+                      },
+                      "value": {
+                        "type": "string",
+                        "description": "Parameter value"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "template_name",
+          "broadcast_name",
+          "receivers"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200,
+            201
+          ]
+        }
+      },
+      "sample_input": {
+        "template_name": "order_confirmation",
+        "broadcast_name": "bulk_orders_2026",
+        "receivers": [
+          {
+            "whatsappNumber": "918888888888",
+            "customParams": [
+              {
+                "name": "1",
+                "value": "John Doe"
+              },
+              {
+                "name": "2",
+                "value": "Order #12345"
+              }
+            ]
+          },
+          {
+            "whatsappNumber": "917777777777",
+            "customParams": [
+              {
+                "name": "1",
+                "value": "Jane Smith"
+              },
+              {
+                "name": "2",
+                "value": "Order #12346"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "service_name": "send_session_message",
+      "description": "Send a custom text message during an active WhatsApp session (within the 24-hour window after user interaction). Cannot be used to initiate conversation.",
+      "service_type": "api_call",
+      "endpoint_template": "{{base_url}}/api/v1/sendSessionMessage/{{whatsapp_number}}",
+      "request_config": {
+        "method": "POST",
+        "parameter_method": "json_payload",
+        "headers_template": {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        "body_template": {
+          "messageText": "{{message_text}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "whatsapp_number": {
+            "type": "string",
+            "description": "Recipient's WhatsApp number with country code (e.g., 918888888888)"
+          },
+          "message_text": {
+            "type": "string",
+            "description": "Plain text message to send. Supports WhatsApp formatting (bold, italic, etc.)"
+          }
+        },
+        "required": [
+          "whatsapp_number",
+          "message_text"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200,
+            201
+          ]
+        }
+      },
+      "sample_input": {
+        "whatsapp_number": "918888888888",
+        "message_text": "Hi! Thanks for reaching out. How can we help you today?"
+      }
+    },
+    {
+      "service_name": "send_session_file_via_url",
+      "description": "Send a media file (image, document, video, audio) by URL during an active WhatsApp session. Supports captions.",
+      "service_type": "api_call",
+      "endpoint_template": "{{base_url}}/api/v1/sendSessionFileViaUrl/{{whatsapp_number}}",
+      "request_config": {
+        "method": "POST",
+        "parameter_method": "json_payload",
+        "headers_template": {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        "body_template": {
+          "url": "{{media_url}}",
+          "caption": "{{caption}}",
+          "fileName": "{{file_name}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "whatsapp_number": {
+            "type": "string",
+            "description": "Recipient's WhatsApp number with country code"
+          },
+          "media_url": {
+            "type": "string",
+            "description": "Public HTTPS URL to the media file (image, document, video, audio)"
+          },
+          "caption": {
+            "type": "string",
+            "description": "Optional caption for the media (not supported for audio)"
+          },
+          "file_name": {
+            "type": "string",
+            "description": "File name with extension (e.g., invoice.pdf). Required for documents."
+          }
+        },
+        "required": [
+          "whatsapp_number",
+          "media_url"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200,
+            201
+          ]
+        }
+      },
+      "sample_input": {
+        "whatsapp_number": "918888888888",
+        "media_url": "https://example.com/invoice.pdf",
+        "caption": "Your invoice is attached",
+        "file_name": "invoice_12345.pdf"
+      }
+    },
+    {
+      "service_name": "send_session_file",
+      "description": "Upload and send a media file directly (multipart upload) during an active WhatsApp session. Use this when you don't have a public URL for the file.",
+      "service_type": "api_call",
+      "endpoint_template": "{{base_url}}/api/v1/sendSessionFile/{{whatsapp_number}}",
+      "request_config": {
+        "method": "POST",
+        "parameter_method": "form_data",
+        "headers_template": {
+          "Accept": "application/json"
+        },
+        "form_data_template": {
+          "file": "{{file_data}}",
+          "caption": "{{caption}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "whatsapp_number": {
+            "type": "string",
+            "description": "Recipient's WhatsApp number with country code"
+          },
+          "file_data": {
+            "type": "object",
+            "description": "File object with data/type/name to upload",
+            "properties": {
+              "data": {
+                "type": "string",
+                "description": "Base64 encoded file content"
+              },
+              "type": {
+                "type": "string",
+                "description": "MIME type (e.g., image/jpeg, application/pdf)"
+              },
+              "name": {
+                "type": "string",
+                "description": "Filename with extension"
+              }
+            }
+          },
+          "caption": {
+            "type": "string",
+            "description": "Optional caption for the file"
+          }
+        },
+        "required": [
+          "whatsapp_number",
+          "file_data"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200,
+            201
+          ]
+        }
+      },
+      "sample_input": {
+        "whatsapp_number": "918888888888",
+        "file_data": {
+          "data": "JVBERi0xLjQK...",
+          "type": "application/pdf",
+          "name": "invoice.pdf"
+        },
+        "caption": "Your invoice"
+      }
+    },
+    {
+      "service_name": "send_interactive_buttons_message",
+      "description": "Send an interactive WhatsApp message with up to 3 quick reply buttons during an active session.",
+      "service_type": "api_call",
+      "endpoint_template": "{{base_url}}/api/v1/sendInteractiveButtonsMessage",
+      "request_config": {
+        "method": "POST",
+        "parameter_method": "json_payload",
+        "headers_template": {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        "query_template": {
+          "whatsappNumber": "{{whatsapp_number}}"
+        },
+        "body_template": {
+          "header": {
+            "type": "Text",
+            "text": "{{header_text}}"
+          },
+          "body": "{{body_text}}",
+          "footer": "{{footer_text}}",
+          "buttons": [
+            {
+              "text": "{{button1_text}}"
+            },
+            {
+              "text": "{{button2_text}}"
+            },
+            {
+              "text": "{{button3_text}}"
+            }
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "whatsapp_number": {
+            "type": "string",
+            "description": "Recipient's WhatsApp number with country code"
+          },
+          "header_text": {
+            "type": "string",
+            "description": "Header text shown above the message body"
+          },
+          "body_text": {
+            "type": "string",
+            "description": "Main body text of the interactive message"
+          },
+          "footer_text": {
+            "type": "string",
+            "description": "Optional footer text"
+          },
+          "button1_text": {
+            "type": "string",
+            "description": "Text for button 1 (max 20 chars)"
+          },
+          "button2_text": {
+            "type": "string",
+            "description": "Text for button 2 (max 20 chars)"
+          },
+          "button3_text": {
+            "type": "string",
+            "description": "Text for button 3 (max 20 chars, optional)"
+          }
+        },
+        "required": [
+          "whatsapp_number",
+          "body_text",
+          "button1_text"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200,
+            201
+          ]
+        }
+      },
+      "sample_input": {
+        "whatsapp_number": "918888888888",
+        "header_text": "Order Confirmation",
+        "body_text": "Would you like to confirm your order #12345?",
+        "footer_text": "Reply within 24 hours",
+        "button1_text": "Yes, confirm",
+        "button2_text": "No, cancel",
+        "button3_text": "Need help"
+      }
+    },
+    {
+      "service_name": "send_interactive_list_message",
+      "description": "Send an interactive WhatsApp message with a list of selectable options during an active session.",
+      "service_type": "api_call",
+      "endpoint_template": "{{base_url}}/api/v1/sendInteractiveListMessage",
+      "request_config": {
+        "method": "POST",
+        "parameter_method": "json_payload",
+        "headers_template": {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        "query_template": {
+          "whatsappNumber": "{{whatsapp_number}}"
+        },
+        "body_template": {
+          "header": "{{header_text}}",
+          "body": "{{body_text}}",
+          "footer": "{{footer_text}}",
+          "buttonText": "{{button_text}}",
+          "sections": [
+            {
+              "title": "{{section_title}}",
+              "rows": [
+                {
+                  "id": "{{row1_id}}",
+                  "title": "{{row1_title}}",
+                  "description": "{{row1_description}}"
+                },
+                {
+                  "id": "{{row2_id}}",
+                  "title": "{{row2_title}}",
+                  "description": "{{row2_description}}"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "whatsapp_number": {
+            "type": "string",
+            "description": "Recipient's WhatsApp number with country code"
+          },
+          "header_text": {
+            "type": "string",
+            "description": "Header text for the message"
+          },
+          "body_text": {
+            "type": "string",
+            "description": "Main body text of the message"
+          },
+          "footer_text": {
+            "type": "string",
+            "description": "Optional footer text"
+          },
+          "button_text": {
+            "type": "string",
+            "description": "Text shown on the button that opens the list (e.g., 'Select an option')"
+          },
+          "section_title": {
+            "type": "string",
+            "description": "Title for the list section"
+          },
+          "row1_id": {
+            "type": "string",
+            "description": "Unique ID for list row 1"
+          },
+          "row1_title": {
+            "type": "string",
+            "description": "Title for list row 1 (max 24 chars)"
+          },
+          "row1_description": {
+            "type": "string",
+            "description": "Description for list row 1 (max 72 chars)"
+          },
+          "row2_id": {
+            "type": "string",
+            "description": "Unique ID for list row 2"
+          },
+          "row2_title": {
+            "type": "string",
+            "description": "Title for list row 2"
+          },
+          "row2_description": {
+            "type": "string",
+            "description": "Description for list row 2"
+          }
+        },
+        "required": [
+          "whatsapp_number",
+          "body_text",
+          "button_text",
+          "section_title",
+          "row1_id",
+          "row1_title"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200,
+            201
+          ]
+        }
+      },
+      "sample_input": {
+        "whatsapp_number": "918888888888",
+        "header_text": "Our Products",
+        "body_text": "Please choose a product category to explore",
+        "footer_text": "Tap the button below",
+        "button_text": "View Categories",
+        "section_title": "Categories",
+        "row1_id": "cat_electronics",
+        "row1_title": "Electronics",
+        "row1_description": "Phones, laptops, accessories",
+        "row2_id": "cat_clothing",
+        "row2_title": "Clothing",
+        "row2_description": "Men, women, kids apparel"
+      }
+    },
+    {
+      "service_name": "get_message_templates",
+      "description": "Get all approved WhatsApp message templates linked to your WATI account, with pagination support.",
+      "service_type": "api_call",
+      "endpoint_template": "{{base_url}}/api/v1/getMessageTemplates",
+      "request_config": {
+        "method": "GET",
+        "parameter_method": "query_params",
+        "headers_template": {
+          "Accept": "application/json"
+        },
+        "query_template": {
+          "pageSize": "{{page_size}}",
+          "pageNumber": "{{page_number}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "page_size": {
+            "type": "integer",
+            "description": "Number of templates per page",
+            "default": 100
+          },
+          "page_number": {
+            "type": "integer",
+            "description": "Page number (starts at 1)",
+            "default": 1
+          }
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "sample_input": {
+        "page_size": 50,
+        "page_number": 1
+      }
+    },
+    {
+      "service_name": "get_contacts",
+      "description": "Fetch all contacts saved in your WATI account with pagination and optional filtering.",
+      "service_type": "api_call",
+      "endpoint_template": "{{base_url}}/api/v1/getContacts",
+      "request_config": {
+        "method": "GET",
+        "parameter_method": "query_params",
+        "headers_template": {
+          "Accept": "application/json"
+        },
+        "query_template": {
+          "pageSize": "{{page_size}}",
+          "pageNumber": "{{page_number}}",
+          "name": "{{name_filter}}",
+          "attribute": "{{attribute_filter}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "page_size": {
+            "type": "integer",
+            "description": "Number of contacts per page",
+            "default": 100
+          },
+          "page_number": {
+            "type": "integer",
+            "description": "Page number (starts at 1)",
+            "default": 1
+          },
+          "name_filter": {
+            "type": "string",
+            "description": "Optional filter by contact name"
+          },
+          "attribute_filter": {
+            "type": "string",
+            "description": "Optional filter by custom attribute"
+          }
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "sample_input": {
+        "page_size": 100,
+        "page_number": 1
+      }
+    },
+    {
+      "service_name": "add_contact",
+      "description": "Add a new contact (or update an existing one) to your WATI account by WhatsApp number.",
+      "service_type": "api_call",
+      "endpoint_template": "{{base_url}}/api/v1/addContact/{{whatsapp_number}}",
+      "request_config": {
+        "method": "POST",
+        "parameter_method": "json_payload",
+        "headers_template": {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        "body_template": {
+          "name": "{{name}}",
+          "customParams": "{{custom_params}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "whatsapp_number": {
+            "type": "string",
+            "description": "Contact's WhatsApp number with country code (no + sign)"
+          },
+          "name": {
+            "type": "string",
+            "description": "Contact's display name"
+          },
+          "custom_params": {
+            "type": "array",
+            "description": "Optional custom attribute key/value pairs for the contact",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Attribute name (e.g., email, company)"
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Attribute value"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "whatsapp_number",
+          "name"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200,
+            201
+          ]
+        }
+      },
+      "sample_input": {
+        "whatsapp_number": "918888888888",
+        "name": "John Doe",
+        "custom_params": [
+          {
+            "name": "email",
+            "value": "john@example.com"
+          },
+          {
+            "name": "company",
+            "value": "Acme Inc"
+          }
+        ]
+      }
+    },
+    {
+      "service_name": "update_contact_attributes",
+      "description": "Update custom attributes for an existing contact identified by WhatsApp number.",
+      "service_type": "api_call",
+      "endpoint_template": "{{base_url}}/api/v1/updateContactAttributes/{{whatsapp_number}}",
+      "request_config": {
+        "method": "POST",
+        "parameter_method": "json_payload",
+        "headers_template": {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        "body_template": {
+          "customParams": "{{custom_params}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "whatsapp_number": {
+            "type": "string",
+            "description": "Contact's WhatsApp number with country code"
+          },
+          "custom_params": {
+            "type": "array",
+            "description": "Custom attribute key/value pairs to set/update",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Attribute name"
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Attribute value"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "whatsapp_number",
+          "custom_params"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "sample_input": {
+        "whatsapp_number": "918888888888",
+        "custom_params": [
+          {
+            "name": "subscription_status",
+            "value": "premium"
+          }
+        ]
+      }
+    },
+    {
+      "service_name": "get_media",
+      "description": "Download/retrieve a media file from WATI by its filename. Used to access media files received via webhooks.",
+      "service_type": "api_call",
+      "endpoint_template": "{{base_url}}/api/v1/getMedia",
+      "request_config": {
+        "method": "GET",
+        "parameter_method": "query_params",
+        "headers_template": {
+          "Accept": "*/*"
+        },
+        "query_template": {
+          "fileName": "{{file_name}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "file_name": {
+            "type": "string",
+            "description": "Filename of the media to retrieve (from webhook payload)"
+          }
+        },
+        "required": [
+          "file_name"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "raw_response": true
+      },
+      "sample_input": {
+        "file_name": "data/images/123/abc.jpg"
+      }
+    }
+  ],
+  "events": [
+    {
+      "event_name": "message_received",
+      "description": "Triggered when a customer sends a WhatsApp message to your WATI number. Payload wraps the message in an envelope: event_id, event_name, app_id, webhook_data. Configure in WATI Dashboard > Webhooks.",
+      "event_type": "webhook",
+      "event_configuration": {
+        "http_method": "POST",
+        "content_type": "application/json",
+        "required_parameters": [
+          "event_id",
+          "event_name",
+          "webhook_data"
+        ],
+        "optional_parameters": [
+          "app_id",
+          "is_simulation"
+        ],
+        "validation": {
+          "type": "none"
+        },
+        "event_types": [
+          "message_received"
+        ],
+        "webhook_setup_guide": {
+          "step1": "Login to the WhatsApp provider Dashboard",
+          "step2": "Navigate to Settings > Webhooks",
+          "step3": "Click Add Webhook",
+          "step4": "Set webhook name (e.g., 'IOFlow Inbound')",
+          "step5": "Enter callback URL: your IOFlow webhook endpoint",
+          "step6": "Select event type: 'Message Received'",
+          "step7": "Save webhook configuration"
+        }
+      },
+      "sample_payload": {
+        "event_id": "4073dceb-9564-4b66-9b29-01a722083b5b",
+        "event_name": "message_received",
+        "app_id": "2413fb63-ae6f-4da1-8b2e-f9e00ec280f3",
+        "webhook_data": {
+          "customer_name": "John Doe",
+          "sender": "919999999999",
+          "integrated_number": "918888888888",
+          "company_id": 120652,
+          "content_type": "text",
+          "received_at": "2026-06-10 07:14:49",
+          "replied_message_id": null,
+          "message_uuid": "wamid.HBgMOTE4MzY5NDc0NzM4FQIAEhggQUMzMEMxQkI3NTEwMzcwRTc3RjVENjBDMTQ3NzgyOUYA",
+          "direction": 0,
+          "group_id": null,
+          "text": "Hello",
+          "messages": [
+            {
+              "from": "919999999999",
+              "from_user_id": "IN.1978880166101468",
+              "id": "wamid.HBgMOTE4MzY5NDc0NzM4FQIAEhggQUMzMEMxQkI3NTEwMzcwRTc3RjVENjBDMTQ3NzgyOUYA",
+              "timestamp": "1781075688",
+              "text": {
+                "body": "Hello"
+              },
+              "type": "text"
+            }
+          ],
+          "contacts": [
+            {
+              "profile": {
+                "name": "John Doe"
+              },
+              "wa_id": "919999999999",
+              "user_id": "IN.1978880166101468"
+            }
+          ],
+          "template_name": null,
+          "template_language": null
+        },
+        "is_simulation": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.event_id",
+            "mapping": "$.event_id"
+          },
+          "event_name": {
+            "type": "string",
+            "description": "Parameter extracted from $.event_name",
+            "mapping": "$.event_name"
+          },
+          "app_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.app_id",
+            "mapping": "$.app_id"
+          },
+          "whatsapp_message_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.webhook_data.message_uuid",
+            "mapping": "$.webhook_data.message_uuid"
+          },
+          "sender_number": {
+            "type": "string",
+            "description": "Parameter extracted from $.webhook_data.sender",
+            "mapping": "$.webhook_data.sender"
+          },
+          "recipient_number": {
+            "type": "string",
+            "description": "Parameter extracted from $.webhook_data.integrated_number",
+            "mapping": "$.webhook_data.integrated_number"
+          },
+          "sender_name": {
+            "type": "string",
+            "description": "Parameter extracted from $.webhook_data.customer_name",
+            "mapping": "$.webhook_data.customer_name"
+          },
+          "message_text": {
+            "type": "string",
+            "description": "Parameter extracted from $.webhook_data.text",
+            "mapping": "$.webhook_data.text"
+          },
+          "message_type": {
+            "type": "string",
+            "description": "Parameter extracted from $.webhook_data.content_type",
+            "mapping": "$.webhook_data.content_type"
+          },
+          "content_type": {
+            "type": "string",
+            "description": "Parameter extracted from $.webhook_data.content_type",
+            "mapping": "$.webhook_data.content_type"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Parameter extracted from $.webhook_data.received_at",
+            "mapping": "$.webhook_data.received_at"
+          },
+          "company_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.webhook_data.company_id",
+            "mapping": "$.webhook_data.company_id"
+          },
+          "direction": {
+            "type": "string",
+            "description": "Parameter extracted from $.webhook_data.direction (0 = inbound)",
+            "mapping": "$.webhook_data.direction"
+          },
+          "replied_message_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.webhook_data.replied_message_id",
+            "mapping": "$.webhook_data.replied_message_id"
+          },
+          "group_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.webhook_data.group_id",
+            "mapping": "$.webhook_data.group_id"
+          },
+          "template_name": {
+            "type": "string",
+            "description": "Parameter extracted from $.webhook_data.template_name",
+            "mapping": "$.webhook_data.template_name"
+          },
+          "template_language": {
+            "type": "string",
+            "description": "Parameter extracted from $.webhook_data.template_language",
+            "mapping": "$.webhook_data.template_language"
+          },
+          "data": {
+            "type": "string",
+            "description": "Full raw webhook payload",
+            "mapping": "$"
+          }
+        },
+        "required": [],
+        "parameter_extraction": {
+          "method": "json_path",
+          "mappings": {
+            "event_id": "$.event_id",
+            "event_name": "$.event_name",
+            "app_id": "$.app_id",
+            "whatsapp_message_id": "$.webhook_data.message_uuid",
+            "sender_number": "$.webhook_data.sender",
+            "recipient_number": "$.webhook_data.integrated_number",
+            "sender_name": "$.webhook_data.customer_name",
+            "message_text": "$.webhook_data.text",
+            "message_type": "$.webhook_data.content_type",
+            "content_type": "$.webhook_data.content_type",
+            "timestamp": "$.webhook_data.received_at",
+            "company_id": "$.webhook_data.company_id",
+            "direction": "$.webhook_data.direction",
+            "replied_message_id": "$.webhook_data.replied_message_id",
+            "group_id": "$.webhook_data.group_id",
+            "template_name": "$.webhook_data.template_name",
+            "template_language": "$.webhook_data.template_language",
+            "data": "$"
+          }
+        }
+      }
+    },
+    {
+      "event_name": "message_delivery_status",
+      "description": "Triggered when an outgoing WhatsApp message changes status (SENT, DELIVERED, READ, FAILED, REPLIED). Configure in WATI Dashboard > Webhooks with status events enabled.",
+      "event_type": "webhook",
+      "event_configuration": {
+        "http_method": "POST",
+        "content_type": "application/json",
+        "required_parameters": [
+          "eventType",
+          "whatsappMessageId",
+          "statusString",
+          "timestamp"
+        ],
+        "optional_parameters": [
+          "waId",
+          "ticketId",
+          "conversationId",
+          "failedReason"
+        ],
+        "validation": {
+          "type": "none"
+        },
+        "event_types": [
+          "sentMessageDELIVERED",
+          "sentMessageREAD",
+          "sentMessageREPLIED",
+          "templateMessageSent",
+          "templateMessageFailed"
+        ],
+        "status_codes": {
+          "Sent": "Message sent to WhatsApp servers",
+          "Delivered": "Message delivered to recipient device",
+          "Read": "Message read by recipient",
+          "Replied": "Recipient replied to message",
+          "Failed": "Message delivery failed"
+        }
+      },
+      "sample_payload": {
+        "id": "5fb7c5c0e5a1f000123abcdf",
+        "whatsappMessageId": "wamid.HBgMOTE4ODg4ODg4ODg4FQIAEhggMzc1RkY4QkM5RjI3Q0FBNQA=",
+        "eventType": "sentMessageDELIVERED",
+        "statusString": "Delivered",
+        "timestamp": "1685356900",
+        "waId": "918888888888",
+        "ticketId": "ticket_xyz789",
+        "conversationId": "conv_abc123",
+        "templateName": "order_confirmation",
+        "broadcastName": "order_broadcast_2026",
+        "failedReason": null,
+        "channelPhoneNumber": "919999999999"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.id",
+            "mapping": "$.id"
+          },
+          "event_type": {
+            "type": "string",
+            "description": "Parameter extracted from $.eventType",
+            "mapping": "$.eventType"
+          },
+          "whatsapp_message_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.whatsappMessageId",
+            "mapping": "$.whatsappMessageId"
+          },
+          "delivery_status": {
+            "type": "string",
+            "description": "Parameter extracted from $.statusString",
+            "mapping": "$.statusString"
+          },
+          "recipient_number": {
+            "type": "string",
+            "description": "Parameter extracted from $.waId",
+            "mapping": "$.waId"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Parameter extracted from $.timestamp",
+            "mapping": "$.timestamp"
+          },
+          "template_name": {
+            "type": "string",
+            "description": "Parameter extracted from $.templateName",
+            "mapping": "$.templateName"
+          },
+          "broadcast_name": {
+            "type": "string",
+            "description": "Parameter extracted from $.broadcastName",
+            "mapping": "$.broadcastName"
+          },
+          "conversation_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.conversationId",
+            "mapping": "$.conversationId"
+          },
+          "ticket_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.ticketId",
+            "mapping": "$.ticketId"
+          },
+          "failed_reason": {
+            "type": "string",
+            "description": "Parameter extracted from $.failedReason",
+            "mapping": "$.failedReason"
+          },
+          "data": {
+            "type": "string",
+            "description": "Full raw webhook payload",
+            "mapping": "$"
+          }
+        },
+        "required": [],
+        "parameter_extraction": {
+          "method": "json_path",
+          "mappings": {
+            "event_id": "$.id",
+            "event_type": "$.eventType",
+            "whatsapp_message_id": "$.whatsappMessageId",
+            "delivery_status": "$.statusString",
+            "recipient_number": "$.waId",
+            "timestamp": "$.timestamp",
+            "template_name": "$.templateName",
+            "broadcast_name": "$.broadcastName",
+            "conversation_id": "$.conversationId",
+            "ticket_id": "$.ticketId",
+            "failed_reason": "$.failedReason",
+            "data": "$"
+          }
+        }
+      }
+    },
+    {
+      "event_name": "button_reply_received",
+      "description": "Triggered when a user taps a quick-reply button on an interactive message. WATI delivers this via the same Message Received webhook, with the button info under interactiveButtonReply or buttonReply.",
+      "event_type": "webhook",
+      "event_configuration": {
+        "http_method": "POST",
+        "content_type": "application/json",
+        "required_parameters": [
+          "eventType",
+          "waId",
+          "timestamp"
+        ],
+        "optional_parameters": [
+          "interactiveButtonReply",
+          "buttonReply",
+          "senderName"
+        ],
+        "validation": {
+          "type": "none"
+        }
+      },
+      "sample_payload": {
+        "id": "5fb7c5c0e5a1f000123abce0",
+        "whatsappMessageId": "wamid.button_reply_123",
+        "eventType": "messageReceived",
+        "statusString": "Received",
+        "timestamp": "1685357000",
+        "waId": "918888888888",
+        "senderName": "John Doe",
+        "text": "Yes, confirm",
+        "type": "button",
+        "interactiveButtonReply": {
+          "id": "btn_1",
+          "title": "Yes, confirm"
+        },
+        "buttonReply": null,
+        "replyContextId": "wamid.original_button_message_id",
+        "conversationId": "conv_abc123",
+        "ticketId": "ticket_xyz789",
+        "channelPhoneNumber": "919999999999"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.id",
+            "mapping": "$.id"
+          },
+          "event_type": {
+            "type": "string",
+            "description": "Parameter extracted from $.eventType",
+            "mapping": "$.eventType"
+          },
+          "whatsapp_message_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.whatsappMessageId",
+            "mapping": "$.whatsappMessageId"
+          },
+          "sender_number": {
+            "type": "string",
+            "description": "Parameter extracted from $.waId",
+            "mapping": "$.waId"
+          },
+          "sender_name": {
+            "type": "string",
+            "description": "Parameter extracted from $.senderName",
+            "mapping": "$.senderName"
+          },
+          "button_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.interactiveButtonReply.id",
+            "mapping": "$.interactiveButtonReply.id"
+          },
+          "button_title": {
+            "type": "string",
+            "description": "Parameter extracted from $.interactiveButtonReply.title",
+            "mapping": "$.interactiveButtonReply.title"
+          },
+          "button_text": {
+            "type": "string",
+            "description": "Parameter extracted from $.text",
+            "mapping": "$.text"
+          },
+          "context_message_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.replyContextId",
+            "mapping": "$.replyContextId"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Parameter extracted from $.timestamp",
+            "mapping": "$.timestamp"
+          },
+          "conversation_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.conversationId",
+            "mapping": "$.conversationId"
+          },
+          "data": {
+            "type": "string",
+            "description": "Full raw webhook payload",
+            "mapping": "$"
+          }
+        },
+        "required": [],
+        "parameter_extraction": {
+          "method": "json_path",
+          "mappings": {
+            "event_id": "$.id",
+            "event_type": "$.eventType",
+            "whatsapp_message_id": "$.whatsappMessageId",
+            "sender_number": "$.waId",
+            "sender_name": "$.senderName",
+            "button_id": "$.interactiveButtonReply.id",
+            "button_title": "$.interactiveButtonReply.title",
+            "button_text": "$.text",
+            "context_message_id": "$.replyContextId",
+            "timestamp": "$.timestamp",
+            "conversation_id": "$.conversationId",
+            "data": "$"
+          }
+        }
+      }
+    },
+    {
+      "event_name": "list_reply_received",
+      "description": "Triggered when a user selects an item from an interactive list message. Delivered via the Message Received webhook with listReply populated.",
+      "event_type": "webhook",
+      "event_configuration": {
+        "http_method": "POST",
+        "content_type": "application/json",
+        "required_parameters": [
+          "eventType",
+          "waId",
+          "timestamp"
+        ],
+        "optional_parameters": [
+          "listReply",
+          "senderName"
+        ],
+        "validation": {
+          "type": "none"
+        }
+      },
+      "sample_payload": {
+        "id": "5fb7c5c0e5a1f000123abce1",
+        "whatsappMessageId": "wamid.list_reply_123",
+        "eventType": "messageReceived",
+        "statusString": "Received",
+        "timestamp": "1685357100",
+        "waId": "918888888888",
+        "senderName": "John Doe",
+        "text": "Electronics",
+        "type": "list",
+        "listReply": {
+          "id": "cat_electronics",
+          "title": "Electronics",
+          "description": "Phones, laptops, accessories"
+        },
+        "replyContextId": "wamid.original_list_message_id",
+        "conversationId": "conv_abc123",
+        "ticketId": "ticket_xyz789",
+        "channelPhoneNumber": "919999999999"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.id",
+            "mapping": "$.id"
+          },
+          "event_type": {
+            "type": "string",
+            "description": "Parameter extracted from $.eventType",
+            "mapping": "$.eventType"
+          },
+          "whatsapp_message_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.whatsappMessageId",
+            "mapping": "$.whatsappMessageId"
+          },
+          "sender_number": {
+            "type": "string",
+            "description": "Parameter extracted from $.waId",
+            "mapping": "$.waId"
+          },
+          "sender_name": {
+            "type": "string",
+            "description": "Parameter extracted from $.senderName",
+            "mapping": "$.senderName"
+          },
+          "list_item_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.listReply.id",
+            "mapping": "$.listReply.id"
+          },
+          "list_item_title": {
+            "type": "string",
+            "description": "Parameter extracted from $.listReply.title",
+            "mapping": "$.listReply.title"
+          },
+          "list_item_description": {
+            "type": "string",
+            "description": "Parameter extracted from $.listReply.description",
+            "mapping": "$.listReply.description"
+          },
+          "context_message_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.replyContextId",
+            "mapping": "$.replyContextId"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Parameter extracted from $.timestamp",
+            "mapping": "$.timestamp"
+          },
+          "conversation_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.conversationId",
+            "mapping": "$.conversationId"
+          },
+          "data": {
+            "type": "string",
+            "description": "Full raw webhook payload",
+            "mapping": "$"
+          }
+        },
+        "required": [],
+        "parameter_extraction": {
+          "method": "json_path",
+          "mappings": {
+            "event_id": "$.id",
+            "event_type": "$.eventType",
+            "whatsapp_message_id": "$.whatsappMessageId",
+            "sender_number": "$.waId",
+            "sender_name": "$.senderName",
+            "list_item_id": "$.listReply.id",
+            "list_item_title": "$.listReply.title",
+            "list_item_description": "$.listReply.description",
+            "context_message_id": "$.replyContextId",
+            "timestamp": "$.timestamp",
+            "conversation_id": "$.conversationId",
+            "data": "$"
+          }
+        }
+      }
+    },
+    {
+      "event_name": "media_message_received",
+      "description": "Triggered when a user sends a media file (image, document, video, audio, voice, sticker) via WhatsApp. Use the get_media service with the data field to download the file.",
+      "event_type": "webhook",
+      "event_configuration": {
+        "http_method": "POST",
+        "content_type": "application/json",
+        "required_parameters": [
+          "eventType",
+          "waId",
+          "type",
+          "timestamp"
+        ],
+        "optional_parameters": [
+          "data",
+          "text",
+          "sourceUrl"
+        ],
+        "media_types": [
+          "image",
+          "document",
+          "video",
+          "audio",
+          "voice",
+          "sticker"
+        ],
+        "validation": {
+          "type": "none"
+        }
+      },
+      "sample_payload": {
+        "id": "5fb7c5c0e5a1f000123abce2",
+        "whatsappMessageId": "wamid.media_123",
+        "eventType": "messageReceived",
+        "statusString": "Received",
+        "timestamp": "1685357200",
+        "waId": "918888888888",
+        "senderName": "John Doe",
+        "text": "Check this out!",
+        "type": "image",
+        "data": "data/images/abc123.jpg",
+        "sourceUrl": "https://live-mt-server.wati.io/.../data/images/abc123.jpg",
+        "conversationId": "conv_abc123",
+        "ticketId": "ticket_xyz789",
+        "channelPhoneNumber": "919999999999"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.id",
+            "mapping": "$.id"
+          },
+          "event_type": {
+            "type": "string",
+            "description": "Parameter extracted from $.eventType",
+            "mapping": "$.eventType"
+          },
+          "whatsapp_message_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.whatsappMessageId",
+            "mapping": "$.whatsappMessageId"
+          },
+          "sender_number": {
+            "type": "string",
+            "description": "Parameter extracted from $.waId",
+            "mapping": "$.waId"
+          },
+          "sender_name": {
+            "type": "string",
+            "description": "Parameter extracted from $.senderName",
+            "mapping": "$.senderName"
+          },
+          "media_type": {
+            "type": "string",
+            "description": "Parameter extracted from $.type",
+            "mapping": "$.type"
+          },
+          "media_filename": {
+            "type": "string",
+            "description": "Parameter extracted from $.data (use with get_media service to download)",
+            "mapping": "$.data"
+          },
+          "media_url": {
+            "type": "string",
+            "description": "Parameter extracted from $.sourceUrl",
+            "mapping": "$.sourceUrl"
+          },
+          "caption": {
+            "type": "string",
+            "description": "Parameter extracted from $.text",
+            "mapping": "$.text"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Parameter extracted from $.timestamp",
+            "mapping": "$.timestamp"
+          },
+          "conversation_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.conversationId",
+            "mapping": "$.conversationId"
+          },
+          "data": {
+            "type": "string",
+            "description": "Full raw webhook payload",
+            "mapping": "$"
+          }
+        },
+        "required": [],
+        "parameter_extraction": {
+          "method": "json_path",
+          "mappings": {
+            "event_id": "$.id",
+            "event_type": "$.eventType",
+            "whatsapp_message_id": "$.whatsappMessageId",
+            "sender_number": "$.waId",
+            "sender_name": "$.senderName",
+            "media_type": "$.type",
+            "media_filename": "$.data",
+            "media_url": "$.sourceUrl",
+            "caption": "$.text",
+            "timestamp": "$.timestamp",
+            "conversation_id": "$.conversationId",
+            "data": "$"
+          }
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "created_at": "2026-05-29T00:00:00.000000",
+    "created_by": "IOFlow",
+    "author": "IOFlow",
+    "tags": [
+      "communication",
+      "whatsapp",
+      "wati",
+      "messaging",
+      "media",
+      "templates"
+    ],
+    "documentation_url": "https://docs.wati.io/reference/introduction",
+    "support_email": "support@wati.io",
+    "services_count": 13,
+    "events_count": 5
+  }
+}

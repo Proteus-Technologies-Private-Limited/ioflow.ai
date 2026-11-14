@@ -1,0 +1,233 @@
+{
+  "version": "1.0.0",
+  "export_timestamp": "2025-09-28T00:00:00Z",
+  "flow": {
+    "flow_name": "Upload & Extract Stock Statement to Google Sheets",
+    "description": "Uploads an unstructured stock statement (image, pdf, excel, word, or text), uses Google Gemini (gemini-2.5-flash) to extract structured inventory data, and writes the result to a Google Sheet named after the input file.",
+    "trigger_config": {
+      "type": "manual",
+      "manual_variables": [
+        {
+          "id": "uploaded_file",
+          "name": "uploaded_file",
+          "displayName": "Uploaded File",
+          "dataType": "file",
+          "uiControl": "file",
+          "required": true
+        }
+      ]
+    },
+    "flow_definition": {
+      "nodes": [
+        {
+          "id": "trigger_file_upload",
+          "type": "trigger",
+          "position": { "x": 200, "y": 100 },
+          "width": 260,
+          "height": 120,
+          "data": {
+            "label": "Manual File Upload",
+            "triggerType": "manual",
+            "manualVariables": [
+              {
+                "id": "uploaded_file",
+                "name": "uploaded_file",
+                "displayName": "Uploaded File",
+                "dataType": "file",
+                "uiControl": "file",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepare_file",
+          "type": "transform",
+          "position": { "x": 200, "y": 260 },
+          "width": 300,
+          "height": 140,
+          "data": {
+            "label": "Detect & Convert File",
+            "script": "import base64\\nimport io\\noutput = {}\\nfile = input.get('uploaded_file', {})\\nname = file.get('name','')\\next = name.lower().split('.')[-1] if '.' in name else ''\\ndata_b64 = file.get('data','')\\ndecoded = None\\nif data_b64:\\n try:\\n decoded = base64.b64decode(data_b64)\\n except Exception:\\n decoded = None\\ntext_content = None\\n# Word to text\\nif ext in ('docx','doc') and decoded:\\n try:\\n from docx import Document\\n doc = Document(io.BytesIO(decoded))\\n paragraphs = [p.text for p in doc.paragraphs if p.text]\\n text_content = '\\\\n'.join(paragraphs)\\n except Exception:\\n text_content = None\\n# Excel to csv\\nelif ext in ('xls','xlsx') and decoded:\\n try:\\n import pandas as pd\\n df = pd.read_excel(io.BytesIO(decoded))\\n text_content = df.to_csv(index=False)\\n except Exception:\\n text_content = None\\n# plain text\\nelif ext in ('txt','csv') and decoded:\\n try:\\n text_content = decoded.decode('utf-8', errors='ignore')\\n except Exception:\\n text_content = None\\n# pdf or image: leave as fileUpload\\nelse:\\n if decoded and text_content is None:\\n try:\\n text_content = decoded.decode('utf-8', errors='ignore')\\n except Exception:\\n text_content = None\\n# Build prompt without double quotes to avoid JSON escaping issues\\nprompt_lines = []\\nprompt_lines.append('You are an assistant that extracts structured inventory data from a customer stock statement.')\\nprompt_lines.append('Extract the following:')\\nprompt_lines.append('- customer information: name, address, customer id if present and any identifying fields')\\nprompt_lines.append('- reporting period: start date, end date or period text')\\nprompt_lines.append('- For each line item extract product or sku or item, unit or packing, opening quantity, purchase or receipt quantity, sales or issue quantity, closing stock quantity. Return numeric quantities as numbers.')\\nprompt_lines.append('Return exactly one JSON object with keys: customer, period, items, notes. Do not include explanatory text.')\\nif ext in ('png','jpg','jpeg','tiff','bmp','gif') or ext == 'pdf':\\n prompt_lines.append('The file is an image or scanned PDF. Perform OCR and extract tables and text as needed.')\\nelse:\\n prompt_lines.append('The file is text-based or was converted to text. Parse the text to extract header info and line items.')\\nprompt = '\\\\n'.join(prompt_lines)\\nif text_content:\\n output = { 'processingType': 'text', 'text_content': text_content, 'prompt': prompt, 'originalFileName': name }\\nelse:\\n output = { 'processingType': 'fileUpload', 'file_for_upload': file, 'prompt': prompt, 'originalFileName': name }\\n"
+          }
+        },
+        {
+          "id": "check_processing_type",
+          "type": "condition",
+          "position": { "x": 220, "y": 440 },
+          "width": 260,
+          "height": 120,
+          "data": {
+            "label": "Is Binary File (upload needed)?",
+            "expression": "node_outputs.prepare_file.processingType == 'fileUpload'"
+          }
+        },
+        {
+          "id": "upload_to_gemini",
+          "type": "action",
+          "position": { "x": 220, "y": 620 },
+          "width": 300,
+          "height": 120,
+          "data": {
+            "label": "Upload file to Gemini",
+            "appId": "351850ab-cf3c-438c-b276-e88567f3ad63",
+            "appName": "Google Gemini",
+            "serviceId": "fa111d4f-7193-471f-a2f3-6ba8c52d2476",
+            "service": "upload_file",
+            "parameterMapping": {
+              "file": { "source": "variable", "value": "node_outputs.prepare_file.file_for_upload" },
+              "displayName": { "source": "variable", "value": "node_outputs.prepare_file.originalFileName" }
+            }
+          }
+        },
+        {
+          "id": "build_contents_after_upload",
+          "type": "transform",
+          "position": { "x": 520, "y": 620 },
+          "width": 320,
+          "height": 160,
+          "data": {
+            "label": "Build Gemini Contents (file)",
+            "script": "output = {}\\nprep = node_outputs.get('prepare_file', {})\\nprompt = prep.get('prompt', '')\\nupload = node_outputs.get('upload_to_gemini', {})\\nuploaded_file_info = upload.get('file', upload) or upload\\nfile_uri = None\\nif isinstance(uploaded_file_info, dict):\\n file_uri = uploaded_file_info.get('uri') or uploaded_file_info.get('name')\\ncontents = []\\nif file_uri:\\n contents = [ { 'parts': [ { 'fileData': { 'fileUri': file_uri } } ], 'role': 'user' } ]\\nelse:\\n contents = [ { 'parts': [ { 'text': prompt } ], 'role': 'user' } ]\\nsystemInstruction = { 'parts': [ { 'text': prompt } ] }\\noutput = { 'contents': contents, 'systemInstruction': systemInstruction }\\n"
+          }
+        },
+        {
+          "id": "build_contents_text",
+          "type": "transform",
+          "position": { "x": 520, "y": 480 },
+          "width": 320,
+          "height": 160,
+          "data": {
+            "label": "Build Gemini Contents (text)",
+            "script": "output = {}\\nprep = node_outputs.get('prepare_file', {})\\nprompt = prep.get('prompt','')\\ntext_content = prep.get('text_content','')\\ncombined = prompt + '\\\\n\\\\n---BEGIN_EXTRACTED_TEXT---\\\\n' + (text_content or '') + '\\\\n---END_EXTRACTED_TEXT---'\\ncontents = [ { 'parts': [ { 'text': combined } ], 'role': 'user' } ]\\nsystemInstruction = { 'parts': [ { 'text': 'Extract the structured JSON as requested in the prompt. Return exactly one JSON object.' } ] }\\noutput = { 'contents': contents, 'systemInstruction': systemInstruction }\\n"
+          }
+        },
+        {
+          "id": "select_contents",
+          "type": "transform",
+          "position": { "x": 740, "y": 540 },
+          "width": 300,
+          "height": 140,
+          "data": {
+            "label": "Select Contents for Gemini",
+            "script": "output = {}\\ntext_node = node_outputs.get('build_contents_text', {})\\nfile_node = node_outputs.get('build_contents_after_upload', {})\\ncontents = text_node.get('contents') if text_node and text_node.get('contents') else file_node.get('contents')\\nsystemInstruction = text_node.get('systemInstruction') if text_node and text_node.get('systemInstruction') else file_node.get('systemInstruction')\\noutput = { 'contents': contents, 'systemInstruction': systemInstruction }\\n"
+          }
+        },
+        {
+          "id": "call_gemini",
+          "type": "action",
+          "position": { "x": 1000, "y": 540 },
+          "width": 360,
+          "height": 160,
+          "data": {
+            "label": "Call Gemini generate_content",
+            "appId": "351850ab-cf3c-438c-b276-e88567f3ad63",
+            "appName": "Google Gemini",
+            "serviceId": "9b823989-a785-48c3-aa6f-9b1475ee5086",
+            "service": "generate_content",
+            "parameterMapping": {
+              "model": { "source": "static", "value": "gemini-2.5-flash" },
+              "contents": { "source": "variable", "value": "node_outputs.select_contents.contents" },
+              "systemInstruction": { "source": "variable", "value": "node_outputs.select_contents.systemInstruction" },
+              "generationConfig": { "source": "static", "value": { "responseMimeType": "application/json", "maxOutputTokens": 4096 } }
+            }
+          }
+        },
+        {
+          "id": "parse_gemini_output",
+          "type": "transform",
+          "position": { "x": 1320, "y": 540 },
+          "width": 360,
+          "height": 160,
+          "data": {
+            "label": "Parse Gemini Response",
+            "script": "import json\\noutput = {}\\nresp = node_outputs.get('call_gemini', {})\\ncandidates = resp.get('candidates') or []\\ntext = None\\nif candidates and isinstance(candidates, list):\\n first = candidates[0]\\n content = first.get('content') or {}\\n parts = content.get('parts') or []\\n texts = []\\n for p in parts:\\n if isinstance(p, dict) and 'text' in p:\\n texts.append(p.get('text'))\\n if texts:\\n text = '\\\\n'.join(texts)\\nstructured = None\\nif text:\\n try:\\n structured = json.loads(text)\\n except Exception:\\n structured = None\\noutput = { 'structured': structured, 'raw_text': text, 'raw_response': resp }\\n"
+          }
+        },
+        {
+          "id": "format_rows_for_sheet",
+          "type": "transform",
+          "position": { "x": 1640, "y": 540 },
+          "width": 360,
+          "height": 180,
+          "data": {
+            "label": "Format Rows for Google Sheet",
+            "script": "output = {}\\nparsed = node_outputs.get('parse_gemini_output', {}).get('structured') or {}\\nrows = []\\ncustomer = parsed.get('customer') if isinstance(parsed, dict) else None\\nperiod = parsed.get('period') if isinstance(parsed, dict) else None\\nif customer and isinstance(customer, dict):\\n for k, v in customer.items():\\n rows.append([str(k), str(v)])\\nelse:\\n rows.append(['customer', ''])\\nif period and isinstance(period, dict):\\n for k, v in period.items():\\n rows.append([str(k), str(v)])\\nrows.append([])\\nrows.append(['Product/SKU/Item', 'Unit/Packing', 'Opening', 'Purchase/Receipt', 'Sales/Issue', 'Closing'])\\nitems = parsed.get('items') if isinstance(parsed, dict) else None\\nif not items and isinstance(parsed, list):\\n items = parsed\\nif items and isinstance(items, list):\\n for it in items:\\n product = it.get('product') if isinstance(it, dict) else ''\\n unit = it.get('unit') if isinstance(it, dict) else (it.get('packing') if isinstance(it, dict) else '')\\n opening = it.get('opening') if isinstance(it, dict) else None\\n purchase = it.get('purchase') if isinstance(it, dict) else (it.get('receipt') if isinstance(it, dict) else None)\\n sales = it.get('sales') if isinstance(it, dict) else (it.get('issue') if isinstance(it, dict) else None)\\n closing = it.get('closing') if isinstance(it, dict) else None\\n def norm(x):\\n if x is None: return ''\\n try:\\n return float(str(x).replace(',', ''))\\n except Exception:\\n return str(x)\\n rows.append([product or '', unit or '', norm(opening), norm(purchase), norm(sales), norm(closing)])\\nelse:\\n rows.append(['No line items found', '', '', '', '', ''])\\noutput = { 'rows': rows }\\n"
+          }
+        },
+        {
+          "id": "create_sheet",
+          "type": "action",
+          "position": { "x": 1960, "y": 520 },
+          "width": 300,
+          "height": 140,
+          "data": {
+            "label": "Create Google Sheet",
+            "appId": "d3a674e9-4ba0-41f1-a0c2-952411ee43a0",
+            "appName": "Google Sheets",
+            "serviceId": "1191bd7b-aff4-4679-b84d-c893dd295522",
+            "service": "create_spreadsheet",
+            "parameterMapping": {
+              "title": { "source": "variable", "value": "input.uploaded_file.name" }
+            }
+          }
+        },
+        {
+          "id": "append_to_sheet",
+          "type": "action",
+          "position": { "x": 2220, "y": 520 },
+          "width": 340,
+          "height": 160,
+          "data": {
+            "label": "Append Rows to Sheet",
+            "appId": "d3a674e9-4ba0-41f1-a0c2-952411ee43a0",
+            "appName": "Google Sheets",
+            "serviceId": "ba9f96d5-d547-4583-aa77-3c8cb3aa0e1c",
+            "service": "append_values",
+            "parameterMapping": {
+              "spreadsheetId": { "source": "variable", "value": "node_outputs.create_sheet.spreadsheetId" },
+              "range": { "source": "static", "value": "Sheet1!A1" },
+              "valueInputOption": { "source": "static", "value": "RAW" },
+              "values": { "source": "variable", "value": "node_outputs.format_rows_for_sheet.rows" }
+            }
+          }
+        },
+        {
+          "id": "response_complete",
+          "type": "response",
+          "position": { "x": 2460, "y": 520 },
+          "width": 300,
+          "height": 120,
+          "data": {
+            "label": "Done",
+            "variable": "node_outputs.append_to_sheet",
+            "statusCode": 200
+          }
+        }
+      ],
+      "edges": [
+        { "id": "e1", "source": "trigger_file_upload", "target": "prepare_file" },
+        { "id": "e2", "source": "prepare_file", "target": "check_processing_type" },
+        { "id": "e3", "source": "check_processing_type", "target": "upload_to_gemini", "condition": "true" },
+        { "id": "e4", "source": "check_processing_type", "target": "build_contents_text", "condition": "false" },
+        { "id": "e5", "source": "upload_to_gemini", "target": "build_contents_after_upload" },
+        { "id": "e6", "source": "build_contents_text", "target": "select_contents" },
+        { "id": "e7", "source": "build_contents_after_upload", "target": "select_contents" },
+        { "id": "e8", "source": "select_contents", "target": "call_gemini" },
+        { "id": "e9", "source": "call_gemini", "target": "parse_gemini_output" },
+        { "id": "e10", "source": "parse_gemini_output", "target": "format_rows_for_sheet" },
+        { "id": "e11", "source": "format_rows_for_sheet", "target": "create_sheet" },
+        { "id": "e12", "source": "create_sheet", "target": "append_to_sheet" },
+        { "id": "e13", "source": "append_to_sheet", "target": "response_complete" }
+      ]
+    }
+  },
+  "metadata": {
+    "required_applications": [
+      { "app_id": "351850ab-cf3c-438c-b276-e88567f3ad63", "app_name": "Google Gemini" },
+      { "app_id": "d3a674e9-4ba0-41f1-a0c2-952411ee43a0", "app_name": "Google Sheets" }
+    ],
+    "source_instance": { "tenant_id": "", "user_email": "" },
+    "warnings": []
+  }
+}

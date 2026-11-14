@@ -1,0 +1,143 @@
+{
+  "version": "1.0",
+  "export_timestamp": "2024-09-20T13:00:00.000Z",
+  "flow": {
+    "flow_name": "Create PDF from Two Images (Fixed v2)",
+    "description": "Uploads two images, combines them into a PDF, and saves it to the user's home folder - avoiding unpacking issues.",
+    "category": "utility",
+    "trigger_config": {
+      "type": "manual",
+      "manual_variables": [
+        {
+          "id": "image1",
+          "name": "image1",
+          "displayName": "First Image",
+          "dataType": "file",
+          "uiControl": "file",
+          "required": true
+        },
+        {
+          "id": "image2",
+          "name": "image2",
+          "displayName": "Second Image",
+          "dataType": "file",
+          "uiControl": "file",
+          "required": true
+        }
+      ]
+    },
+    "flow_definition": {
+      "nodes": [
+        {
+          "id": "trigger_1",
+          "type": "trigger",
+          "position": {
+            "x": 250,
+            "y": 100
+          },
+          "data": {
+            "label": "Upload Images",
+            "triggerType": "manual",
+            "manualVariables": [
+              {
+                "id": "image1",
+                "name": "image1",
+                "displayName": "First Image",
+                "dataType": "file",
+                "uiControl": "file",
+                "required": true
+              },
+              {
+                "id": "image2",
+                "name": "image2",
+                "displayName": "Second Image",
+                "dataType": "file",
+                "uiControl": "file",
+                "required": true
+              }
+            ],
+            "outputs": {
+              "image1": "{{input.image1}}",
+              "image2": "{{input.image2}}"
+            }
+          }
+        },
+        {
+          "id": "transform_to_pdf",
+          "type": "transform",
+          "position": {
+            "x": 250,
+            "y": 250
+          },
+          "data": {
+            "label": "Generate PDF",
+            "script": "# Use the provided modules and avoid unpacking issues\n\n# Get image data from trigger\nimage1_info = input.get('image1', {})\nimage2_info = input.get('image2', {})\nimage1_data = image1_info.get('data', '')\nimage2_data = image2_info.get('data', '')\n\nif not image1_data or not image2_data:\n    raise ValueError(\"One or both images are missing\")\n\n# Decode image bytes - use the base64_module directly for binary data\nimg1_bytes = base64_module.b64decode(image1_data)\nimg2_bytes = base64_module.b64decode(image2_data)\n\n# Create BytesIO objects first\nbio1 = io.BytesIO(img1_bytes)\nbio2 = io.BytesIO(img2_bytes)\n\n# Access classes from reportlab\nImageReader = reportlab['ImageReader']\nCanvas = reportlab['canvas'].Canvas\nletter_size = reportlab['pagesizes'].letter\n\n# Create ImageReader objects\nimg1_reader = ImageReader(bio1)\nimg2_reader = ImageReader(bio2)\n\n# Create PDF in memory\nbuffer = io.BytesIO()\nc = Canvas(buffer, pagesize=letter_size)\n\n# Get page dimensions\npage_width = letter_size[0]\npage_height = letter_size[1]\nmargin = 50\ndraw_width = page_width - (2 * margin)\n\n# Draw the first image\n# Place it near the top of the page\ny_pos1 = page_height - margin - 300\nc.drawImage(img1_reader, margin, y_pos1, width=draw_width, height=300, preserveAspectRatio=True, anchor='n')\n\n# Draw the second image below the first\n# Leave some space between images\ny_pos2 = y_pos1 - 350  # 300 for first image + 50 for spacing\nc.drawImage(img2_reader, margin, y_pos2, width=draw_width, height=300, preserveAspectRatio=True, anchor='n')\n\nc.showPage()\nc.save()\n\npdf_bytes = buffer.getvalue()\nbuffer.close()\n\n# Encode PDF to base64 for output\noutput = {\n    'pdf_content': base64_module.b64encode(pdf_bytes).decode('utf-8'),\n    'filename': 'combined_images.pdf'\n}"
+          }
+        },
+        {
+          "id": "save_pdf_file",
+          "type": "action",
+          "position": {
+            "x": 250,
+            "y": 400
+          },
+          "data": {
+            "label": "Save PDF to Home",
+            "appId": "893c3d77-a5d1-4797-947a-5e205612075b",
+            "appName": "File Systems",
+            "serviceId": "5a369787-b39e-4798-963f-049eb9c656dd",
+            "service": "write_file_base64",
+            "serviceDisplayName": "Write File (Base64)",
+            "parameterMapping": {
+              "content": {
+                "source": "variable",
+                "value": "node_outputs.transform_to_pdf.pdf_content"
+              },
+              "path": {
+                "source": "variable",
+                "value": "node_outputs.transform_to_pdf.filename"
+              }
+            }
+          }
+        },
+        {
+          "id": "response_1",
+          "type": "response",
+          "position": {
+            "x": 250,
+            "y": 550
+          },
+          "data": {
+            "label": "Success Response",
+            "variable": "{{node_outputs.save_pdf_file}}",
+            "statusCode": 200
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "edge_1",
+          "source": "trigger_1",
+          "target": "transform_to_pdf"
+        },
+        {
+          "id": "edge_2",
+          "source": "transform_to_pdf",
+          "target": "save_pdf_file"
+        },
+        {
+          "id": "edge_3",
+          "source": "save_pdf_file",
+          "target": "response_1"
+        }
+      ]
+    },
+    "is_synchronous": true,
+    "sync_timeout": 30
+  },
+  "metadata": {
+    "required_applications": [
+      "893c3d77-a5d1-4797-947a-5e205612075b"
+    ]
+  }
+}

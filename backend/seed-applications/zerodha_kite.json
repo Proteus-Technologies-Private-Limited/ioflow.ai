@@ -1,0 +1,734 @@
+{
+  "key": "zerodha_kite",
+  "application": {
+    "app_name": "Zerodha Kite Connect",
+    "app_type": "api",
+    "category": "Integration",
+    "auth_type": "custom",
+    "description": "Zerodha Kite Connect trading APIs for executing orders, managing portfolios, streaming market data, and accessing historical data across equities, commodities, and mutual funds on Indian stock exchanges (NSE, BSE, NFO, CDS, BCD, MCX).",
+    "base_url": "https://api.kite.trade",
+    "version": "3.0.10",
+    "auth_config": {}
+  },
+  "services": [
+    {
+      "service_name": "get_user_profile",
+      "description": "Retrieve the user profile details including user ID, name, email, broker, enabled exchanges, products, and order types.",
+      "service_type": "api_call",
+      "endpoint_template": "/user/profile",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "X-Kite-Version": "3",
+          "Authorization": "token {{api_key}}:{{access_token}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "user_type": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "user_name": {
+            "type": "string"
+          },
+          "user_shortname": {
+            "type": "string"
+          },
+          "broker": {
+            "type": "string"
+          },
+          "exchanges": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "order_types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "avatar_url": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "create_session_token",
+      "description": "Exchange the request_token obtained after login for an access_token used to authenticate all subsequent API requests.",
+      "service_type": "api_call",
+      "endpoint_template": "/session/token",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "X-Kite-Version": "3",
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "api_key": {
+            "type": "string",
+            "description": "The API key issued to your app"
+          },
+          "request_token": {
+            "type": "string",
+            "description": "The token received after the user completes the login flow"
+          },
+          "checksum": {
+            "type": "string",
+            "description": "SHA-256 hash of api_key + request_token + api_secret"
+          }
+        },
+        "required": [
+          "api_key",
+          "request_token",
+          "checksum"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "user_name": {
+            "type": "string"
+          },
+          "access_token": {
+            "type": "string"
+          },
+          "public_token": {
+            "type": "string"
+          },
+          "refresh_token": {
+            "type": "string"
+          },
+          "login_time": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "invalidate_session",
+      "description": "Logout and invalidate the current API session and access_token.",
+      "service_type": "api_call",
+      "endpoint_template": "/session/token",
+      "request_config": {
+        "method": "DELETE",
+        "headers_template": {
+          "X-Kite-Version": "3"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "api_key": {
+            "type": "string",
+            "description": "The API key issued to your app"
+          },
+          "access_token": {
+            "type": "string",
+            "description": "The access_token to invalidate"
+          }
+        },
+        "required": [
+          "api_key",
+          "access_token"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "place_order",
+      "description": "Place an order of a particular variety (regular, amo, co, iceberg, auction) for equities, commodities, or currency derivatives.",
+      "service_type": "api_call",
+      "endpoint_template": "/orders/{{variety}}",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "X-Kite-Version": "3",
+          "Authorization": "token {{api_key}}:{{access_token}}",
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "variety": {
+            "type": "string",
+            "description": "Order variety - regular, amo, co, iceberg, auction",
+            "enum": [
+              "regular",
+              "amo",
+              "co",
+              "iceberg",
+              "auction"
+            ]
+          },
+          "tradingsymbol": {
+            "type": "string",
+            "description": "Trading symbol of the instrument (e.g., INFY, RELIANCE)"
+          },
+          "exchange": {
+            "type": "string",
+            "description": "Exchange to place the order on",
+            "enum": [
+              "NSE",
+              "BSE",
+              "NFO",
+              "CDS",
+              "BCD",
+              "MCX",
+              "BFO"
+            ]
+          },
+          "transaction_type": {
+            "type": "string",
+            "description": "Transaction type - BUY or SELL",
+            "enum": [
+              "BUY",
+              "SELL"
+            ]
+          },
+          "order_type": {
+            "type": "string",
+            "description": "Order type",
+            "enum": [
+              "MARKET",
+              "LIMIT",
+              "SL",
+              "SL-M"
+            ]
+          },
+          "quantity": {
+            "type": "integer",
+            "description": "Number of shares/lots to transact"
+          },
+          "product": {
+            "type": "string",
+            "description": "Margin product type",
+            "enum": [
+              "CNC",
+              "NRML",
+              "MIS"
+            ]
+          },
+          "price": {
+            "type": "number",
+            "description": "Price for LIMIT orders"
+          },
+          "trigger_price": {
+            "type": "number",
+            "description": "Trigger price for SL and SL-M orders"
+          },
+          "disclosed_quantity": {
+            "type": "integer",
+            "description": "Quantity to disclose to the exchange"
+          },
+          "validity": {
+            "type": "string",
+            "description": "Order validity",
+            "enum": [
+              "DAY",
+              "IOC",
+              "TTL"
+            ]
+          },
+          "validity_ttl": {
+            "type": "integer",
+            "description": "Order life span in minutes for TTL validity"
+          },
+          "tag": {
+            "type": "string",
+            "description": "Optional alphanumeric tag for the order (max 20 characters)"
+          }
+        },
+        "required": [
+          "variety",
+          "tradingsymbol",
+          "exchange",
+          "transaction_type",
+          "order_type",
+          "quantity",
+          "product"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "order_id": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "modify_order",
+      "description": "Modify an open or pending order with updated price, quantity, order type, or other parameters.",
+      "service_type": "api_call",
+      "endpoint_template": "/orders/{{variety}}/{{order_id}}",
+      "request_config": {
+        "method": "PUT",
+        "headers_template": {
+          "X-Kite-Version": "3",
+          "Authorization": "token {{api_key}}:{{access_token}}",
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "variety": {
+            "type": "string",
+            "description": "Order variety",
+            "enum": [
+              "regular",
+              "amo",
+              "co",
+              "iceberg",
+              "auction"
+            ]
+          },
+          "order_id": {
+            "type": "string",
+            "description": "The order ID to modify"
+          },
+          "order_type": {
+            "type": "string",
+            "description": "New order type",
+            "enum": [
+              "MARKET",
+              "LIMIT",
+              "SL",
+              "SL-M"
+            ]
+          },
+          "quantity": {
+            "type": "integer",
+            "description": "New quantity"
+          },
+          "price": {
+            "type": "number",
+            "description": "New price for LIMIT orders"
+          },
+          "trigger_price": {
+            "type": "number",
+            "description": "New trigger price for SL/SL-M orders"
+          },
+          "disclosed_quantity": {
+            "type": "integer",
+            "description": "New disclosed quantity"
+          },
+          "validity": {
+            "type": "string",
+            "description": "New order validity",
+            "enum": [
+              "DAY",
+              "IOC",
+              "TTL"
+            ]
+          }
+        },
+        "required": [
+          "variety",
+          "order_id"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "order_id": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "cancel_order",
+      "description": "Cancel an open or pending order by order ID and variety.",
+      "service_type": "api_call",
+      "endpoint_template": "/orders/{{variety}}/{{order_id}}",
+      "request_config": {
+        "method": "DELETE",
+        "headers_template": {
+          "X-Kite-Version": "3",
+          "Authorization": "token {{api_key}}:{{access_token}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "variety": {
+            "type": "string",
+            "description": "Order variety",
+            "enum": [
+              "regular",
+              "amo",
+              "co",
+              "iceberg",
+              "auction"
+            ]
+          },
+          "order_id": {
+            "type": "string",
+            "description": "The order ID to cancel"
+          }
+        },
+        "required": [
+          "variety",
+          "order_id"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "order_id": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_orders",
+      "description": "Retrieve the list of all orders (open and executed) for the current trading day.",
+      "service_type": "api_call",
+      "endpoint_template": "/orders",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "X-Kite-Version": "3",
+          "Authorization": "token {{api_key}}:{{access_token}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "output_schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "order_id": {
+              "type": "string"
+            },
+            "exchange_order_id": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "tradingsymbol": {
+              "type": "string"
+            },
+            "exchange": {
+              "type": "string"
+            },
+            "order_type": {
+              "type": "string"
+            },
+            "transaction_type": {
+              "type": "string"
+            },
+            "quantity": {
+              "type": "integer"
+            },
+            "filled_quantity": {
+              "type": "integer"
+            },
+            "price": {
+              "type": "number"
+            },
+            "average_price": {
+              "type": "number"
+            },
+            "product": {
+              "type": "string"
+            },
+            "variety": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_order_history",
+      "description": "Retrieve the complete history of a specific order showing all interim status changes and updates.",
+      "service_type": "api_call",
+      "endpoint_template": "/orders/{{order_id}}",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "X-Kite-Version": "3",
+          "Authorization": "token {{api_key}}:{{access_token}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "order_id": {
+            "type": "string",
+            "description": "The order ID to retrieve history for"
+          }
+        },
+        "required": [
+          "order_id"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "output_schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "order_id": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "status_message": {
+              "type": "string"
+            },
+            "order_timestamp": {
+              "type": "string"
+            },
+            "exchange_timestamp": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_trades",
+      "description": "Retrieve the list of all executed trades for the current trading day.",
+      "service_type": "api_call",
+      "endpoint_template": "/trades",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "X-Kite-Version": "3",
+          "Authorization": "token {{api_key}}:{{access_token}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "output_schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "trade_id": {
+              "type": "string"
+            },
+            "order_id": {
+              "type": "string"
+            },
+            "exchange_order_id": {
+              "type": "string"
+            },
+            "tradingsymbol": {
+              "type": "string"
+            },
+            "exchange": {
+              "type": "string"
+            },
+            "instrument_token": {
+              "type": "integer"
+            },
+            "transaction_type": {
+              "type": "string"
+            },
+            "quantity": {
+              "type": "integer"
+            },
+            "average_price": {
+              "type": "number"
+            },
+            "price": {
+              "type": "number"
+            },
+            "product": {
+              "type": "string"
+            },
+            "fill_timestamp": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_order_trades",
+      "description": "Retrieve the list of trades generated by a specific order.",
+      "service_type": "api_call",
+      "endpoint_template": "/orders/{{order_id}}/trades",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "X-Kite-Version": "3",
+          "Authorization": "token {{api_key}}:{{access_token}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "order_id": {
+            "type": "string",
+            "description": "The order ID to retrieve trades for"
+          }
+        },
+        "required": [
+          "order_id"
+        ]
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "output_schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "trade_id": {
+              "type": "string"
+            },
+            "order_id": {
+              "type": "string"
+            },
+            "tradingsymbol": {
+              "type": "string"
+            },
+            "exchange": {
+              "type": "string"
+            },
+            "quantity": {
+              "type": "integer"
+            },
+            "average_price": {
+              "type": "number"
+            },
+            "transaction_type": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "events": [],
+  "_validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": [],
+    "validated_at": "2026-03-17T23:13:51.419304"
+  },
+  "metadata": {
+    "last_modified": "2026-03-17T17:43:51.419383",
+    "services_count": 10
+  }
+}

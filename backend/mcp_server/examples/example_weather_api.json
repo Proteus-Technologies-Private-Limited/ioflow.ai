@@ -1,0 +1,364 @@
+{
+  "key": "weather_api_example",
+  "application": {
+    "app_name": "Weather API Example",
+    "app_type": "global",
+    "description": "Example weather service integration showing best practices",
+    "category": "Integration",
+    "auth_type": "api_key",
+    "auth_config": {
+      "header_name": "X-Weather-API-Key",
+      "query_param": null,
+      "description": "API key should be obtained from weather service provider"
+    },
+    "version": "1.0.0",
+    "base_url": "https://api.weather-example.com",
+    "icon_url": "https://weather-example.com/icon.png"
+  },
+  "services": [
+    {
+      "service_name": "get_current_weather",
+      "display_name": "Get Current Weather",
+      "description": "Get current weather conditions for a location",
+      "service_type": "api_call",
+      "endpoint_template": "{{base_url}}/v1/weather/current",
+      "http_method": "GET",
+      "request_config": {
+        "parameter_method": "query",
+        "headers_template": {
+          "Accept": "application/json",
+          "X-Weather-API-Key": "{{auth.api_key}}"
+        },
+        "query_params": {
+          "location": "{{location}}",
+          "units": "{{units}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string",
+            "description": "City name or coordinates (lat,lon)",
+            "pattern": "^[a-zA-Z\\s,.-]+$|^-?\\d+\\.\\d+,-?\\d+\\.\\d+$"
+          },
+          "units": {
+            "type": "string",
+            "description": "Temperature units",
+            "enum": ["metric", "imperial"],
+            "default": "metric"
+          }
+        },
+        "required": ["location"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string",
+            "description": "Location name"
+          },
+          "temperature": {
+            "type": "number",
+            "description": "Current temperature"
+          },
+          "conditions": {
+            "type": "string",
+            "description": "Weather conditions"
+          },
+          "humidity": {
+            "type": "number",
+            "description": "Humidity percentage"
+          },
+          "wind_speed": {
+            "type": "number",
+            "description": "Wind speed"
+          }
+        }
+      },
+      "response_config": {
+        "data_path": "$.data",
+        "error_path": "$.error"
+      },
+      "sample_input": {
+        "location": "New York",
+        "units": "metric"
+      },
+      "sample_output": {
+        "location": "New York",
+        "temperature": 22,
+        "conditions": "Partly cloudy",
+        "humidity": 65,
+        "wind_speed": 12
+      },
+      "is_async": false,
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "get_forecast",
+      "display_name": "Get Weather Forecast",
+      "description": "Get weather forecast for next 5 days",
+      "service_type": "api_call",
+      "endpoint_template": "{{base_url}}/v1/weather/forecast",
+      "http_method": "GET",
+      "request_config": {
+        "parameter_method": "query",
+        "headers_template": {
+          "Accept": "application/json",
+          "X-Weather-API-Key": "{{auth.api_key}}"
+        },
+        "query_params": {
+          "location": "{{location}}",
+          "days": "{{days}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string",
+            "description": "City name or coordinates"
+          },
+          "days": {
+            "type": "number",
+            "description": "Number of forecast days (1-7)",
+            "minimum": 1,
+            "maximum": 7,
+            "default": 5
+          }
+        },
+        "required": ["location"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string",
+            "description": "Location name"
+          },
+          "forecast": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "high": {
+                  "type": "number",
+                  "description": "High temperature"
+                },
+                "low": {
+                  "type": "number",
+                  "description": "Low temperature"
+                },
+                "conditions": {
+                  "type": "string",
+                  "description": "Weather conditions"
+                }
+              }
+            }
+          }
+        }
+      },
+      "response_config": {
+        "data_path": "$.data",
+        "error_path": "$.error"
+      },
+      "sample_input": {
+        "location": "London",
+        "days": 3
+      },
+      "sample_output": {
+        "location": "London",
+        "forecast": [
+          {
+            "date": "2024-01-20",
+            "high": 15,
+            "low": 8,
+            "conditions": "Rain"
+          },
+          {
+            "date": "2024-01-21",
+            "high": 12,
+            "low": 6,
+            "conditions": "Cloudy"
+          },
+          {
+            "date": "2024-01-22",
+            "high": 14,
+            "low": 7,
+            "conditions": "Sunny"
+          }
+        ]
+      },
+      "is_async": false,
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "send_weather_alert",
+      "display_name": "Send Weather Alert",
+      "description": "Send weather alert webhook",
+      "service_type": "webhook",
+      "endpoint_template": "https://your-webhook-endpoint.com/weather-alerts",
+      "http_method": "POST",
+      "request_config": {
+        "parameter_method": "body",
+        "headers_template": {
+          "Content-Type": "application/json"
+        },
+        "body_template": {
+          "alert_type": "{{alert_type}}",
+          "severity": "{{severity}}",
+          "locations": "{{locations}}",
+          "message": "{{message}}"
+        }
+      },
+      "webhook_config": {
+        "retry_attempts": 3,
+        "retry_delay_seconds": 1
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "alert_type": {
+            "type": "string",
+            "description": "Type of weather alert",
+            "enum": ["storm", "heat", "cold", "flood", "wind"]
+          },
+          "severity": {
+            "type": "string",
+            "description": "Alert severity level",
+            "enum": ["low", "medium", "high", "extreme"]
+          },
+          "locations": {
+            "type": "array",
+            "description": "Affected locations",
+            "items": {
+              "type": "string"
+            }
+          },
+          "message": {
+            "type": "string",
+            "description": "Alert message"
+          }
+        },
+        "required": ["alert_type", "severity", "locations", "message"]
+      },
+      "sample_input": {
+        "alert_type": "storm",
+        "severity": "high",
+        "locations": ["New York", "Boston"],
+        "message": "Severe storm warning in effect"
+      },
+      "is_async": true,
+      "timeout_seconds": 30
+    }
+  ],
+  "events": [
+    {
+      "event_name": "weather_alert_received",
+      "display_name": "Weather Alert Received",
+      "description": "Triggered when a weather alert is issued",
+      "event_type": "webhook",
+      "event_configuration": {
+        "webhook_url": "/webhooks/weather/alerts",
+        "secret_header": "X-Weather-Webhook-Secret"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "alert_id": {
+            "type": "string",
+            "description": "Alert identifier"
+          },
+          "type": {
+            "type": "string",
+            "description": "Alert type"
+          },
+          "severity": {
+            "type": "string",
+            "description": "Severity level"
+          },
+          "issued_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When alert was issued"
+          },
+          "locations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Affected locations"
+          },
+          "details": {
+            "type": "object",
+            "properties": {
+              "wind_speed": {
+                "type": "string"
+              },
+              "rainfall": {
+                "type": "string"
+              },
+              "storm_surge": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "sample_payload": {
+        "alert_id": "ALERT-2024-001",
+        "type": "storm",
+        "severity": "high",
+        "issued_at": "2024-01-20T10:00:00Z",
+        "locations": ["Miami", "Fort Lauderdale"],
+        "details": {
+          "wind_speed": "120 mph",
+          "rainfall": "10-15 inches",
+          "storm_surge": "6-9 feet"
+        }
+      }
+    },
+    {
+      "event_name": "daily_forecast_update",
+      "display_name": "Daily Forecast Update",
+      "description": "Scheduled daily forecast update",
+      "event_type": "schedule",
+      "configuration": {
+        "schedule": "0 6 * * *",
+        "timezone": "UTC",
+        "description": "Runs daily at 6 AM UTC"
+      }
+    },
+    {
+      "event_name": "check_weather_changes",
+      "display_name": "Check Weather Changes",
+      "description": "Poll for significant weather changes",
+      "event_type": "polling",
+      "configuration": {
+        "interval_seconds": 3600,
+        "endpoint": "/v1/weather/changes",
+        "method": "GET",
+        "comparison_field": "last_updated"
+      }
+    }
+  ],
+  "metadata": {
+    "author": "IOFlow Team",
+    "documentation_url": "https://docs.weather-example.com",
+    "support_email": "support@weather-example.com",
+    "tags": ["weather", "api", "integration", "alerts"],
+    "rate_limits": {
+      "requests_per_minute": 60,
+      "requests_per_day": 10000
+    },
+    "notes": [
+      "This is an example seed application showing best practices",
+      "Replace base_url and auth details with actual service",
+      "All endpoints and responses are examples"
+    ]
+  }
+}

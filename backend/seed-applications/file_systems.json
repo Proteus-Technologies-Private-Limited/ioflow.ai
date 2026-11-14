@@ -1,0 +1,710 @@
+{
+  "key": "file_systems",
+  "application": {
+    "app_name": "File Systems",
+    "app_type": "file_system",
+    "app_scope": "tenant",
+    "description": "Comprehensive file operations across FTP, SFTP, SMB, NFS, and local file systems. Supports reading, writing, listing, and managing files with base64 encoding.",
+    "category": "Integration",
+    "auth_type": "basic",
+    "auth_config": {
+      "username_field": "username",
+      "password_field": "password",
+      "description": "Enter credentials for file server access. For local files, authentication is optional.",
+      "optional_fields": {
+        "private_key": {
+          "label": "Private Key (for SFTP)",
+          "type": "textarea",
+          "required": false,
+          "placeholder": "-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----",
+          "help_text": "SSH private key for SFTP authentication (optional, use instead of password)"
+        },
+        "domain": {
+          "label": "Domain (for SMB)",
+          "type": "text",
+          "required": false,
+          "placeholder": "WORKGROUP",
+          "help_text": "Windows domain for SMB/CIFS connections"
+        }
+      }
+    },
+    "version": "1.1.0",
+    "base_url": "file:///",
+    "icon_url": "https://cdn.jsdelivr.net/npm/heroicons@2.0.18/24/solid/folder-open.svg",
+    "base_url_placeholder": "Protocol and server (e.g., ftp://ftp.example.com:21, sftp://server.com:22, smb://fileserver/share, file:///)",
+    "base_url_help_text": "Configure the file system protocol and server. Use file:/// for local files, or specify FTP/SFTP/SMB server URLs."
+  },
+  "services": [
+    {
+      "service_name": "read_file_base64",
+      "display_name": "Read File (Base64)",
+      "service_type": "file_operation",
+      "description": "Read a file and return its content in base64 encoded format. Supports all file types including documents, images, PDFs, etc.",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "read_base64",
+            "enum": [
+              "read_base64"
+            ],
+            "description": "Operation type",
+            "ui_control": "hidden"
+          },
+          "path": {
+            "type": "string",
+            "description": "Full path to the file to read",
+            "example": "/path/to/file.pdf",
+            "placeholder": "/home/user/documents/report.pdf",
+            "help_text": "Enter the complete file path. For local files use absolute paths. For remote servers, use relative paths from the base directory.",
+            "ui_control": "text",
+            "format": "file-path"
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the operation was successful"
+          },
+          "content": {
+            "type": "string",
+            "description": "Base64 encoded file content",
+            "format": "base64"
+          },
+          "encoding": {
+            "type": "string",
+            "description": "Content encoding (always base64)"
+          },
+          "size": {
+            "type": "integer",
+            "description": "File size in bytes"
+          },
+          "modified": {
+            "type": "string",
+            "description": "Last modified timestamp",
+            "format": "date-time"
+          },
+          "path": {
+            "type": "string",
+            "description": "File path that was read"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 60,
+      "sample_input": {
+        "path": "/documents/invoice.pdf"
+      },
+      "sample_output": {
+        "success": true,
+        "content": "JVBERi0xLjQKJeLjz9MKNCAwIG9i...",
+        "encoding": "base64",
+        "size": 45678,
+        "modified": "2025-01-21T10:30:00Z",
+        "path": "/documents/invoice.pdf"
+      }
+    },
+    {
+      "service_name": "write_file_base64",
+      "display_name": "Write File (Base64)",
+      "service_type": "file_operation",
+      "description": "Write or upload a file from base64 encoded content. Perfect for saving files from flow data or uploaded content.",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "write_base64",
+            "enum": [
+              "write_base64"
+            ],
+            "description": "Operation type",
+            "ui_control": "hidden"
+          },
+          "path": {
+            "type": "string",
+            "description": "Full path where the file should be saved",
+            "example": "/path/to/newfile.pdf",
+            "placeholder": "/home/user/uploads/document.pdf",
+            "help_text": "Specify the complete path including filename and extension. Directories will be created if they don't exist.",
+            "ui_control": "text",
+            "format": "file-path"
+          },
+          "content": {
+            "type": "string",
+            "description": "Base64 encoded file content to write",
+            "format": "base64",
+            "ui_control": "file",
+            "placeholder": "Upload file or paste base64 content",
+            "help_text": "Provide the file content as base64 string. You can upload a file which will be automatically converted to base64.",
+            "max_size_mb": 50
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "overwrite",
+              "append"
+            ],
+            "default": "overwrite",
+            "description": "Write mode - overwrite existing file or append to it",
+            "ui_control": "select",
+            "help_text": "Choose whether to replace existing file content or add to the end of the file"
+          }
+        },
+        "required": [
+          "path",
+          "content"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the operation was successful"
+          },
+          "message": {
+            "type": "string",
+            "description": "Status message"
+          },
+          "size": {
+            "type": "integer",
+            "description": "Number of bytes written"
+          },
+          "path": {
+            "type": "string",
+            "description": "File path where content was written"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 60,
+      "sample_input": {
+        "path": "/uploads/report.pdf",
+        "content": "JVBERi0xLjQKJeLjz9MKNCAwIG9i...",
+        "mode": "overwrite"
+      },
+      "sample_output": {
+        "success": true,
+        "message": "File written successfully: /uploads/report.pdf",
+        "size": 45678,
+        "path": "/uploads/report.pdf"
+      }
+    },
+    {
+      "service_name": "list_files",
+      "display_name": "List Files",
+      "service_type": "file_operation",
+      "description": "List files and directories in a given path with optional pattern filtering",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "list",
+            "enum": [
+              "list"
+            ],
+            "description": "Operation type",
+            "ui_control": "hidden"
+          },
+          "path": {
+            "type": "string",
+            "description": "Directory path to list",
+            "default": "/",
+            "example": "/home/user/documents",
+            "placeholder": "/path/to/directory",
+            "help_text": "Enter the directory path to list. Use / for root directory or leave empty for current directory.",
+            "ui_control": "text",
+            "format": "directory-path"
+          },
+          "pattern": {
+            "type": "string",
+            "description": "File pattern filter using wildcards",
+            "default": "*",
+            "example": "*.pdf",
+            "placeholder": "*.txt, *.pdf, report_*, etc.",
+            "help_text": "Use wildcards to filter files: * matches any characters, ? matches single character. Examples: *.pdf, report_*.doc, data_???.csv",
+            "ui_control": "text"
+          },
+          "include_hidden": {
+            "type": "boolean",
+            "description": "Include hidden files in listing",
+            "default": false,
+            "ui_control": "checkbox",
+            "help_text": "Check to include hidden files (files starting with . on Unix/Linux systems)"
+          }
+        },
+        "required": []
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the operation was successful"
+          },
+          "files": {
+            "type": "array",
+            "description": "List of files and directories",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "File or directory name"
+                },
+                "path": {
+                  "type": "string",
+                  "description": "Full path"
+                },
+                "is_directory": {
+                  "type": "boolean",
+                  "description": "Whether this is a directory"
+                },
+                "size": {
+                  "type": "integer",
+                  "description": "File size in bytes (0 for directories)"
+                },
+                "modified": {
+                  "type": "string",
+                  "description": "Last modified timestamp",
+                  "format": "date-time"
+                }
+              }
+            }
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of files/directories found"
+          },
+          "path": {
+            "type": "string",
+            "description": "Listed directory path"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30,
+      "sample_input": {
+        "path": "/documents",
+        "pattern": "*.pdf",
+        "include_hidden": false
+      },
+      "sample_output": {
+        "success": true,
+        "files": [
+          {
+            "name": "invoice.pdf",
+            "path": "/documents/invoice.pdf",
+            "is_directory": false,
+            "size": 45678,
+            "modified": "2025-01-21T10:30:00Z"
+          },
+          {
+            "name": "reports",
+            "path": "/documents/reports",
+            "is_directory": true,
+            "size": 0,
+            "modified": "2025-01-20T15:45:00Z"
+          }
+        ],
+        "count": 2,
+        "path": "/documents"
+      }
+    },
+    {
+      "service_name": "delete_file",
+      "display_name": "Delete File",
+      "service_type": "file_operation",
+      "description": "Delete a file or directory (use with caution)",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "delete",
+            "enum": [
+              "delete"
+            ],
+            "description": "Operation type",
+            "ui_control": "hidden"
+          },
+          "path": {
+            "type": "string",
+            "description": "File or directory path to delete",
+            "example": "/path/to/file.txt",
+            "placeholder": "/path/to/file-or-directory",
+            "help_text": "⚠️ WARNING: This will permanently delete the file or directory. For directories, all contents will be deleted recursively.",
+            "ui_control": "text",
+            "format": "file-path",
+            "confirmation_required": true,
+            "confirmation_message": "Are you sure you want to delete this file/directory? This action cannot be undone."
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the operation was successful"
+          },
+          "message": {
+            "type": "string",
+            "description": "Status message"
+          },
+          "path": {
+            "type": "string",
+            "description": "Deleted file/directory path"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "move_file",
+      "display_name": "Move/Rename File",
+      "service_type": "file_operation",
+      "description": "Move or rename a file or directory",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "move",
+            "enum": [
+              "move",
+              "rename"
+            ],
+            "description": "Operation type",
+            "ui_control": "hidden"
+          },
+          "path": {
+            "type": "string",
+            "description": "Source file or directory path",
+            "example": "/path/to/oldfile.txt",
+            "placeholder": "/current/path/to/file",
+            "help_text": "Enter the current path of the file or directory you want to move or rename",
+            "ui_control": "text",
+            "format": "file-path"
+          },
+          "destination": {
+            "type": "string",
+            "description": "Destination path (new location or name)",
+            "example": "/path/to/newfile.txt",
+            "placeholder": "/new/path/to/file",
+            "help_text": "Enter the new path or name. For renaming, change only the filename. For moving, specify the new directory path.",
+            "ui_control": "text",
+            "format": "file-path"
+          }
+        },
+        "required": [
+          "path",
+          "destination"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the operation was successful"
+          },
+          "message": {
+            "type": "string",
+            "description": "Status message"
+          },
+          "source": {
+            "type": "string",
+            "description": "Original source path"
+          },
+          "destination": {
+            "type": "string",
+            "description": "New destination path"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30,
+      "sample_input": {
+        "path": "/documents/old_report.pdf",
+        "destination": "/archives/2024/report_final.pdf"
+      },
+      "sample_output": {
+        "success": true,
+        "message": "File moved from /documents/old_report.pdf to /archives/2024/report_final.pdf",
+        "source": "/documents/old_report.pdf",
+        "destination": "/archives/2024/report_final.pdf"
+      }
+    },
+    {
+      "service_name": "copy_file",
+      "display_name": "Copy File",
+      "service_type": "file_operation",
+      "description": "Copy a file or directory to another location",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "copy",
+            "enum": [
+              "copy"
+            ],
+            "description": "Operation type",
+            "ui_control": "hidden"
+          },
+          "path": {
+            "type": "string",
+            "description": "Source file or directory path to copy",
+            "example": "/path/to/source.txt",
+            "placeholder": "/source/file/path",
+            "help_text": "Enter the path of the file or directory you want to copy",
+            "ui_control": "text",
+            "format": "file-path"
+          },
+          "destination": {
+            "type": "string",
+            "description": "Destination path for the copy",
+            "example": "/path/to/copy.txt",
+            "placeholder": "/destination/file/path",
+            "help_text": "Enter the destination path where the copy should be created. Include the new filename for files.",
+            "ui_control": "text",
+            "format": "file-path"
+          }
+        },
+        "required": [
+          "path",
+          "destination"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the operation was successful"
+          },
+          "message": {
+            "type": "string",
+            "description": "Status message"
+          },
+          "source": {
+            "type": "string",
+            "description": "Source path that was copied"
+          },
+          "destination": {
+            "type": "string",
+            "description": "Destination path where copy was created"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30,
+      "sample_input": {
+        "path": "/documents/template.docx",
+        "destination": "/working/draft_v1.docx"
+      },
+      "sample_output": {
+        "success": true,
+        "message": "File copied from /documents/template.docx to /working/draft_v1.docx",
+        "source": "/documents/template.docx",
+        "destination": "/working/draft_v1.docx"
+      }
+    },
+    {
+      "service_name": "create_directory",
+      "display_name": "Create Directory",
+      "service_type": "file_operation",
+      "description": "Create a new directory or folder structure",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "mkdir",
+            "enum": [
+              "mkdir"
+            ],
+            "description": "Operation type",
+            "ui_control": "hidden"
+          },
+          "path": {
+            "type": "string",
+            "description": "Directory path to create",
+            "example": "/path/to/new/directory",
+            "placeholder": "/path/to/new/folder",
+            "help_text": "Enter the full path of the directory to create. Parent directories will be created automatically if they don't exist.",
+            "ui_control": "text",
+            "format": "directory-path"
+          },
+          "recursive": {
+            "type": "boolean",
+            "description": "Create parent directories if they don't exist",
+            "default": true,
+            "ui_control": "checkbox",
+            "help_text": "When enabled, all parent directories in the path will be created if they don't exist"
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the operation was successful"
+          },
+          "message": {
+            "type": "string",
+            "description": "Status message"
+          },
+          "path": {
+            "type": "string",
+            "description": "Created directory path"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "get_file_info",
+      "display_name": "Get File Information",
+      "service_type": "file_operation",
+      "description": "Get detailed information about a file or directory without reading its content",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "info",
+            "enum": [
+              "info"
+            ],
+            "description": "Operation type",
+            "ui_control": "hidden"
+          },
+          "path": {
+            "type": "string",
+            "description": "File or directory path to inspect",
+            "example": "/path/to/file.txt",
+            "placeholder": "/path/to/file-or-directory",
+            "help_text": "Enter the path of the file or directory to get information about",
+            "ui_control": "text",
+            "format": "file-path"
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the operation was successful"
+          },
+          "exists": {
+            "type": "boolean",
+            "description": "Whether the file/directory exists"
+          },
+          "is_directory": {
+            "type": "boolean",
+            "description": "Whether this is a directory"
+          },
+          "is_file": {
+            "type": "boolean",
+            "description": "Whether this is a file"
+          },
+          "size": {
+            "type": "integer",
+            "description": "Size in bytes"
+          },
+          "created": {
+            "type": "string",
+            "description": "Creation timestamp",
+            "format": "date-time"
+          },
+          "modified": {
+            "type": "string",
+            "description": "Last modified timestamp",
+            "format": "date-time"
+          },
+          "accessed": {
+            "type": "string",
+            "description": "Last accessed timestamp",
+            "format": "date-time"
+          },
+          "permissions": {
+            "type": "string",
+            "description": "File permissions (Unix-style)"
+          },
+          "mime_type": {
+            "type": "string",
+            "description": "MIME type of the file"
+          },
+          "path": {
+            "type": "string",
+            "description": "File/directory path"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    }
+  ],
+  "events": [],
+  "metadata": {
+    "author": "IOFlow Team",
+    "created_at": "2025-01-21",
+    "last_modified": "2025-01-21",
+    "tags": [
+      "file",
+      "ftp",
+      "sftp",
+      "smb",
+      "nfs",
+      "storage",
+      "integration",
+      "file-management",
+      "upload",
+      "download"
+    ],
+    "notes": "Universal file system operations. Configure base_url to specify protocol: ftp://server:21, sftp://server:22, smb://server/share, nfs://server:/export, or file:/// for local files. All file content is handled as base64 for binary safety.",
+    "services_count": 8,
+    "events_count": 0,
+    "supported_protocols": [
+      "file (local file system)",
+      "ftp (File Transfer Protocol)",
+      "sftp (SSH File Transfer Protocol)",
+      "smb/cifs (Windows file sharing)",
+      "nfs (Network File System - requires OS-level mount)"
+    ],
+    "dependencies": {
+      "sftp": "paramiko",
+      "smb": "pysmb"
+    },
+    "ui_hints": {
+      "file_upload": "The write_file_base64 service accepts file uploads which are automatically converted to base64",
+      "file_download": "The read_file_base64 service returns content that can be decoded and downloaded",
+      "path_format": "Use forward slashes (/) for all paths, even on Windows",
+      "batch_operations": "For bulk operations, use list_files to get file lists, then process in loops"
+    }
+  }
+}

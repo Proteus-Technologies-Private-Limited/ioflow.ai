@@ -1,0 +1,8 @@
+{
+  "agent_id": "test_agent",
+  "name": "Test Agent",
+  "model": "gemini-2.0-flash-exp",
+  "system_prompt": "You are a helpful assistant.",
+  "instruction": "",
+  "tools": []
+}

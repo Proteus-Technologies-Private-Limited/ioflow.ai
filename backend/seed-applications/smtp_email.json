@@ -1,0 +1,142 @@
+{
+  "key": "smtp_email",
+  "application": {
+    "app_name": "SMTP Email",
+    "app_type": "email",
+    "description": "Send emails using SMTP protocol. Supports Gmail, Outlook, and other SMTP servers.",
+    "category": "Communication",
+    "auth_type": "basic",
+    "auth_config": {
+      "username_field": "username",
+      "password_field": "password",
+      "description": "Enter your email credentials (usually your email address and password/app password)"
+    },
+    "version": "1.2.0",
+    "base_url": "",
+    "icon_url": "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons@v8/icons/mail-dot-ru.svg",
+    "app_scope": "global"
+  },
+  "services": [
+    {
+      "service_name": "Send Email",
+      "display_name": "Send Email",
+      "service_type": "smtp_send",
+      "description": "Send emails via SMTP with support for HTML, plain text, CC, BCC, and attachments",
+      "endpoint_template": "/smtp/send",
+      "request_config": {
+        "method": "POST",
+        "parameter_method": "json_payload"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "Sender email address (optional - uses account email if not specified)",
+            "format": "email"
+          },
+          "to": {
+            "type": "string",
+            "description": "Recipient email address (comma-separated for multiple)",
+            "format": "email"
+          },
+          "cc": {
+            "type": "string",
+            "description": "CC recipients (comma-separated)"
+          },
+          "bcc": {
+            "type": "string",
+            "description": "BCC recipients (comma-separated)"
+          },
+          "subject": {
+            "type": "string",
+            "description": "Email subject line"
+          },
+          "body": {
+            "type": "string",
+            "description": "Email body content"
+          },
+          "body_type": {
+            "type": "string",
+            "enum": [
+              "plain",
+              "html"
+            ],
+            "default": "plain",
+            "description": "Email body format"
+          },
+          "attachments": {
+            "type": "array",
+            "description": "Email attachments",
+            "items": {
+              "type": "object",
+              "properties": {
+                "filename": {
+                  "type": "string",
+                  "description": "Attachment filename"
+                },
+                "content": {
+                  "type": "string",
+                  "description": "Base64 encoded file content"
+                },
+                "content_type": {
+                  "type": "string",
+                  "description": "MIME content type"
+                }
+              },
+              "required": [
+                "filename",
+                "content"
+              ]
+            }
+          }
+        },
+        "required": [
+          "to",
+          "subject",
+          "body"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the email was sent successfully"
+          },
+          "message": {
+            "type": "string",
+            "description": "Status message"
+          },
+          "message_id": {
+            "type": "string",
+            "description": "Generated message ID"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 60
+    }
+  ],
+  "events": [],
+  "metadata": {
+    "author": "IOFlow Team",
+    "created_at": "2025-01-20",
+    "tags": [
+      "email",
+      "smtp",
+      "communication"
+    ],
+    "notes": "SMTP email sender. Configure base_url: smtp://host:port (TLS), smtps://host:port (SSL), or smtp-plain://host:port (no encryption). Examples: smtp://smtp.gmail.com:587, smtps://smtp.gmail.com:465, smtp-plain://192.168.1.1:25. When using smtp://, TLS can be disabled via service configuration UI.",
+    "services_count": 1,
+    "events_count": 0
+  }
+}

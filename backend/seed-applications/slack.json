@@ -1,0 +1,144 @@
+{
+  "key": "slack",
+  "application": {
+    "app_name": "Slack",
+    "app_type": "api",
+    "description": "Team collaboration and messaging platform",
+    "category": "Communication",
+    "auth_type": "oauth2",
+    "auth_config": {
+      "authorization_url": "https://slack.com/oauth/v2/authorize",
+      "token_url": "https://slack.com/api/oauth.v2.access",
+      "scopes": [
+        "chat:write",
+        "channels:read",
+        "users:read"
+      ],
+      "grant_type": "authorization_code"
+    },
+    "version": "2.1.0",
+    "base_url": "https://slack.com/api",
+    "icon_url": "https://a.slack-edge.com/80588/marketing/img/icons/icon_slack_hash_colored.png",
+    "app_scope": "global"
+  },
+  "services": [
+    {
+      "service_name": "Send Message",
+      "service_type": "api_call",
+      "description": "Send a message to a Slack channel",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "body_template": {
+          "channel": "{{channel}}",
+          "text": "{{message}}",
+          "as_user": true
+        },
+        "method": "POST"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "field_value",
+          "field": "ok",
+          "value": true
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "Channel ID or name (e.g., #general)"
+          },
+          "message": {
+            "type": "string",
+            "description": "Message text to send"
+          }
+        },
+        "required": [
+          "channel",
+          "message"
+        ]
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "{{base_url}}/chat.postMessage"
+    },
+    {
+      "service_name": "List Channels",
+      "service_type": "api_call",
+      "description": "List all channels in the workspace",
+      "request_config": {
+        "parameter_method": "query_params",
+        "query_template": {
+          "types": "public_channel,private_channel",
+          "limit": "{{limit}}"
+        },
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "field_value",
+          "field": "ok",
+          "value": true
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "default": 100,
+            "description": "Number of channels to return"
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "{{base_url}}/conversations.list"
+    }
+  ],
+  "events": [
+    {
+      "event_name": "Message Received",
+      "event_type": "webhook",
+      "description": "Triggered when a new message is posted",
+      "event_configuration": {
+        "webhook_url": "/webhooks/slack",
+        "verification_method": "hmac",
+        "signature_header": "X-Slack-Signature",
+        "timestamp_header": "X-Slack-Request-Timestamp",
+        "signature_algorithm": "sha256",
+        "signature_format": "v0={{signature}}",
+        "signature_base_format_with_timestamp": "v0:{{timestamp}}:{{body}}",
+        "timestamp_tolerance": 300,
+        "url_verification_enabled": true,
+        "challenge_configs": [
+          {
+            "name": "Slack URL Verification",
+            "method": "POST",
+            "conditions": {
+              "type": "url_verification"
+            },
+            "challenge_field": "challenge",
+            "response_field": "challenge"
+          }
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  ],
+  "metadata": {
+    "author": "IOFlow Team",
+    "created_at": "2024-01-01",
+    "tags": [
+      "communication",
+      "messaging",
+      "oauth2"
+    ],
+    "last_modified": "2025-08-23T12:53:14.110338",
+    "modified_by": "claude-code",
+    "events_count": 1
+  }
+}

@@ -1,0 +1,581 @@
+{
+  "version": "1.0",
+  "export_timestamp": "2025-11-06T15:59:50.229023Z",
+  "flow": {
+    "flow_name": "AI Blog posting  to Wordpress",
+    "description": "Publishes ai generated blog posts with proper category, tag and image",
+    "category": "AI & Automation",
+    "trigger_config": {
+      "type": "manual",
+      "app_id": null,
+      "event_name": null,
+      "schedule": null,
+      "manual_variables": [
+        {
+          "id": 1756188184583,
+          "name": "topic",
+          "displayName": "Topic to blog on",
+          "description": "",
+          "dataType": "string",
+          "uiControl": "textarea",
+          "required": false,
+          "defaultValue": "Write blog about impact of agentic AI software in Indian manufacturing sector",
+          "validation": {},
+          "order": 0
+        }
+      ],
+      "execute_immediately": null,
+      "folder_path": null,
+      "listener_type": null,
+      "file_pattern": null,
+      "recursive": null,
+      "debounce_seconds": null
+    },
+    "flow_definition": {
+      "nodes": [
+        {
+          "id": "trigger_1",
+          "type": "trigger",
+          "position": {
+            "x": -550.0,
+            "y": -200.0
+          },
+          "data": {
+            "label": "Trigger",
+            "triggerType": "manual",
+            "manualVariables": [
+              {
+                "id": 1756188184583,
+                "name": "topic",
+                "displayName": "Topic to blog on",
+                "description": "",
+                "dataType": "string",
+                "uiControl": "textarea",
+                "required": false,
+                "defaultValue": "Write blog about impact of agentic AI software in Indian manufacturing sector",
+                "validation": {},
+                "order": 0
+              }
+            ],
+            "config": {},
+            "executeImmediately": null,
+            "width": 200,
+            "height": 100
+          }
+        },
+        {
+          "id": "get_categories",
+          "type": "action",
+          "position": {
+            "x": -300.0,
+            "y": -300.0
+          },
+          "data": {
+            "label": "Get Categories",
+            "config": {},
+            "appId": "e97d4b5a-c245-4d68-8599-7a26e4ae9ddb",
+            "serviceId": "e22ff65e-124b-484a-9657-1c81a87d7952",
+            "parameterMapping": {
+              "per_page": {
+                "source": "static",
+                "value": 100
+              },
+              "page": {
+                "source": "static",
+                "value": 1
+              },
+              "orderby": {
+                "source": "static",
+                "value": "name"
+              },
+              "order": {
+                "source": "static",
+                "value": "asc"
+              },
+              "hide_empty": {
+                "source": "static",
+                "value": false
+              }
+            },
+            "parametersRaw": "",
+            "useParameterMapping": true,
+            "appName": "WordPress",
+            "service": "get_categories",
+            "serviceDisplayName": "get_categories",
+            "width": 200,
+            "height": 100
+          }
+        },
+        {
+          "id": "get_tags",
+          "type": "action",
+          "position": {
+            "x": -300.0,
+            "y": -100.0
+          },
+          "data": {
+            "label": "Get Tags",
+            "config": {},
+            "appId": "e97d4b5a-c245-4d68-8599-7a26e4ae9ddb",
+            "serviceId": "0f13695a-1ef8-4348-b52e-e7b3c90bf5af",
+            "parameterMapping": {},
+            "parameters": {},
+            "parametersRaw": "",
+            "useParameterMapping": false,
+            "appName": "WordPress",
+            "service": "get_tags",
+            "serviceDisplayName": "get_tags",
+            "width": 200,
+            "height": 100
+          }
+        },
+        {
+          "id": "ai_blog",
+          "type": "action",
+          "position": {
+            "x": 0.0,
+            "y": -200.0
+          },
+          "data": {
+            "label": "Generate Blog",
+            "config": {},
+            "appId": "01b8e055-537c-4446-8bb4-3e7ea556b31e",
+            "serviceId": "fc508636-d815-49e1-a374-495d73ff5393",
+            "parameterMapping": {
+              "model": {
+                "source": "static",
+                "value": "gpt-5-mini"
+              },
+              "messages": {
+                "source": "static",
+                "value": [
+                  {
+                    "role": "system",
+                    "content": "You are a highly experienced blogger. You always write in business formal yet interesting manner. \n\nIMPORTANT: Structure your response as follows:\n1. Start with a compelling title wrapped in <title> tags\n2. Select 2-3 relevant categories from the available list and include their IDs in <category_ids> tags (comma-separated numbers)\n3. Select 3-5 relevant tags from the available list and include their IDs in <tag_ids> tags (comma-separated numbers)\n4. Include 2-3 image descriptions wrapped in <image-prompt> tags\n5. Follow with the blog content in pure HTML\n6. Use <h2> for main sections, <h3> for subsections\n7. Add placeholder images: <figure class=\"image-placeholder\" data-image-index=\"1\"><figcaption>Description</figcaption></figure>\n\nAvailable WordPress Categories:\n{{node_outputs.get_categories.data}}\n\nAvailable WordPress Tags:\n{{node_outputs.get_tags.data}}\n\nIMPORTANT: \n- Only use category IDs from the categories list above\n- Only use tag IDs from the tags list above\n- If no relevant tags exist, use empty <tag_ids></tag_ids>\n- Always include at least one category\n\nExample format:\n<title>Your Blog Title</title>\n<category_ids>1,3</category_ids>\n<tag_ids>5,8,12</tag_ids>\n<image-prompt>A futuristic manufacturing facility</image-prompt>\n<image-prompt>Dashboard showing AI analytics</image-prompt>\n<p>Introduction...</p>"
+                  },
+                  {
+                    "role": "user",
+                    "content": "{{input.topic}}"
+                  }
+                ]
+              }
+            },
+            "parametersRaw": "",
+            "useParameterMapping": true,
+            "appName": "OpenAI",
+            "service": "create_chat_completion",
+            "serviceDisplayName": "Create Chat Completion",
+            "width": 200,
+            "height": 100
+          }
+        },
+        {
+          "id": "transform_extract",
+          "type": "transform",
+          "position": {
+            "x": 326.0,
+            "y": -266.0
+          },
+          "data": {
+            "label": "Extract & Process",
+            "config": {},
+            "script": "import json\nimport re\n\nai = node_outputs.get('ai_blog', {})\nstatus = ai.get('status', None)\nraw = ai.get('data', '')\nblog_content = ''\nblog_title = 'Untitled Blog Post'\nblog_excerpt = ''\nimage_prompts = []\ncategory_ids = []\ntag_ids = []\n\n# Extract the actual text content from the AI response\nfull_text = ''\nif isinstance(raw, str):\n    full_text = raw\nelif isinstance(raw, dict):\n    choices = raw.get('choices')\n    if isinstance(choices, list) and len(choices) > 0:\n        parts = []\n        for c in choices:\n            if isinstance(c, dict):\n                msg = c.get('message') or c.get('delta') or {}\n                if isinstance(msg, dict):\n                    part = msg.get('content') or msg.get('text') or ''\n                else:\n                    part = c.get('text', '')\n                if not part:\n                    part = c.get('text', '')\n                if part:\n                    parts.append(part)\n        if parts:\n            full_text = \"\\n\".join(parts)\n        else:\n            full_text = raw.get('text', json.dumps(raw, ensure_ascii=False))\n    else:\n        if 'message' in raw and isinstance(raw.get('message'), dict):\n            full_text = raw.get('message', {}).get('content', '')\n        elif 'text' in raw:\n            full_text = raw.get('text', '')\n        else:\n            full_text = json.dumps(raw, ensure_ascii=False)\nelif isinstance(raw, list):\n    items = []\n    for it in raw:\n        items.append(it if isinstance(it, str) else json.dumps(it, ensure_ascii=False))\n    full_text = \"\\n\".join(items)\nelse:\n    full_text = str(raw)\n\n# Extract title\ntitle_match = re.search(r'<title>(.*?)</title>', full_text, re.IGNORECASE | re.DOTALL)\nif title_match:\n    blog_title = title_match.group(1).strip()\n    full_text = re.sub(r'<title>.*?</title>', '', full_text, flags=re.IGNORECASE | re.DOTALL)\n\n# Extract category IDs\ncategory_ids_match = re.search(r'<category_ids>(.*?)</category_ids>', full_text, re.IGNORECASE | re.DOTALL)\nif category_ids_match:\n    category_ids_str = category_ids_match.group(1).strip()\n    # Convert to list of integers\n    try:\n        if category_ids_str:  # Only process if not empty\n            category_ids = [int(id.strip()) for id in category_ids_str.split(',') if id.strip()]\n        else:\n            category_ids = [1]  # Default to uncategorized if empty\n    except:\n        category_ids = [1]  # Default to uncategorized on error\n    full_text = re.sub(r'<category_ids>.*?</category_ids>', '', full_text, flags=re.IGNORECASE | re.DOTALL)\nelse:\n    category_ids = [1]  # Default to uncategorized\n\n# Extract tag IDs\ntag_ids_match = re.search(r'<tag_ids>(.*?)</tag_ids>', full_text, re.IGNORECASE | re.DOTALL)\nif tag_ids_match:\n    tag_ids_str = tag_ids_match.group(1).strip()\n    # Convert to list of integers\n    try:\n        if tag_ids_str:  # Only process if not empty\n            tag_ids = [int(id.strip()) for id in tag_ids_str.split(',') if id.strip()]\n        else:\n            tag_ids = []  # Empty list if no tags\n    except:\n        tag_ids = []  # Empty list on error\n    full_text = re.sub(r'<tag_ids>.*?</tag_ids>', '', full_text, flags=re.IGNORECASE | re.DOTALL)\nelse:\n    tag_ids = []  # Empty list if no tag_ids tag found\n\n# Extract image prompts and their captions\nimage_prompt_matches = re.findall(r'<image-prompt>(.*?)</image-prompt>', full_text, re.IGNORECASE | re.DOTALL)\nfor prompt in image_prompt_matches:\n    image_prompts.append(prompt.strip())\n    \n# Remove image prompts from content\nfull_text = re.sub(r'<image-prompt>.*?</image-prompt>', '', full_text, flags=re.IGNORECASE | re.DOTALL)\n\n# Also extract captions from placeholders if they exist\nimage_captions = []\nplaceholder_matches = re.findall(r'<figure[^>]*data-image-index=\"(\\d+)\"[^>]*>.*?<figcaption>(.*?)</figcaption>', full_text, re.IGNORECASE | re.DOTALL)\nfor idx, caption in placeholder_matches:\n    image_captions.append(caption.strip())\n\nblog_content = full_text.strip()\n\n# Create excerpt\nexcerpt_match = re.search(r'<p[^>]*>(.*?)</p>', blog_content, re.IGNORECASE | re.DOTALL)\nif excerpt_match:\n    blog_excerpt = re.sub(r'<[^>]+>', '', excerpt_match.group(1))[:200].strip()\nelse:\n    clean_text = re.sub(r'<[^>]+>', '', blog_content)\n    blog_excerpt = clean_text[:200].strip()\n\nif blog_excerpt and not blog_excerpt.endswith('.'):\n    blog_excerpt += '...'\n\noutput = {}\noutput['status'] = status\noutput['success'] = ai.get('success', True if status == 200 else False)\noutput['blog_content'] = blog_content\noutput['blog_title'] = blog_title\noutput['blog_excerpt'] = blog_excerpt\noutput['image_prompts'] = image_prompts\noutput['image_captions'] = image_captions\noutput['category_ids'] = category_ids\noutput['tag_ids'] = tag_ids\noutput['raw'] = raw",
+            "width": 200,
+            "height": 100
+          }
+        },
+        {
+          "id": "generate_image_1",
+          "type": "action",
+          "position": {
+            "x": 340.38216560509545,
+            "y": 2.1656050955413946
+          },
+          "data": {
+            "label": "Generate Image 1",
+            "config": {},
+            "appId": "01b8e055-537c-4446-8bb4-3e7ea556b31e",
+            "serviceId": "7767113f-10bf-450b-b35b-4b09388682d8",
+            "parameterMapping": {
+              "prompt": {
+                "source": "variable",
+                "value": "node_outputs.transform_extract.image_prompts[0]"
+              },
+              "model": {
+                "source": "static",
+                "value": "dall-e-3"
+              },
+              "size": {
+                "source": "static",
+                "value": "1024x1024"
+              },
+              "quality": {
+                "source": "static",
+                "value": "standard"
+              },
+              "n": {
+                "source": "static",
+                "value": 1
+              }
+            },
+            "parametersRaw": "",
+            "useParameterMapping": true,
+            "appName": "OpenAI",
+            "service": "create_image",
+            "serviceDisplayName": "Create Image",
+            "width": 200,
+            "height": 100
+          }
+        },
+        {
+          "id": "generate_image_2",
+          "type": "action",
+          "position": {
+            "x": 60.875796178343876,
+            "y": 158.6624203821656
+          },
+          "data": {
+            "label": "Generate Image 2",
+            "config": {},
+            "appId": "01b8e055-537c-4446-8bb4-3e7ea556b31e",
+            "serviceId": "7767113f-10bf-450b-b35b-4b09388682d8",
+            "parameterMapping": {
+              "prompt": {
+                "source": "variable",
+                "value": "node_outputs.transform_extract.image_prompts[1]"
+              },
+              "model": {
+                "source": "static",
+                "value": "dall-e-3"
+              },
+              "size": {
+                "source": "static",
+                "value": "1024x1024"
+              },
+              "quality": {
+                "source": "static",
+                "value": "standard"
+              },
+              "n": {
+                "source": "static",
+                "value": 1
+              }
+            },
+            "parametersRaw": "",
+            "useParameterMapping": true,
+            "appName": "OpenAI",
+            "service": "create_image",
+            "serviceDisplayName": "Create Image",
+            "width": 200,
+            "height": 100
+          }
+        },
+        {
+          "id": "transform_prep_upload_1",
+          "type": "transform",
+          "position": {
+            "x": 585.0955414012737,
+            "y": 6.194267515923599
+          },
+          "data": {
+            "label": "Prep Upload 1",
+            "config": {},
+            "script": "import json\nimport base64\nimport urllib.request\nimport io\n\n# Get image data from previous node\nimage1_data = node_outputs.get('generate_image_1', {})\nextract_data = node_outputs.get('transform_extract', {})\n\noutput = {}\noutput['success'] = False\noutput['image_url'] = ''\noutput['alt_text'] = extract_data.get('blog_title', '') + ' - Image 1'\noutput['caption'] = ''\n\n# Get caption if available\ncaptions = extract_data.get('image_captions', [])\nif len(captions) > 0:\n    output['caption'] = captions[0]\n\nif image1_data.get('status') == 200:\n    img1_raw = image1_data.get('data', {})\n    image_url = ''\n    \n    if isinstance(img1_raw, dict):\n        # Check for data array (DALL-E response format)\n        if 'data' in img1_raw and isinstance(img1_raw['data'], list) and len(img1_raw['data']) > 0:\n            image_url = img1_raw['data'][0].get('url', '')\n        elif 'url' in img1_raw:\n            image_url = img1_raw['url']\n    \n    if image_url:\n        try:\n            # Download the image\n            with urllib.request.urlopen(image_url) as response:\n                image_data = response.read()\n                \n            # Convert to base64 for WordPress upload\n            image_base64 = base64.b64encode(image_data).decode('utf-8')\n            \n            output['success'] = True\n            output['image_url'] = image_url\n            output['image_base64'] = image_base64\n            output['filename'] = 'blog-image-1.jpg'\n            output['mime_type'] = 'image/jpeg'\n        except Exception as e:\n            output['error'] = str(e)",
+            "width": 200,
+            "height": 100
+          }
+        },
+        {
+          "id": "transform_prep_upload_2",
+          "type": "transform",
+          "position": {
+            "x": 458.407643312102,
+            "y": 234.4426751592357
+          },
+          "data": {
+            "label": "Prep Upload 2",
+            "config": {},
+            "script": "import json\nimport base64\nimport urllib.request\nimport io\n\n# Get image data from previous node\nimage2_data = node_outputs.get('generate_image_2', {})\nextract_data = node_outputs.get('transform_extract', {})\n\noutput = {}\noutput['success'] = False\noutput['image_url'] = ''\noutput['alt_text'] = extract_data.get('blog_title', '') + ' - Image 2'\noutput['caption'] = ''\n\n# Get caption if available\ncaptions = extract_data.get('image_captions', [])\nif len(captions) > 1:\n    output['caption'] = captions[1]\n\nif image2_data.get('status') == 200:\n    img2_raw = image2_data.get('data', {})\n    image_url = ''\n    \n    if isinstance(img2_raw, dict):\n        # Check for data array (DALL-E response format)\n        if 'data' in img2_raw and isinstance(img2_raw['data'], list) and len(img2_raw['data']) > 0:\n            image_url = img2_raw['data'][0].get('url', '')\n        elif 'url' in img2_raw:\n            image_url = img2_raw['url']\n    \n    if image_url:\n        try:\n            # Download the image\n            with urllib.request.urlopen(image_url) as response:\n                image_data = response.read()\n                \n            # Convert to base64 for WordPress upload\n            image_base64 = base64.b64encode(image_data).decode('utf-8')\n            \n            output['success'] = True\n            output['image_url'] = image_url\n            output['image_base64'] = image_base64\n            output['filename'] = 'blog-image-2.jpg'\n            output['mime_type'] = 'image/jpeg'\n        except Exception as e:\n            output['error'] = str(e)",
+            "width": 200,
+            "height": 100
+          }
+        },
+        {
+          "id": "upload_media_1",
+          "type": "action",
+          "position": {
+            "x": 831.6719745222931,
+            "y": 36.003184713375816
+          },
+          "data": {
+            "label": "Upload Media 1",
+            "config": {},
+            "appId": "e97d4b5a-c245-4d68-8599-7a26e4ae9ddb",
+            "serviceId": "5800dca7-d287-432e-9f2a-f441e69f4b4d",
+            "parameterMapping": {
+              "file": {
+                "source": "static",
+                "value": "node_outputs.transform_prep_upload_1.image_base64"
+              },
+              "filename": {
+                "source": "variable",
+                "value": "{{node_outputs.transform_prep_upload_1.filename}}"
+              },
+              "mime_type": {
+                "source": "variable",
+                "value": "{{node_outputs.transform_prep_upload_1.mime_type}}"
+              },
+              "alt_text": {
+                "source": "variable",
+                "value": "{{node_outputs.transform_prep_upload_1.alt_text}}"
+              },
+              "caption": {
+                "source": "variable",
+                "value": "{{node_outputs.transform_prep_upload_1.caption}}"
+              }
+            },
+            "parametersRaw": "",
+            "useParameterMapping": true,
+            "appName": "WordPress",
+            "service": "upload_media",
+            "serviceDisplayName": "upload_media",
+            "width": 200,
+            "height": 100
+          }
+        },
+        {
+          "id": "upload_media_2",
+          "type": "action",
+          "position": {
+            "x": 798.1369426751592,
+            "y": 213.94904458598728
+          },
+          "data": {
+            "label": "Upload Media 2",
+            "config": {},
+            "appId": "e97d4b5a-c245-4d68-8599-7a26e4ae9ddb",
+            "serviceId": "5800dca7-d287-432e-9f2a-f441e69f4b4d",
+            "parameterMapping": {
+              "file": {
+                "source": "static",
+                "value": "node_outputs.transform_prep_upload_2.image_base64"
+              },
+              "filename": {
+                "source": "variable",
+                "value": "{{node_outputs.transform_prep_upload_2.filename}}"
+              },
+              "mime_type": {
+                "source": "variable",
+                "value": "{{node_outputs.transform_prep_upload_2.mime_type}}"
+              },
+              "alt_text": {
+                "source": "variable",
+                "value": "{{node_outputs.transform_prep_upload_2.alt_text}}"
+              },
+              "caption": {
+                "source": "variable",
+                "value": "{{node_outputs.transform_prep_upload_2.caption}}"
+              }
+            },
+            "parametersRaw": "",
+            "useParameterMapping": true,
+            "appName": "WordPress",
+            "service": "upload_media",
+            "serviceDisplayName": "upload_media",
+            "width": 200,
+            "height": 100
+          }
+        },
+        {
+          "id": "transform_final",
+          "type": "transform",
+          "position": {
+            "x": 1091.2898089171974,
+            "y": 101.68789808917194
+          },
+          "data": {
+            "label": "Prepare Final Content",
+            "config": {},
+            "script": "import json\nimport re\n\n# Get data from previous nodes\nextract_data = node_outputs.get('transform_extract', {})\nupload1_data = node_outputs.get('upload_media_1', {})\nupload2_data = node_outputs.get('upload_media_2', {})\n\nblog_title = extract_data.get('blog_title', 'Untitled Blog Post')\nblog_excerpt = extract_data.get('blog_excerpt', '')\nblog_content = extract_data.get('blog_content', '')\ncategory_ids = extract_data.get('category_ids', [1])\ntag_ids = extract_data.get('tag_ids', [])\nimage_captions = extract_data.get('image_captions', [])\n\n# Extract WordPress media URLs from upload responses\nwordpress_image_urls = []\nwordpress_image_ids = []\n\n# Process upload 1\nif upload1_data.get('status') == 200 or upload1_data.get('status') == 201:\n    media1_raw = upload1_data.get('data', {})\n    if isinstance(media1_raw, dict):\n        # WordPress media response typically includes source_url\n        media_url = media1_raw.get('source_url') or media1_raw.get('url') or media1_raw.get('guid', {}).get('rendered', '')\n        media_id = media1_raw.get('id', '')\n        if media_url:\n            wordpress_image_urls.append(media_url)\n            wordpress_image_ids.append(media_id)\n\n# Process upload 2\nif upload2_data.get('status') == 200 or upload2_data.get('status') == 201:\n    media2_raw = upload2_data.get('data', {})\n    if isinstance(media2_raw, dict):\n        # WordPress media response typically includes source_url\n        media_url = media2_raw.get('source_url') or media2_raw.get('url') or media2_raw.get('guid', {}).get('rendered', '')\n        media_id = media2_raw.get('id', '')\n        if media_url:\n            wordpress_image_urls.append(media_url)\n            wordpress_image_ids.append(media_id)\n\n# Replace image placeholders with actual WordPress media\nfinal_content = blog_content\nfor i, (url, media_id) in enumerate(zip(wordpress_image_urls, wordpress_image_ids), 1):\n    if url:\n        # Find the placeholder for this image index\n        placeholder_pattern = f'<figure[^>]*data-image-index=\"{i}\"[^>]*>.*?</figure>'\n        \n        # Build WordPress block editor compatible image\n        replacement = f'<!-- wp:image {{\"id\":{media_id},\"sizeSlug\":\"large\",\"linkDestination\":\"none\"}} -->\\n'\n        replacement += f'<figure class=\"wp-block-image size-large\">'\n        replacement += f'<img src=\"{url}\" alt=\"{blog_title} - Image {i}\" class=\"wp-image-{media_id}\"/>'\n        \n        # Add figcaption if exists\n        if i <= len(image_captions) and image_captions[i-1]:\n            replacement += f'<figcaption>{image_captions[i-1]}</figcaption>'\n        replacement += '</figure>\\n<!-- /wp:image -->'\n        \n        final_content = re.sub(placeholder_pattern, replacement, final_content, flags=re.IGNORECASE | re.DOTALL)\n\n# If no images were uploaded successfully, remove all placeholders\nif not wordpress_image_urls:\n    final_content = re.sub(r'<figure[^>]*class=\"image-placeholder\"[^>]*>.*?</figure>', '', final_content, flags=re.IGNORECASE | re.DOTALL)\n\n# Prepare the final data with featured image if available\noutput = {}\noutput['blog_title'] = blog_title\noutput['blog_excerpt'] = blog_excerpt\noutput['blog_content'] = final_content\noutput['wordpress_image_urls'] = wordpress_image_urls\noutput['wordpress_image_ids'] = wordpress_image_ids\noutput['category_ids'] = category_ids if category_ids else [1]  # Ensure at least uncategorized\noutput['tag_ids'] = tag_ids if tag_ids else []  # Can be empty array\noutput['success'] = True\n\n# Set first image as featured image if available\nif wordpress_image_ids:\n    output['featured_media'] = wordpress_image_ids[0]",
+            "width": 200,
+            "height": 100
+          }
+        },
+        {
+          "id": "action_wordpress",
+          "type": "action",
+          "position": {
+            "x": 1401.2101910828028,
+            "y": 97.96178343949049
+          },
+          "data": {
+            "label": "Publish to WordPress",
+            "config": {},
+            "appId": "e97d4b5a-c245-4d68-8599-7a26e4ae9ddb",
+            "serviceId": "5face2b2-328c-45fe-a7f3-2036ab1fb301",
+            "parameterMapping": {
+              "status": {
+                "source": "static",
+                "value": "draft"
+              },
+              "title": {
+                "source": "static",
+                "value": "node_outputs.transform_final.blog_title"
+              },
+              "content": {
+                "source": "variable",
+                "value": "{{node_outputs.transform_final.blog_content}}"
+              },
+              "excerpt": {
+                "source": "variable",
+                "value": "{{node_outputs.transform_final.blog_excerpt}}"
+              },
+              "categories": {
+                "source": "variable",
+                "value": "{{node_outputs.transform_final.category_ids}}"
+              },
+              "tags": {
+                "source": "variable",
+                "value": "{{node_outputs.transform_final.tag_ids}}"
+              },
+              "featured_media": {
+                "source": "variable",
+                "value": "{{node_outputs.transform_final.featured_media}}"
+              }
+            },
+            "parametersRaw": "",
+            "useParameterMapping": true,
+            "appName": "WordPress",
+            "service": "create_post",
+            "serviceDisplayName": "create_post",
+            "width": 200,
+            "height": 100
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "edge1",
+          "source": "trigger_1",
+          "target": "get_categories",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "label": null
+        },
+        {
+          "id": "edge2",
+          "source": "trigger_1",
+          "target": "get_tags",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "label": null
+        },
+        {
+          "id": "edge3",
+          "source": "get_categories",
+          "target": "ai_blog",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "label": null
+        },
+        {
+          "id": "edge4",
+          "source": "get_tags",
+          "target": "ai_blog",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "label": null
+        },
+        {
+          "id": "edge5",
+          "source": "ai_blog",
+          "target": "transform_extract",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "label": null
+        },
+        {
+          "id": "edge6",
+          "source": "transform_extract",
+          "target": "generate_image_1",
+          "sourceHandle": "bottom",
+          "targetHandle": "top",
+          "label": null
+        },
+        {
+          "id": "edge7",
+          "source": "transform_extract",
+          "target": "generate_image_2",
+          "sourceHandle": "bottom",
+          "targetHandle": "top",
+          "label": null
+        },
+        {
+          "id": "edge8",
+          "source": "generate_image_1",
+          "target": "transform_prep_upload_1",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "label": null
+        },
+        {
+          "id": "edge9",
+          "source": "generate_image_2",
+          "target": "transform_prep_upload_2",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "label": null
+        },
+        {
+          "id": "edge10",
+          "source": "transform_prep_upload_1",
+          "target": "upload_media_1",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "label": null
+        },
+        {
+          "id": "edge11",
+          "source": "transform_prep_upload_2",
+          "target": "upload_media_2",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "label": null
+        },
+        {
+          "id": "edge12",
+          "source": "upload_media_1",
+          "target": "transform_final",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "label": null
+        },
+        {
+          "id": "edge13",
+          "source": "upload_media_2",
+          "target": "transform_final",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "label": null
+        },
+        {
+          "id": "edge14",
+          "source": "transform_final",
+          "target": "action_wordpress",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "label": null
+        }
+      ]
+    },
+    "is_synchronous": false,
+    "sync_timeout": 30
+  },
+  "metadata": {
+    "required_applications": [],
+    "source_instance": {
+      "name": "IOFlow",
+      "version": "1.0"
+    }
+  }
+}

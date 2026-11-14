@@ -1,0 +1,1515 @@
+"""
+IOFlow MCP Server for Seed Application Management
+
+This MCP server exposes IOFlow's seed application management capabilities
+to external LLM applications, enabling them to discover, create, edit,
+test, and deploy seed applications autonomously.
+"""
+
+import os
+import sys
+import json
+import logging
+from typing import Dict, List, Optional, Any
+from pathlib import Path
+
+# Add backend to path for imports
+backend_path = str(Path(__file__).parent.parent)
+if backend_path not in sys.path:
+    sys.path.insert(0, backend_path)
+
+try:
+    from mcp.server import FastMCP
+    from mcp.types import TextContent
+    MCP_AVAILABLE = True
+except ImportError:
+    # Fallback for development without MCP installed
+    # Use stderr for warnings to not interfere with MCP protocol
+    import sys
+    print("Warning: MCP package not installed. Install with: pip install mcp", file=sys.stderr)
+    print("Using mock implementation for development.", file=sys.stderr)
+    
+    class Server:
+        def __init__(self, name):
+            self.name = name
+            self.tools = {}
+            self.resources = {}
+        
+        def tool(self):
+            def decorator(func):
+                self.tools[func.__name__] = func
+                return func
+            return decorator
+        
+        def resource(self, uri=None):
+            def decorator(func):
+                self.resources[uri or func.__name__] = func
+                return func
+            return decorator
+        
+        async def run(self):
+            import sys
+            print(f"Mock MCP Server '{self.name}' running...", file=sys.stderr)
+            print(f"Registered {len(self.tools)} tools and {len(self.resources)} resources", file=sys.stderr)
+            import asyncio
+            await asyncio.Event().wait()
+    
+    class TextContent:
+        def __init__(self, mimeType, text):
+            self.mimeType = mimeType
+            self.text = text
+
+from db.database import get_db
+from db.models import Tenant, User
+from db.application_models import Application, ApplicationService, ApplicationEvent
+from services.json_seed_manager import JsonSeedManager
+from core.security import AuthService
+
+# Import MCP server components
+from mcp_server.auth.mcp_auth import MCPAuthHandler
+from mcp_server.tools.exploration_tools import ExplorationTools
+from mcp_server.tools.management_tools import ManagementTools
+from mcp_server.tools.testing_tools import TestingTools
+from mcp_server.tools.deployment_tools import DeploymentTools
+from mcp_server.tools.documentation_tools import DocumentationTools
+from mcp_server.tools.flow_design_tools import FLOW_DESIGN_TOOLS
+from mcp_server.tools.flow_design_assistant import FLOW_DESIGN_ASSISTANT_TOOLS
+
+# Configure logging to stderr to avoid interfering with MCP protocol
+import sys
+logging.basicConfig(
+    level=logging.INFO,
+    stream=sys.stderr,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+class IOFlowMCPServer:
+    """Main MCP Server for IOFlow Seed Application Management"""
+    
+    def __init__(self):
+        self.server = Server("ioflow-seed-manager")
+        self.base_url = os.getenv("IOFLOW_BASE_URL", "http://localhost:7001")
+        self.api_key = os.getenv("IOFLOW_API_KEY")
+        
+        # Initialize components
+        self.seed_manager = JsonSeedManager()
+        self.auth_handler = MCPAuthHandler(self.base_url, self.api_key)
+        self.exploration_tools = ExplorationTools(self.seed_manager, self.auth_handler)
+        self.management_tools = ManagementTools(self.seed_manager, self.auth_handler)
+        self.testing_tools = TestingTools(self.seed_manager, self.auth_handler)
+        self.deployment_tools = DeploymentTools(self.seed_manager, self.auth_handler)
+        self.documentation_tools = DocumentationTools()
+        
+        # Initialize flow design tools
+        self.flow_design_tools = []
+        for tool_class in FLOW_DESIGN_TOOLS:
+            self.flow_design_tools.append(tool_class())
+        
+        # Register tools and resources
+        self._register_exploration_tools()
+        self._register_management_tools()
+        self._register_testing_tools()
+        self._register_deployment_tools()
+        self._register_documentation_tools()
+        self._register_flow_design_tools()
+        self._register_flow_design_assistant_tools()
+        self._register_resources()
+        
+        logger.info("IOFlow MCP Server initialized")
+    
+    def _register_exploration_tools(self):
+        """Register exploration service tools"""
+        
+        @self.server.tool()
+        async def explore_seed_applications(
+            category: Optional[str] = None,
+            auth_type: Optional[str] = None,
+            search_term: Optional[str] = None
+        ) -> Dict[str, Any]:
+            """
+            List all available seed applications with optional filters.
+            
+            Args:
+                category: Filter by category (Communication, Productivity, etc.)
+                auth_type: Filter by auth type (oauth2, api_key, basic, etc.)
+                search_term: Search in name or description
+                
+            Returns:
+                Dict with applications list and metadata
+            """
+            return await self.exploration_tools.list_seed_applications(
+                category=category,
+                auth_type=auth_type,
+                search_term=search_term
+            )
+        
+        @self.server.tool()
+        async def get_seed_application(app_key: str) -> Dict[str, Any]:
+            """
+            Get detailed information about a specific seed application.
+            
+            Args:
+                app_key: The unique key of the seed application
+                
+            Returns:
+                Complete seed application details including services and events
+            """
+            return await self.exploration_tools.get_application_details(app_key)
+        
+        @self.server.tool()
+        async def get_application_details(
+            app_name: str,
+            include_services: bool = True,
+            include_events: bool = True
+        ) -> Dict[str, Any]:
+            """
+            Get detailed information about a specific application by name.
+            
+            Args:
+                app_name: The name/key of the application (e.g., 'gmail', 'slack')
+                include_services: Include service details (default: True)
+                include_events: Include event details (default: True)
+                
+            Returns:
+                Complete application details including services and events
+            """
+            # This is an alias for get_seed_application to handle different call patterns
+            return await self.exploration_tools.get_application_details(app_name)
+        
+        @self.server.tool()
+        async def get_sample_application(
+            category: str = "Integration",
+            auth_type: Optional[str] = None,
+            has_webhooks: bool = False,
+            service_count: Optional[int] = None
+        ) -> Dict[str, Any]:
+            """
+            Get a complete sample seed application JSON for reference.
+            
+            Args:
+                category: Category of sample to retrieve
+                auth_type: Preferred authentication type
+                has_webhooks: Whether sample should include webhook events
+                service_count: Minimum number of services
+                
+            Returns:
+                Complete seed application JSON structure with annotations
+            """
+            criteria = {
+                "category": category,
+                "auth_type": auth_type,
+                "has_webhooks": has_webhooks,
+                "service_count": service_count
+            }
+            return await self.exploration_tools.get_sample_by_criteria(criteria)
+        
+        @self.server.tool()
+        async def explain_application_schema(
+            field_path: Optional[str] = None
+        ) -> Dict[str, Any]:
+            """
+            Explain the seed application JSON schema structure and requirements.
+            
+            Args:
+                field_path: Optional specific field to explain (e.g., "application.auth_config")
+                
+            Returns:
+                Detailed explanation of the schema with field descriptions
+            """
+            if field_path:
+                return await self.exploration_tools.explain_schema_field(field_path)
+            
+            # Return general schema explanation
+            return {
+                "schema_overview": "Seed applications are JSON files that define integrations in IOFlow",
+                "required_fields": {
+                    "key": "Unique identifier for the application (lowercase, underscore separated)",
+                    "application": "Main application configuration object"
+                },
+                "application_fields": {
+                    "app_name": "Human-readable name of the application",
+                    "app_type": "Type of application: database, email, api, file_system, memory, or flow",
+                    "app_scope": "Scope of application: global (available to all), tenant (organization-specific), or user (user-specific)",
+                    "description": "Brief description of what the application does",
+                    "category": "One of: Communication, Productivity, Analytics, Database, Integration, Other",
+                    "auth_type": "Authentication method: none, api_key, oauth2, basic, token_exchange, custom",
+                    "auth_config": "Configuration specific to the auth_type",
+                    "version": "Semantic version (e.g., 1.0.0)",
+                    "base_url": "Base URL for API calls",
+                    "icon_url": "URL to application icon"
+                },
+                "services": {
+                    "description": "Array of available actions/operations",
+                    "service_types": [
+                        "api_call - REST API calls",
+                        "webhook - Send webhooks",
+                        "email_send - Send emails",
+                        "database_query - Database operations",
+                        "llm_api_call - LLM API calls",
+                        "mcp_call - MCP protocol calls"
+                    ],
+                    "required_fields": ["name", "description", "service_type", "configuration"]
+                },
+                "events": {
+                    "description": "Array of triggers that can start flows",
+                    "event_types": [
+                        "webhook - Incoming webhooks",
+                        "schedule - Cron-based schedules",
+                        "polling - Periodic API polling",
+                        "manual - Manual triggers",
+                        "email - Email triggers",
+                        "form - Form submissions"
+                    ],
+                    "required_fields": ["name", "description", "event_type", "configuration"]
+                },
+                "parameter_schema": {
+                    "description": "JSON Schema format for defining input parameters",
+                    "supported_types": ["string", "number", "boolean", "object", "array"],
+                    "fields": ["name", "type", "required", "description", "default", "enum"]
+                },
+                "hint": "Use field_path parameter to get detailed explanation of specific fields"
+            }
+        
+        @self.server.tool()
+        async def get_application_categories() -> Dict[str, Any]:
+            """
+            Get all available application categories with counts.
+            
+            Returns:
+                Dict with list of categories and their application counts
+            """
+            return await self.exploration_tools.get_categories()
+        
+        @self.server.tool()
+        async def get_documentation(
+            doc_type: str = "comprehensive",
+            format: str = "markdown"
+        ) -> Dict[str, Any]:
+            """
+            Get documentation for creating seed applications.
+            
+            Args:
+                doc_type: Type of documentation to return:
+                    - "comprehensive": Full seed application guide
+                    - "quick_reference": Parameter mapping quick reference
+                    - "troubleshooting": Troubleshooting guide
+                    - "examples": Example applications
+                format: Format of the documentation (currently only "markdown" supported)
+                
+            Returns:
+                Dict with documentation content and metadata
+            """
+            return await self.exploration_tools.get_documentation(
+                doc_type=doc_type,
+                format=format
+            )
+    
+    def _register_management_tools(self):
+        """Register application management tools"""
+        
+        @self.server.tool()
+        async def create_seed_application(
+            app_key: str,
+            app_name: str,
+            app_type: str = "global",
+            category: str = "Integration",
+            auth_type: str = "api_key",
+            description: str = "",
+            base_url: str = "",
+            version: str = "1.0.0"
+        ) -> Dict[str, Any]:
+            """
+            Create a new seed application with basic configuration.
+            
+            Args:
+                app_key: Unique identifier (lowercase, underscore separated)
+                app_name: Human-readable name
+                app_type: Type of application (database, email, api, file_system, memory, flow)
+                app_scope: Scope of application (global, tenant, or user)
+                category: Application category
+                auth_type: Authentication method
+                description: Application description
+                base_url: Base API URL
+                version: Semantic version
+                
+            Returns:
+                Created application structure or error
+            """
+            return await self.management_tools.create_seed_application(
+                app_key=app_key,
+                app_name=app_name,
+                app_type=app_type,
+                category=category,
+                auth_type=auth_type,
+                description=description,
+                base_url=base_url,
+                version=version
+            )
+        
+        @self.server.tool()
+        async def edit_application_metadata(
+            app_key: str,
+            updates: Dict[str, Any]
+        ) -> Dict[str, Any]:
+            """
+            Edit metadata of an existing seed application.
+            
+            Args:
+                app_key: Application key to edit
+                updates: Dict of fields to update
+                
+            Returns:
+                Updated application or error
+            """
+            return await self.management_tools.edit_application_metadata(
+                app_key=app_key,
+                updates=updates
+            )
+        
+        @self.server.tool()
+        async def add_service_to_application(
+            app_key: str,
+            service_name: str,
+            service_type: str,
+            description: str,
+            configuration: Dict[str, Any],
+            parameters: Optional[List[Dict[str, Any]]] = None,
+            sample_input: Optional[Dict[str, Any]] = None,
+            sample_output: Optional[Dict[str, Any]] = None
+        ) -> Dict[str, Any]:
+            """
+            Add a new service to a seed application.
+            
+            Args:
+                app_key: Application to add service to
+                service_name: Unique service name (alphanumeric + underscore)
+                service_type: Type of service (api_call, webhook, etc.)
+                description: Service description
+                configuration: Service-specific configuration dict:
+                    For api_call services:
+                        - endpoint: URL endpoint with {{param}} placeholders  
+                        - request_config: Request configuration dict:
+                            - method: HTTP method (GET, POST, etc.)
+                            - parameter_method: How params are sent (url_pattern, body, query)
+                            - headers: Optional headers dict
+                            - body_template: For body params, maps IOFlow params to API params
+                            - query_params: For query params, maps IOFlow params to API params
+                parameters: List of parameter definitions. Format: 
+                    [
+                        {
+                            "name": "param_name",
+                            "type": "string",  # or number, boolean, object, array
+                            "required": true,  # or false
+                            "description": "Parameter description",
+                            "pattern": "^[A-Z]+$"  # optional regex
+                        }
+                    ]
+                    Note: Pass as a Python list, not a JSON string
+                sample_input: Example input data
+                sample_output: Example output data
+                
+            Returns:
+                Updated application or error
+            
+            Example:
+                configuration={
+                    "endpoint": "/verify/pan/{{pan_number}}",
+                    "request_config": {
+                        "method": "GET",
+                        "parameter_method": "url_pattern"
+                    }
+                }
+                parameters=[{
+                    "name": "pan_number",
+                    "type": "string",
+                    "required": True,
+                    "pattern": "^[A-Z]{5}[0-9]{4}[A-Z]{1}$"
+                }]
+            """
+            return await self.management_tools.add_service_to_application(
+                app_key=app_key,
+                service_name=service_name,
+                service_type=service_type,
+                description=description,
+                configuration=configuration,
+                parameters=parameters,
+                sample_input=sample_input,
+                sample_output=sample_output
+            )
+        
+        @self.server.tool()
+        async def add_event_to_application(
+            app_key: str,
+            event_name: str,
+            event_type: str,
+            description: str,
+            event_configuration: Dict[str, Any],
+            sample_payload: Optional[Dict[str, Any]] = None,
+            **kwargs
+        ) -> Dict[str, Any]:
+            """
+            Add a new event/trigger to a seed application.
+            
+            Args:
+                app_key: Application to add event to
+                event_name: Unique event name
+                event_type: Type of event (webhook, schedule, etc.)
+                description: Event description
+                event_configuration: Event-specific configuration
+                sample_payload: Example payload data
+                
+            Returns:
+                Updated application or error
+            """
+            # Check for common parameter mistakes
+            if 'configuration' in kwargs:
+                return {
+                    "error": "Invalid parameter 'configuration'",
+                    "message": "Use 'event_configuration' instead of 'configuration' for events",
+                    "hint": "Events use 'event_configuration' to match the database schema and seed application format"
+                }
+            
+            if kwargs:
+                return {
+                    "error": f"Unexpected parameters: {', '.join(kwargs.keys())}",
+                    "valid_parameters": ["app_key", "event_name", "event_type", "description", "event_configuration", "sample_payload"]
+                }
+            
+            return await self.management_tools.add_event_to_application(
+                app_key=app_key,
+                event_name=event_name,
+                event_type=event_type,
+                description=description,
+                configuration=event_configuration,
+                sample_payload=sample_payload
+            )
+        
+        @self.server.tool()
+        async def update_auth_configuration(
+            app_key: str,
+            auth_type: str,
+            auth_config: Dict[str, Any]
+        ) -> Dict[str, Any]:
+            """
+            Update authentication configuration for an application.
+            
+            Args:
+                app_key: Application key
+                auth_type: New authentication type
+                auth_config: Authentication configuration
+                
+            Returns:
+                Updated application or error
+            """
+            return await self.management_tools.update_auth_configuration(
+                app_key=app_key,
+                auth_type=auth_type,
+                auth_config=auth_config
+            )
+        
+        @self.server.tool()
+        async def delete_seed_application(
+            app_key: str,
+            confirm: bool = False
+        ) -> Dict[str, Any]:
+            """
+            Delete a seed application (requires confirmation).
+            
+            Args:
+                app_key: Application key to delete
+                confirm: Must be True to confirm deletion
+                
+            Returns:
+                Success status or error
+            """
+            return await self.management_tools.delete_seed_application(
+                app_key=app_key,
+                confirm=confirm
+            )
+    
+    def _register_testing_tools(self):
+        """Register testing framework tools"""
+        
+        @self.server.tool()
+        async def validate_application_schema(
+            app_key: str,
+            strict_mode: bool = True
+        ) -> Dict[str, Any]:
+            """
+            Validate seed application JSON structure against schema.
+            
+            Args:
+                app_key: Application key to validate
+                strict_mode: If True, enforce all best practices
+                
+            Returns:
+                Validation results with any errors or warnings
+            """
+            return await self.testing_tools.validate_application_schema(
+                app_key=app_key,
+                strict_mode=strict_mode
+            )
+        
+        @self.server.tool()
+        async def test_service_endpoint(
+            app_key: str,
+            service_name: str,
+            test_params: Optional[Dict[str, Any]] = None,
+            mock_auth: Optional[Dict[str, Any]] = None,
+            timeout: int = 30
+        ) -> Dict[str, Any]:
+            """
+            Test a specific service endpoint with mock data.
+            
+            Args:
+                app_key: Application key
+                service_name: Name of service to test
+                test_params: Test parameters (if None, uses sample or generates)
+                mock_auth: Mock authentication credentials
+                timeout: Request timeout in seconds
+                
+            Returns:
+                Test results including response data and timing
+            """
+            return await self.testing_tools.test_service_endpoint(
+                app_key=app_key,
+                service_name=service_name,
+                test_params=test_params,
+                mock_auth=mock_auth,
+                timeout=timeout
+            )
+        
+        @self.server.tool()
+        async def test_authentication(
+            app_key: str,
+            credentials: Dict[str, Any],
+            test_endpoint: Optional[str] = None
+        ) -> Dict[str, Any]:
+            """
+            Test authentication configuration for an application.
+            
+            Args:
+                app_key: Application key
+                credentials: Authentication credentials to test
+                test_endpoint: Optional specific endpoint to test auth against
+                
+            Returns:
+                Authentication test results
+            """
+            return await self.testing_tools.test_authentication(
+                app_key=app_key,
+                credentials=credentials,
+                test_endpoint=test_endpoint
+            )
+        
+        @self.server.tool()
+        async def test_parameter_extraction(
+            app_key: str,
+            service_name: str,
+            sample_data: Dict[str, Any]
+        ) -> Dict[str, Any]:
+            """
+            Test parameter extraction and mapping for a service.
+            
+            Args:
+                app_key: Application key
+                service_name: Service to test
+                sample_data: Sample data to test extraction
+                
+            Returns:
+                Extraction test results
+            """
+            return await self.testing_tools.test_parameter_extraction(
+                app_key=app_key,
+                service_name=service_name,
+                sample_data=sample_data
+            )
+        
+        @self.server.tool()
+        async def simulate_service_execution(
+            app_key: str,
+            service_name: str,
+            parameters: Dict[str, Any],
+            mock_response: Optional[Dict[str, Any]] = None
+        ) -> Dict[str, Any]:
+            """
+            Simulate full service execution without making actual API calls.
+            
+            Args:
+                app_key: Application key
+                service_name: Service to simulate
+                parameters: Input parameters
+                mock_response: Optional mock response data
+                
+            Returns:
+                Simulation results
+            """
+            return await self.testing_tools.simulate_service_execution(
+                app_key=app_key,
+                service_name=service_name,
+                parameters=parameters,
+                mock_response=mock_response
+            )
+        
+        @self.server.tool()
+        async def test_event_subscription(
+            app_key: str,
+            event_name: str,
+            sample_payload: Optional[Dict[str, Any]] = None
+        ) -> Dict[str, Any]:
+            """
+            Test event subscription and payload processing.
+            
+            Args:
+                app_key: Application key
+                event_name: Event to test
+                sample_payload: Optional payload to test with
+                
+            Returns:
+                Event test results
+            """
+            return await self.testing_tools.test_event_subscription(
+                app_key=app_key,
+                event_name=event_name,
+                sample_payload=sample_payload
+            )
+        
+        @self.server.tool()
+        async def generate_test_report(
+            app_key: str,
+            include_all_tests: bool = True
+        ) -> Dict[str, Any]:
+            """
+            Generate a comprehensive test report for an application.
+            
+            Args:
+                app_key: Application to test
+                include_all_tests: Run all tests if True
+                
+            Returns:
+                Comprehensive test report
+            """
+            return await self.testing_tools.generate_test_report(
+                app_key=app_key,
+                include_all_tests=include_all_tests
+            )
+        
+        @self.server.tool()
+        async def debug_failed_service(
+            test_id: str
+        ) -> Dict[str, Any]:
+            """
+            Debug a failed service test with detailed analysis.
+            
+            Args:
+                test_id: ID of the failed test
+                
+            Returns:
+                Debugging information and suggestions
+            """
+            return await self.testing_tools.debug_failed_service(test_id=test_id)
+    
+    def _register_deployment_tools(self):
+        """Register deployment and installation tools"""
+        
+        @self.server.tool()
+        async def install_application(
+            app_key: str,
+            pre_validate: bool = True,
+            force_reinstall: bool = False
+        ) -> Dict[str, Any]:
+            """
+            Install a seed application to IOFlow.
+            
+            Args:
+                app_key: Application key to install
+                pre_validate: Run validation before installation
+                force_reinstall: Force reinstall if already installed
+                
+            Returns:
+                Installation results
+            """
+            # Authenticate first
+            if not self.auth_handler.user_info:
+                auth_result = await self.auth_handler.validate_api_key()
+                if not auth_result:
+                    return {"error": "Authentication failed. Please check your API key."}
+            
+            return await self.deployment_tools.install_application(
+                app_key=app_key,
+                pre_validate=pre_validate,
+                force_reinstall=force_reinstall
+            )
+        
+        @self.server.tool()
+        async def uninstall_application(
+            app_key: str,
+            confirm: bool = False,
+            remove_subscriptions: bool = True
+        ) -> Dict[str, Any]:
+            """
+            Uninstall an application from IOFlow.
+            
+            Args:
+                app_key: Application key to uninstall
+                confirm: Must be True to confirm uninstallation
+                remove_subscriptions: Also remove all subscriptions
+                
+            Returns:
+                Uninstallation results
+            """
+            # Authenticate first
+            if not self.auth_handler.user_info:
+                auth_result = await self.auth_handler.validate_api_key()
+                if not auth_result:
+                    return {"error": "Authentication failed. Please check your API key."}
+            
+            return await self.deployment_tools.uninstall_application(
+                app_key=app_key,
+                confirm=confirm,
+                remove_subscriptions=remove_subscriptions
+            )
+        
+        @self.server.tool()
+        async def update_installed_application(
+            app_key: str,
+            backup_current: bool = True
+        ) -> Dict[str, Any]:
+            """
+            Update an installed application with latest seed version.
+            
+            Args:
+                app_key: Application key to update
+                backup_current: Backup current configuration
+                
+            Returns:
+                Update results
+            """
+            # Authenticate first
+            if not self.auth_handler.user_info:
+                auth_result = await self.auth_handler.validate_api_key()
+                if not auth_result:
+                    return {"error": "Authentication failed. Please check your API key."}
+            
+            return await self.deployment_tools.update_installed_application(
+                app_key=app_key,
+                backup_current=backup_current
+            )
+        
+        @self.server.tool()
+        async def list_installed_applications(
+            include_subscriptions: bool = False
+        ) -> Dict[str, Any]:
+            """
+            List all installed applications.
+            
+            Args:
+                include_subscriptions: Include subscription details
+                
+            Returns:
+                List of installed applications
+            """
+            # Authenticate first
+            if not self.auth_handler.user_info:
+                auth_result = await self.auth_handler.validate_api_key()
+                if not auth_result:
+                    return {"error": "Authentication failed. Please check your API key."}
+            
+            return await self.deployment_tools.list_installed_applications(
+                include_subscriptions=include_subscriptions
+            )
+        
+        @self.server.tool()
+        async def verify_deployment(
+            app_key: str,
+            run_tests: bool = True
+        ) -> Dict[str, Any]:
+            """
+            Verify that an application is properly deployed.
+            
+            Args:
+                app_key: Application key to verify
+                run_tests: Run basic tests on services
+                
+            Returns:
+                Verification results
+            """
+            return await self.deployment_tools.verify_deployment(
+                app_key=app_key,
+                run_tests=run_tests
+            )
+    
+    def _register_documentation_tools(self):
+        """Register documentation tools"""
+        
+        @self.server.tool()
+        async def ioflow_get_service_docs(
+            service_type: Optional[str] = None
+        ) -> TextContent:
+            """
+            Get documentation for creating IOFlow application services.
+            
+            Args:
+                service_type: Optional specific service type (api_call, webhook, database_query, etc.)
+                
+            Returns:
+                Service documentation and examples
+            """
+            results = await self.documentation_tools.handle_tool_call(
+                "ioflow_get_service_docs",
+                {"service_type": service_type}
+            )
+            return results[0] if results else TextContent(type="text", text="No documentation found")
+        
+        @self.server.tool()
+        async def ioflow_get_event_docs(
+            event_type: Optional[str] = None
+        ) -> TextContent:
+            """
+            Get documentation for creating IOFlow application events.
+            
+            Args:
+                event_type: Optional specific event type (webhook, schedule, polling, etc.)
+                
+            Returns:
+                Event documentation and examples
+            """
+            results = await self.documentation_tools.handle_tool_call(
+                "ioflow_get_event_docs",
+                {"event_type": event_type}
+            )
+            return results[0] if results else TextContent(type="text", text="No documentation found")
+        
+        @self.server.tool()
+        async def ioflow_get_app_guide() -> TextContent:
+            """
+            Get complete guide for creating IOFlow applications.
+            
+            Returns:
+                Comprehensive guide with best practices and examples
+            """
+            results = await self.documentation_tools.handle_tool_call(
+                "ioflow_get_app_guide",
+                {}
+            )
+            return results[0] if results else TextContent(type="text", text="No documentation found")
+        
+        @self.server.tool()
+        async def ioflow_search_docs(query: str) -> TextContent:
+            """
+            Search IOFlow documentation for specific terms.
+            
+            Args:
+                query: Search query
+                
+            Returns:
+                Search results from documentation
+            """
+            results = await self.documentation_tools.handle_tool_call(
+                "ioflow_search_docs",
+                {"query": query}
+            )
+            return results[0] if results else TextContent(type="text", text="No results found")
+    
+    def _register_flow_design_tools(self):
+        """Register flow design tools"""
+        
+        @self.server.tool()
+        async def flow_design_guidelines(
+            topic: str = "overview"
+        ) -> Dict[str, Any]:
+            """
+            Get detailed guidelines for designing flows in IOFlow.
+            
+            Args:
+                topic: Specific topic (overview, nodes, variables, triggers, actions, 
+                       transforms, conditions, loops, error_handling, best_practices, examples)
+                       Pass empty string or omit to get all topics.
+                
+            Returns:
+                Comprehensive guidelines for the requested topic
+            """
+            for tool in self.flow_design_tools:
+                if tool.name == "flow_design_guidelines":
+                    return await tool.run(topic=topic)
+            return {"error": "Flow design guidelines tool not found"}
+        
+        @self.server.tool()
+        async def get_flow_application_details(
+            app_name: Optional[str] = None,
+            include_services: bool = True,
+            include_events: bool = True,
+            only_connected: bool = False
+        ) -> str:
+            """
+            Get detailed information about applications for flow design, including IDs, services, and events.
+            
+            Args:
+                app_name: Name of specific application (optional)
+                include_services: Include service details (default: True)
+                include_events: Include event details (default: True)
+                only_connected: Only show connected applications (default: False)
+                
+            Returns:
+                Detailed application information with IDs for flow design
+            """
+            for tool in self.flow_design_tools:
+                if tool.name == "get_application_details":
+                    return await tool.run(
+                        app_name=app_name,
+                        include_services=include_services,
+                        include_events=include_events,
+                        only_connected=only_connected
+                    )
+            return "Application details tool not found"
+        
+        @self.server.tool()
+        async def create_flow_json(
+            flow_name: str,
+            description: str,
+            trigger_type: str,
+            trigger_config: Dict[str, Any],
+            nodes_config: List[Dict[str, Any]]
+        ) -> str:
+            """
+            Create a complete flow JSON structure for IOFlow.
+            
+            Args:
+                flow_name: Name of the flow
+                description: Flow description
+                trigger_type: Type of trigger (manual, webhook, schedule, application_event)
+                trigger_config: Trigger configuration dict
+                nodes_config: List of node configurations
+                
+            Returns:
+                Complete flow JSON ready for import
+            """
+            for tool in self.flow_design_tools:
+                if tool.name == "create_flow_json":
+                    return await tool.run(
+                        flow_name=flow_name,
+                        description=description,
+                        trigger_type=trigger_type,
+                        trigger_config=trigger_config,
+                        nodes_config=nodes_config
+                    )
+            return "Create flow JSON tool not found"
+        
+        @self.server.tool()
+        async def analyze_flow_requirements(
+            use_case: str,
+            source_app: Optional[str] = None,
+            target_app: Optional[str] = None,
+            data_volume: str = "medium",
+            frequency: Optional[str] = None
+        ) -> str:
+            """
+            Analyze requirements for a specific flow use case and suggest the best approach.
+            
+            Args:
+                use_case: Description of what the flow should accomplish
+                source_app: Source application name (optional)
+                target_app: Target application name (optional)
+                data_volume: Expected data volume (low, medium, high)
+                frequency: How often the flow should run (optional)
+                
+            Returns:
+                Detailed analysis with recommendations for flow design
+            """
+            for tool in self.flow_design_tools:
+                if tool.name == "analyze_flow_requirements":
+                    return await tool.run(
+                        use_case=use_case,
+                        source_app=source_app,
+                        target_app=target_app,
+                        data_volume=data_volume,
+                        frequency=frequency
+                    )
+            return "Analyze flow requirements tool not found"
+        
+        @self.server.tool()
+        async def create_or_update_flow(
+            flow_name: str,
+            flow_definition: Dict[str, Any],
+            description: Optional[str] = None,
+            flow_id: Optional[str] = None,
+            is_update: bool = False,
+            activate: bool = False,
+            is_synchronous: bool = False,
+            sync_timeout: int = 30
+        ) -> str:
+            """
+            Create a new flow or update an existing flow in IOFlow.
+            
+            Args:
+                flow_name: Name of the flow
+                flow_definition: Complete flow definition with nodes and edges
+                description: Optional description of the flow
+                flow_id: ID of existing flow (required for updates)
+                is_update: If True, update existing flow; if False, create new
+                activate: If True, activate the flow after creation/update
+                is_synchronous: If True, flow will run synchronously
+                sync_timeout: Timeout in seconds for synchronous flows
+            
+            Returns:
+                Success message with flow ID or error details
+            """
+            for tool in self.flow_design_tools:
+                if tool.name == "create_or_update_flow":
+                    result = await tool.run(
+                        flow_name=flow_name,
+                        flow_definition=flow_definition,
+                        description=description,
+                        flow_id=flow_id,
+                        is_update=is_update,
+                        activate=activate,
+                        is_synchronous=is_synchronous,
+                        sync_timeout=sync_timeout
+                    )
+                    return result.text
+            return "Create or update flow tool not found"
+        
+        @self.server.tool()
+        async def list_flows(
+            search_name: Optional[str] = None,
+            status: Optional[str] = None,
+            trigger_type: Optional[str] = None,
+            limit: int = 20
+        ) -> str:
+            """
+            List all flows or search for specific flows by criteria.
+            
+            Args:
+                search_name: Optional partial flow name to search for
+                status: Optional status filter (active, inactive, draft)
+                trigger_type: Optional trigger type filter (manual, schedule, webhook, etc.)
+                limit: Maximum number of flows to return
+            
+            Returns:
+                List of flows with their details
+            """
+            for tool in self.flow_design_tools:
+                if tool.name == "list_flows":
+                    result = await tool.run(
+                        search_name=search_name,
+                        status=status,
+                        trigger_type=trigger_type,
+                        limit=limit
+                    )
+                    return result.text
+            return "List flows tool not found"
+        
+        @self.server.tool()
+        async def delete_flow(
+            flow_id: Optional[str] = None,
+            flow_name: Optional[str] = None,
+            confirm: bool = False
+        ) -> str:
+            """
+            Delete a flow from IOFlow (permanent action).
+            
+            Args:
+                flow_id: ID of the flow to delete
+                flow_name: Name of the flow to delete (if ID not provided)
+                confirm: Must be True to confirm deletion
+            
+            Returns:
+                Confirmation message or error
+            """
+            for tool in self.flow_design_tools:
+                if tool.name == "delete_flow":
+                    result = await tool.run(
+                        flow_id=flow_id,
+                        flow_name=flow_name,
+                        confirm=confirm
+                    )
+                    return result.text
+            return "Delete flow tool not found"
+    
+    def _register_flow_design_assistant_tools(self):
+        """Register flow design assistant tools"""
+        
+        @self.server.tool()
+        async def get_flow_node_template(
+            node_type: str,
+            example_data: Optional[Dict] = None
+        ) -> Dict[str, Any]:
+            """
+            Get a properly structured template for a specific node type.
+            
+            This tool helps ensure nodes have all required fields for both backend execution 
+            and frontend UI display.
+            
+            Args:
+                node_type: The type of node (trigger, action, transform, condition, loop, response)
+                example_data: Optional data to merge with the template
+                
+            Returns:
+                Complete node template with all required fields
+            """
+            from mcp_server.tools.flow_design_assistant import FlowDesignAssistant
+            return FlowDesignAssistant.get_node_template(node_type, example_data)
+        
+        @self.server.tool()
+        async def get_flow_edge_template(
+            source_id: str,
+            target_id: str,
+            source_handle: str = "output",
+            target_handle: str = "input"
+        ) -> Dict[str, Any]:
+            """
+            Get a properly structured edge template for connecting nodes.
+            
+            Args:
+                source_id: ID of the source node
+                target_id: ID of the target node
+                source_handle: Source handle name (default: 'output')
+                target_handle: Target handle name (default: 'input')
+                
+            Returns:
+                Complete edge template
+            """
+            from mcp_server.tools.flow_design_assistant import FlowDesignAssistant
+            return FlowDesignAssistant.get_edge_template(source_id, target_id, source_handle, target_handle)
+        
+        @self.server.tool()
+        async def get_common_flow_patterns() -> Dict[str, Any]:
+            """
+            Get examples of common flow patterns with proper structure.
+            
+            Returns well-structured flow patterns that can be used as templates or learning examples.
+            Patterns include: webhook_to_action, conditional_processing, loop_processing
+            
+            Returns:
+                Dictionary of flow patterns with descriptions and complete flow definitions
+            """
+            from mcp_server.tools.flow_design_assistant import FlowDesignAssistant
+            return FlowDesignAssistant.get_common_patterns()
+        
+        @self.server.tool()
+        async def validate_and_fix_flow(
+            flow_definition: Dict[str, Any]
+        ) -> Dict[str, Any]:
+            """
+            Validate a flow definition and automatically fix common issues.
+            
+            This tool checks for:
+            - Missing required fields (labels, display names, positions)
+            - Improper edge configurations
+            - Missing UI-required fields for action nodes
+            - Other structural issues
+            
+            Args:
+                flow_definition: The flow definition to validate and fix
+                
+            Returns:
+                Dictionary containing:
+                - fixed_flow: The corrected flow definition
+                - issues_fixed: List of issues that were corrected
+                - is_valid: Whether the original flow was valid
+            """
+            from mcp_server.tools.flow_design_assistant import FlowDesignAssistant
+            return FlowDesignAssistant.validate_and_fix_flow(flow_definition)
+    
+    def _register_resources(self):
+        """Register read-only resources"""
+        
+        @self.server.resource("seed-apps://catalog")
+        async def get_catalog() -> TextContent:
+            """Get the complete seed applications catalog"""
+            try:
+                seed_apps = self.seed_manager.discover_seed_applications()
+                
+                catalog = {
+                    "total_applications": len(seed_apps),
+                    "applications": []
+                }
+                
+                for app_key, app_data in seed_apps.items():
+                    app_info = app_data.get("application", {})
+                    catalog["applications"].append({
+                        "key": app_key,
+                        "name": app_info.get("app_name"),
+                        "category": app_info.get("category"),
+                        "auth_type": app_info.get("auth_type"),
+                        "description": app_info.get("description"),
+                        "uri": f"seed-apps://catalog/{app_key}"
+                    })
+                
+                return TextContent(
+                    mimeType="application/json",
+                    text=json.dumps(catalog, indent=2)
+                )
+                
+            except Exception as e:
+                logger.error(f"Error getting catalog: {str(e)}")
+                return TextContent(
+                    mimeType="application/json",
+                    text=json.dumps({"error": str(e)})
+                )
+        
+        @self.server.resource("seed-apps://catalog/{app_key}")
+        async def get_application_details(app_key: str) -> TextContent:
+            """Get detailed information for a specific seed application"""
+            try:
+                seed_apps = self.seed_manager.discover_seed_applications()
+                
+                if app_key not in seed_apps:
+                    return TextContent(
+                        mimeType="application/json",
+                        text=json.dumps({"error": f"Application '{app_key}' not found"})
+                    )
+                
+                return TextContent(
+                    mimeType="application/json",
+                    text=json.dumps(seed_apps[app_key], indent=2)
+                )
+                
+            except Exception as e:
+                logger.error(f"Error getting application details: {str(e)}")
+                return TextContent(
+                    mimeType="application/json",
+                    text=json.dumps({"error": str(e)})
+                )
+        
+        @self.server.resource("seed-apps://schema")
+        async def get_schema() -> TextContent:
+            """Get the JSON schema for seed applications"""
+            try:
+                from mcp_server.validators.schema_validator import SchemaValidator
+                validator = SchemaValidator()
+                
+                schema = {
+                    "application_schema": validator.application_schema,
+                    "parameter_schema": validator.parameter_schema,
+                    "service_types": [
+                        "api_call", "webhook", "email_send", 
+                        "database_query", "llm_api_call", "mcp_call"
+                    ],
+                    "event_types": [
+                        "webhook", "schedule", "polling", 
+                        "manual", "email", "form"
+                    ],
+                    "auth_types": [
+                        "none", "api_key", "oauth2", 
+                        "basic", "token_exchange", "custom"
+                    ],
+                    "categories": [
+                        "Communication", "Productivity", "Analytics", 
+                        "Database", "Integration", "Other"
+                    ]
+                }
+                
+                return TextContent(
+                    mimeType="application/json",
+                    text=json.dumps(schema, indent=2)
+                )
+                
+            except Exception as e:
+                logger.error(f"Error getting schema: {str(e)}")
+                return TextContent(
+                    mimeType="application/json",
+                    text=json.dumps({"error": str(e)})
+                )
+        
+        @self.server.resource("seed-apps://templates/{category}")
+        async def get_category_template(category: str) -> TextContent:
+            """Get a template for creating applications in a specific category"""
+            try:
+                templates = {
+                    "Integration": {
+                        "key": "your_integration_key",
+                        "application": {
+                            "app_name": "Your Integration",
+                            "app_type": "global",
+                            "description": "Integration with external service",
+                            "category": "Integration",
+                            "auth_type": "api_key",
+                            "auth_config": {
+                                "header_name": "X-API-Key"
+                            },
+                            "version": "1.0.0",
+                            "base_url": "https://api.example.com",
+                            "icon_url": "https://example.com/icon.png"
+                        },
+                        "services": [
+                            {
+                                "service_name": "fetch_data",
+                                "description": "Fetch data from the API",
+                                "service_type": "api_call",
+                                "endpoint_url": "{{base_url}}/api/v1/data",
+                                "http_method": "GET",
+                                "request_config": {
+                                    "parameter_method": "query",
+                                    "headers_template": {
+                                        "X-API-Key": "{{auth.api_key}}"
+                                    }
+                                },
+                                "parameter_schema": {
+                                    "type": "object",
+                                    "properties": {},
+                                    "required": []
+                                },
+                                "timeout_seconds": 30
+                            }
+                        ],
+                        "events": [],
+                        "metadata": {
+                            "author": "Your Name",
+                            "tags": ["integration", "api"]
+                        }
+                    },
+                    "Communication": {
+                        "key": "your_comm_key",
+                        "application": {
+                            "app_name": "Your Communication App",
+                            "app_type": "global",
+                            "description": "Send messages and notifications",
+                            "category": "Communication",
+                            "auth_type": "oauth2",
+                            "auth_config": {
+                                "auth_url": "https://example.com/oauth/authorize",
+                                "token_url": "https://example.com/oauth/token"
+                            },
+                            "version": "1.0.0",
+                            "base_url": "https://api.example.com",
+                            "icon_url": "https://example.com/icon.png"
+                        },
+                        "services": [
+                            {
+                                "service_name": "send_message",
+                                "description": "Send a message",
+                                "service_type": "api_call",
+                                "endpoint_url": "{{base_url}}/api/v1/messages",
+                                "http_method": "POST",
+                                "request_config": {
+                                    "parameter_method": "body",
+                                    "headers_template": {
+                                        "Authorization": "Bearer {{auth.access_token}}",
+                                        "Content-Type": "application/json"
+                                    },
+                                    "body_template": {
+                                        "recipient": "{{recipient}}",
+                                        "content": "{{message}}"
+                                    }
+                                },
+                                "parameter_schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "recipient": {
+                                            "type": "string",
+                                            "description": "Message recipient"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Message content"
+                                        }
+                                    },
+                                    "required": ["recipient", "message"]
+                                },
+                                "timeout_seconds": 30
+                            }
+                        ],
+                        "events": [
+                            {
+                                "event_name": "message_received",
+                                "description": "Triggered when a message is received",
+                                "event_type": "webhook",
+                                "configuration": {
+                                    "webhook_url": "/webhooks/messages"
+                                },
+                                "sample_payload": {
+                                    "from": "+1234567890",
+                                    "content": "Hello",
+                                    "timestamp": "2024-01-01T00:00:00Z"
+                                }
+                            }
+                        ],
+                        "metadata": {
+                            "author": "Your Name",
+                            "tags": ["communication", "messaging"]
+                        }
+                    }
+                }
+                
+                template = templates.get(category, templates["Integration"])
+                
+                return TextContent(
+                    mimeType="application/json",
+                    text=json.dumps(template, indent=2)
+                )
+                
+            except Exception as e:
+                logger.error(f"Error getting template: {str(e)}")
+                return TextContent(
+                    mimeType="application/json",
+                    text=json.dumps({"error": str(e)})
+                )
+        
+        @self.server.resource("seed-apps://docs")
+        async def get_documentation() -> TextContent:
+            """Get documentation for creating seed applications"""
+            try:
+                docs = {
+                    "overview": "Seed applications are JSON-based templates that define integrations in IOFlow",
+                    "quick_start": [
+                        "1. Use explore_seed_applications to see available apps",
+                        "2. Use get_sample_application to get a template",
+                        "3. Use create_seed_application to create your app",
+                        "4. Add services with add_service_to_application",
+                        "5. Test with validate_application_schema",
+                        "6. Install with install_application"
+                    ],
+                    "best_practices": [
+                        "Always include descriptive names and descriptions",
+                        "Provide sample input/output for services",
+                        "Use semantic versioning (x.y.z)",
+                        "Include proper authentication configuration",
+                        "Test services before deployment"
+                    ],
+                    "common_patterns": {
+                        "api_integration": {
+                            "description": "REST API integration pattern",
+                            "key_points": [
+                                "Use api_call service type",
+                                "Configure proper headers",
+                                "Handle pagination if needed",
+                                "Include error handling"
+                            ]
+                        },
+                        "webhook_receiver": {
+                            "description": "Webhook event receiver pattern",
+                            "key_points": [
+                                "Use webhook event type",
+                                "Configure webhook URL",
+                                "Define payload extraction",
+                                "Handle signature validation"
+                            ]
+                        }
+                    }
+                }
+                
+                return TextContent(
+                    mimeType="application/json",
+                    text=json.dumps(docs, indent=2)
+                )
+                
+            except Exception as e:
+                logger.error(f"Error getting documentation: {str(e)}")
+                return TextContent(
+                    mimeType="application/json",
+                    text=json.dumps({"error": str(e)})
+                )
+    
+    async def run(self):
+        """Run the MCP server"""
+        logger.info("Starting IOFlow MCP Server...")
+        await self.server.run()
+
+# Main entry point
+if __name__ == "__main__":
+    import asyncio
+    
+    server = IOFlowMCPServer()
+    asyncio.run(server.run())

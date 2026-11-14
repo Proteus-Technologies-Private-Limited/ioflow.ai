@@ -1,0 +1,158 @@
+{
+  "nodes": [
+    {
+      "id": "trigger_1",
+      "type": "trigger",
+      "position": {
+        "x": -81.33333333333337,
+        "y": -110.00000000000001
+      },
+      "data": {
+        "label": "Trigger",
+        "triggerType": "manual",
+        "manualVariables": [
+          {
+            "id": 1756188184583,
+            "name": "topic",
+            "displayName": "Topic to blog on",
+            "description": "",
+            "dataType": "string",
+            "uiControl": "textarea",
+            "required": false,
+            "defaultValue": "Write blog about impact of agentic AI software in Indian manufacturing sector",
+            "validation": {},
+            "order": 0
+          }
+        ],
+        "config": {},
+        "executeImmediately": null
+      },
+      "width": 200,
+      "height": 80
+    },
+    {
+      "id": "action_1",
+      "type": "action",
+      "position": {
+        "x": 356.30785562632684,
+        "y": 23.49628450106158
+      },
+      "data": {
+        "label": "Publish to Wordpress",
+        "config": {},
+        "appId": "e97d4b5a-c245-4d68-8599-7a26e4ae9ddb",
+        "serviceId": "5face2b2-328c-45fe-a7f3-2036ab1fb301",
+        "parameterMapping": {
+          "status": "draft",
+          "title": "{{node_outputs.transform_1.blog_title}}",
+          "content": "{{node_outputs.transform_1.blog_content}}",
+          "excerpt": "{{node_outputs.transform_1.blog_excerpt}}",
+          "categories": [
+            1
+          ]
+        },
+        "parameters": {
+          "status": "draft",
+          "title": "{{node_outputs.transform_1.blog_title}}",
+          "content": "{{node_outputs.transform_1.blog_content}}",
+          "excerpt": "{{node_outputs.transform_1.blog_excerpt}}",
+          "categories": [
+            1
+          ]
+        },
+        "parametersRaw": "",
+        "useParameterMapping": true,
+        "appName": "WordPress",
+        "service": "create_post",
+        "serviceDisplayName": "create_post"
+      },
+      "width": 194,
+      "height": 124
+    },
+    {
+      "id": "ai_blog",
+      "type": "action",
+      "position": {
+        "x": -100.00000000000011,
+        "y": 11.999999999999943
+      },
+      "data": {
+        "label": "Generate Blog",
+        "config": {},
+        "appId": "01b8e055-537c-4446-8bb4-3e7ea556b31e",
+        "serviceId": "fc508636-d815-49e1-a374-495d73ff5393",
+        "parameterMapping": {},
+        "parameters": {
+          "model": "gpt-5-mini",
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are a highly experienced blogger. You always write in business formal yet interesting manner. \n\nIMPORTANT: Structure your response as follows:\n1. Start with a compelling title wrapped in <title> tags\n2. Follow with the blog content in pure HTML (use <h1>/<h2>/<p>/<ul>/<pre><code>... No outer <html> or <body>)\n3. Include <figure><img> blocks for inline images with <figcaption> where appropriate\n\nExample format:\n<title>Your Compelling Blog Title Here</title>\n<h1>Main Heading</h1>\n<p>Your content...</p>\n..."
+            },
+            {
+              "role": "user",
+              "content": "{{input.topic}}"
+            }
+          ]
+        },
+        "parametersRaw": "{\n  \"model\": \"gpt-5-mini\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a highly experienced blogger. You always write in business formal yet interesting manner. \\n\\nIMPORTANT: Structure your response as follows:\\n1. Start with a compelling title wrapped in <title> tags\\n2. Follow with the blog content in pure HTML (use <h1>/<h2>/<p>/<ul>/<pre><code>... No outer <html> or <body>)\\n3. Include <figure><img> blocks for inline images with <figcaption> where appropriate\\n\\nExample format:\\n<title>Your Compelling Blog Title Here</title>\\n<h1>Main Heading</h1>\\n<p>Your content...</p>\\n...\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{input.topic}}\"\n    }\n  ]\n}",
+        "useParameterMapping": false,
+        "appName": "OpenAI",
+        "service": "create_chat_completion",
+        "serviceDisplayName": "Create Chat Completion"
+      },
+      "width": 172,
+      "height": 124
+    },
+    {
+      "id": "transform_1",
+      "type": "transform",
+      "position": {
+        "x": 108.27441613588104,
+        "y": 20.287685774946937
+      },
+      "data": {
+        "label": "Extract Title & Content",
+        "config": {},
+        "script": "import json\nimport re\n\nai = node_outputs.get('ai_blog', {})\nstatus = ai.get('status', None)\nraw = ai.get('data', '')\nblog_content = ''\nblog_title = 'Untitled Blog Post'  # Default title\nblog_excerpt = ''\n\n# Extract the actual text content from the AI response\nfull_text = ''\nif isinstance(raw, str):\n    full_text = raw\nelif isinstance(raw, dict):\n    choices = raw.get('choices')\n    if isinstance(choices, list) and len(choices) > 0:\n        parts = []\n        for c in choices:\n            if isinstance(c, dict):\n                msg = c.get('message') or c.get('delta') or {}\n                if isinstance(msg, dict):\n                    part = msg.get('content') or msg.get('text') or ''\n                else:\n                    part = c.get('text', '')\n                if not part:\n                    part = c.get('text', '')\n                if part:\n                    parts.append(part)\n        if parts:\n            full_text = \"\\n\".join(parts)\n        else:\n            full_text = raw.get('text', json.dumps(raw, ensure_ascii=False))\n    else:\n        if 'message' in raw and isinstance(raw.get('message'), dict):\n            full_text = raw.get('message', {}).get('content', '')\n        elif 'text' in raw:\n            full_text = raw.get('text', '')\n        else:\n            full_text = json.dumps(raw, ensure_ascii=False)\nelif isinstance(raw, list):\n    items = []\n    for it in raw:\n        items.append(it if isinstance(it, str) else json.dumps(it, ensure_ascii=False))\n    full_text = \"\\n\".join(items)\nelse:\n    full_text = str(raw)\n\n# Extract title from the full text\n# Look for <title> tags first\ntitle_match = re.search(r'<title>(.*?)</title>', full_text, re.IGNORECASE | re.DOTALL)\nif title_match:\n    blog_title = title_match.group(1).strip()\n    # Remove the title tags from the content\n    blog_content = re.sub(r'<title>.*?</title>', '', full_text, flags=re.IGNORECASE | re.DOTALL).strip()\nelse:\n    # If no <title> tags, try to extract from <h1> tag\n    h1_match = re.search(r'<h1[^>]*>(.*?)</h1>', full_text, re.IGNORECASE | re.DOTALL)\n    if h1_match:\n        blog_title = re.sub(r'<[^>]+>', '', h1_match.group(1)).strip()  # Remove any nested HTML tags\n    blog_content = full_text\n\n# Create excerpt from the first paragraph or first 200 characters\n# Try to find the first <p> tag\nexcerpt_match = re.search(r'<p[^>]*>(.*?)</p>', blog_content, re.IGNORECASE | re.DOTALL)\nif excerpt_match:\n    blog_excerpt = re.sub(r'<[^>]+>', '', excerpt_match.group(1))[:200].strip()\nelse:\n    # Fall back to first 200 characters without HTML\n    clean_text = re.sub(r'<[^>]+>', '', blog_content)\n    blog_excerpt = clean_text[:200].strip()\n\n# Clean up the excerpt\nif blog_excerpt and not blog_excerpt.endswith('.'):\n    blog_excerpt += '...'\n\noutput = {}\noutput['status'] = status\noutput['success'] = ai.get('success', True if status == 200 else False)\noutput['blog_content'] = blog_content\noutput['blog_title'] = blog_title\noutput['blog_excerpt'] = blog_excerpt\noutput['raw'] = raw\noutput['debug_full_text'] = full_text[:500]  # For debugging purposes"
+      },
+      "width": 191,
+      "height": 108
+    }
+  ],
+  "edges": [
+    {
+      "id": "reactflow__edge-trigger_1bottom-ai_blogtop",
+      "source": "trigger_1",
+      "target": "ai_blog",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "label": null,
+      "markerEnd": {
+        "type": "arrowclosed"
+      }
+    },
+    {
+      "id": "reactflow__edge-ai_blogright-transform_1left",
+      "source": "ai_blog",
+      "target": "transform_1",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "label": null,
+      "markerEnd": {
+        "type": "arrowclosed"
+      }
+    },
+    {
+      "id": "reactflow__edge-transform_1right-action_1left",
+      "source": "transform_1",
+      "target": "action_1",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "label": null,
+      "markerEnd": {
+        "type": "arrowclosed"
+      }
+    }
+  ]
+}

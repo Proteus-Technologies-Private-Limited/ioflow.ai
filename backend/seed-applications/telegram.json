@@ -1,0 +1,1882 @@
+{
+  "key": "telegram",
+  "application": {
+    "app_name": "Telegram",
+    "app_type": "api",
+    "category": "Messaging",
+    "auth_type": "api_key",
+    "description": "Integration with the Telegram Bot API to send and receive messages and manage chats.",
+    "base_url": "https://api.telegram.org",
+    "version": "1.0.38",
+    "auth_config": {
+      "header_name": "Authorization"
+    }
+  },
+  "services": [
+    {
+      "service_name": "send_message",
+      "display_name": "Send Message",
+      "description": "Sends a text message to a chat or user via the Telegram Bot API",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/sendMessage",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "description": "Telegram bot token",
+            "x-secret": true
+          },
+          "chat_id": {
+            "type": "string",
+            "description": "Unique identifier for the target chat or username of the target channel (in the format @channelusername)"
+          },
+          "text": {
+            "type": "string",
+            "description": "Text of the message to be sent"
+          },
+          "parse_mode": {
+            "type": "string",
+            "description": "Send Markdown or HTML, options: MarkdownV2, Markdown, HTML"
+          },
+          "disable_web_page_preview": {
+            "type": "boolean",
+            "description": "Disables link previews for links in this message"
+          },
+          "disable_notification": {
+            "type": "boolean",
+            "description": "Sends the message silently"
+          },
+          "reply_to_message_id": {
+            "type": "integer",
+            "description": "If the message is a reply, ID of the original message"
+          },
+          "reply_markup": {
+            "type": "object",
+            "description": "Additional interface options (inline keyboard, etc.)"
+          }
+        },
+        "required": [
+          "bot_token",
+          "chat_id",
+          "text"
+        ]
+      }
+    },
+    {
+      "service_name": "send_photo",
+      "display_name": "Send Photo",
+      "description": "Sends a photo to a chat via the Telegram Bot API",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/sendPhoto",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "multipart/form-data"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "description": "Telegram bot token",
+            "x-secret": true
+          },
+          "chat_id": {
+            "type": "string",
+            "description": "Target chat id or channel username"
+          },
+          "photo": {
+            "type": "string",
+            "description": "Photo file to send (multipart/form-data) or file_id for existing photo"
+          },
+          "caption": {
+            "type": "string",
+            "description": "Photo caption"
+          },
+          "parse_mode": {
+            "type": "string",
+            "description": "MarkdownV2, Markdown, or HTML"
+          },
+          "disable_notification": {
+            "type": "boolean",
+            "description": "Sends the message silently"
+          },
+          "reply_to_message_id": {
+            "type": "integer",
+            "description": "If the message is a reply, ID of the original message"
+          },
+          "reply_markup": {
+            "type": "object",
+            "description": "Additional interface options"
+          }
+        },
+        "required": [
+          "bot_token",
+          "chat_id",
+          "photo"
+        ]
+      }
+    },
+    {
+      "service_name": "send_document",
+      "display_name": "Send Document",
+      "description": "Sends general files (documents) to a chat via the Telegram Bot API",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/sendDocument",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "multipart/form-data"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "description": "Telegram bot token",
+            "x-secret": true
+          },
+          "chat_id": {
+            "type": "string",
+            "description": "Target chat id or channel username"
+          },
+          "document": {
+            "type": "string",
+            "description": "File to send (multipart/form-data) or file_id for existing document"
+          },
+          "caption": {
+            "type": "string",
+            "description": "Document caption"
+          },
+          "disable_notification": {
+            "type": "boolean",
+            "description": "Sends the message silently"
+          },
+          "reply_to_message_id": {
+            "type": "integer",
+            "description": "If the message is a reply, ID of the original message"
+          },
+          "reply_markup": {
+            "type": "object",
+            "description": "Additional interface options"
+          }
+        },
+        "required": [
+          "bot_token",
+          "chat_id",
+          "document"
+        ]
+      }
+    },
+    {
+      "service_name": "send_audio",
+      "display_name": "Send Audio",
+      "description": "Sends audio files to a chat via the Telegram Bot API",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/sendAudio",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "multipart/form-data"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "description": "Telegram bot token",
+            "x-secret": true
+          },
+          "chat_id": {
+            "type": "string",
+            "description": "Target chat id or channel username"
+          },
+          "audio": {
+            "type": "string",
+            "description": "Audio file to send (multipart/form-data) or file_id for existing audio"
+          },
+          "caption": {
+            "type": "string",
+            "description": "Audio caption"
+          },
+          "duration": {
+            "type": "integer",
+            "description": "Duration of the audio in seconds"
+          },
+          "performer": {
+            "type": "string",
+            "description": "Performer"
+          },
+          "title": {
+            "type": "string",
+            "description": "Track title"
+          },
+          "disable_notification": {
+            "type": "boolean",
+            "description": "Sends the message silently"
+          },
+          "reply_to_message_id": {
+            "type": "integer",
+            "description": "If the message is a reply, ID of the original message"
+          },
+          "reply_markup": {
+            "type": "object",
+            "description": "Additional interface options"
+          }
+        },
+        "required": [
+          "bot_token",
+          "chat_id",
+          "audio"
+        ]
+      }
+    },
+    {
+      "service_name": "send_video",
+      "display_name": "Send Video",
+      "description": "Sends video files to a chat via the Telegram Bot API",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/sendVideo",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "multipart/form-data"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "description": "Telegram bot token",
+            "x-secret": true
+          },
+          "chat_id": {
+            "type": "string",
+            "description": "Target chat id or channel username"
+          },
+          "video": {
+            "type": "string",
+            "description": "Video file to send (multipart/form-data) or file_id for existing video"
+          },
+          "duration": {
+            "type": "integer",
+            "description": "Duration of the video in seconds"
+          },
+          "width": {
+            "type": "integer",
+            "description": "Video width"
+          },
+          "height": {
+            "type": "integer",
+            "description": "Video height"
+          },
+          "caption": {
+            "type": "string",
+            "description": "Video caption"
+          },
+          "supports_streaming": {
+            "type": "boolean",
+            "description": "Pass True if the uploaded video is suitable for streaming"
+          },
+          "disable_notification": {
+            "type": "boolean"
+          },
+          "reply_to_message_id": {
+            "type": "integer"
+          },
+          "reply_markup": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "bot_token",
+          "chat_id",
+          "video"
+        ]
+      }
+    },
+    {
+      "service_name": "edit_message_text",
+      "display_name": "Edit Message Text",
+      "description": "Edits text and game messages sent by the bot",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/editMessageText",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "description": "Telegram bot token",
+            "x-secret": true
+          },
+          "chat_id": {
+            "type": "string",
+            "description": "Required if inline_message_id is not specified"
+          },
+          "message_id": {
+            "type": "integer",
+            "description": "Required if inline_message_id is not specified"
+          },
+          "inline_message_id": {
+            "type": "string",
+            "description": "Required if chat_id and message_id are not specified"
+          },
+          "text": {
+            "type": "string",
+            "description": "New text of the message"
+          },
+          "parse_mode": {
+            "type": "string"
+          },
+          "disable_web_page_preview": {
+            "type": "boolean"
+          },
+          "reply_markup": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "bot_token",
+          "text"
+        ]
+      }
+    },
+    {
+      "service_name": "get_updates",
+      "display_name": "Get Updates",
+      "description": "Use this method to receive incoming updates using long polling (getUpdates).",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/getUpdates",
+      "request_config": {
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "description": "Telegram bot token",
+            "x-secret": true
+          },
+          "offset": {
+            "type": "integer",
+            "description": "Identifier of the first update to be returned"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Limits the number of updates to be retrieved"
+          },
+          "timeout": {
+            "type": "integer",
+            "description": "Timeout in seconds for long polling"
+          },
+          "allowed_updates": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List the types of updates you want to receive"
+          },
+          "request_timeout_ms": {
+            "type": "integer",
+            "description": "Local request timeout in milliseconds for the polling request"
+          }
+        },
+        "required": [
+          "bot_token"
+        ]
+      }
+    },
+    {
+      "service_name": "set_webhook",
+      "display_name": "Set Webhook",
+      "description": "Specify a URL to receive incoming updates via an outgoing webhook.",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/setWebhook",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "description": "Telegram bot token",
+            "x-secret": true
+          },
+          "url": {
+            "type": "string",
+            "description": "HTTPS URL to send updates to"
+          },
+          "max_connections": {
+            "type": "integer",
+            "description": "Maximum allowed number of simultaneous HTTPS connections"
+          },
+          "allowed_updates": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "certificate": {
+            "type": "string",
+            "description": "Upload your public key certificate for self-signed servers (multipart/form-data)"
+          },
+          "drop_pending_updates": {
+            "type": "boolean",
+            "description": "Pass True to drop all pending updates"
+          },
+          "secret_token": {
+            "type": "string",
+            "description": "A secret token to be sent in a header to the webhook"
+          },
+          "ip_address": {
+            "type": "string",
+            "description": "Fixed IP address to use for webhook connections"
+          }
+        },
+        "required": [
+          "bot_token",
+          "url"
+        ]
+      }
+    },
+    {
+      "service_name": "delete_webhook",
+      "display_name": "Delete Webhook",
+      "description": "Remove webhook integration for the bot, stopping updates from being sent to the webhook URL.",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/deleteWebhook",
+      "request_config": {
+        "method": "POST"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "description": "Telegram bot token",
+            "x-secret": true
+          },
+          "drop_pending_updates": {
+            "type": "boolean",
+            "description": "Pass True to drop all pending updates"
+          }
+        },
+        "required": [
+          "bot_token"
+        ]
+      }
+    },
+    {
+      "service_name": "get_me",
+      "display_name": "Get Bot Info",
+      "description": "A simple method for testing your bot's auth token \u2014 returns basic info about the bot.",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/getMe",
+      "request_config": {
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "description": "Bot token",
+            "x-secret": true
+          }
+        },
+        "required": [
+          "bot_token"
+        ]
+      }
+    },
+    {
+      "service_name": "get_chat",
+      "display_name": "Get Chat",
+      "description": "Get up-to-date information about the chat (name, type, members count).",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/getChat",
+      "request_config": {
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "description": "Bot token",
+            "x-secret": true
+          },
+          "chat_id": {
+            "type": "string",
+            "description": "Unique identifier for the target chat or username of the target channel (in the format @channelusername)"
+          }
+        },
+        "required": [
+          "bot_token",
+          "chat_id"
+        ]
+      }
+    },
+    {
+      "service_name": "kick_chat_member",
+      "display_name": "Kick Chat Member",
+      "description": "Use this method to kick a user from a group, a supergroup or a channel.",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/kickChatMember",
+      "request_config": {
+        "method": "POST"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "description": "Bot token",
+            "x-secret": true
+          },
+          "chat_id": {
+            "type": "string",
+            "description": "Unique identifier for the target chat"
+          },
+          "user_id": {
+            "type": "integer",
+            "description": "Unique identifier of the target user"
+          },
+          "until_date": {
+            "type": "integer",
+            "description": "Date when the user will be unbanned, unix time"
+          },
+          "revoke_messages": {
+            "type": "boolean",
+            "description": "Pass True to delete all messages from the user in the chat"
+          }
+        },
+        "required": [
+          "bot_token",
+          "chat_id",
+          "user_id"
+        ]
+      }
+    },
+    {
+      "service_name": "unban_chat_member",
+      "display_name": "Unban Chat Member",
+      "description": "Use this method to unban a previously kicked user in a supergroup or channel.",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/unbanChatMember",
+      "request_config": {
+        "method": "POST"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "description": "Bot token",
+            "x-secret": true
+          },
+          "chat_id": {
+            "type": "string",
+            "description": "Unique identifier for the target chat"
+          },
+          "user_id": {
+            "type": "integer",
+            "description": "Unique identifier of the target user"
+          },
+          "only_if_banned": {
+            "type": "boolean",
+            "description": "Do nothing if the user is not banned"
+          }
+        },
+        "required": [
+          "bot_token",
+          "chat_id",
+          "user_id"
+        ]
+      }
+    },
+    {
+      "service_name": "answer_callback_query",
+      "display_name": "Answer Callback Query",
+      "description": "Send answers to callback queries sent from inline keyboards.",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/answerCallbackQuery",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "description": "Bot token",
+            "x-secret": true
+          },
+          "callback_query_id": {
+            "type": "string",
+            "description": "Unique identifier for the query to be answered"
+          },
+          "text": {
+            "type": "string",
+            "description": "Text of the notification"
+          },
+          "show_alert": {
+            "type": "boolean",
+            "description": "If True, an alert will be shown to the user instead of a notification at the top of the chat screen"
+          },
+          "url": {
+            "type": "string",
+            "description": "An URL to be opened by the user's client"
+          },
+          "cache_time": {
+            "type": "integer",
+            "description": "The maximum amount of time in seconds that the result of the callback query may be cached client-side"
+          }
+        },
+        "required": [
+          "bot_token",
+          "callback_query_id"
+        ]
+      }
+    },
+    {
+      "service_name": "get_file",
+      "display_name": "Get File",
+      "description": "Get basic info about a file and prepare it for downloading.",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/getFile",
+      "request_config": {
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "description": "Bot token",
+            "x-secret": true
+          },
+          "file_id": {
+            "type": "string",
+            "description": "File identifier to get info for"
+          }
+        },
+        "required": [
+          "bot_token",
+          "file_id"
+        ]
+      }
+    },
+    {
+      "service_name": "send_sticker",
+      "display_name": "Send Sticker",
+      "description": "Sends static .WEBP or animated .TGS stickers to a chat.",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/sendSticker",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "multipart/form-data"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "description": "Bot token",
+            "x-secret": true
+          },
+          "chat_id": {
+            "type": "string",
+            "description": "Target chat id"
+          },
+          "sticker": {
+            "type": "string",
+            "description": "Sticker file to send (multipart/form-data) or file_id"
+          },
+          "disable_notification": {
+            "type": "boolean"
+          },
+          "reply_to_message_id": {
+            "type": "integer"
+          },
+          "reply_markup": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "bot_token",
+          "chat_id",
+          "sticker"
+        ]
+      }
+    },
+    {
+      "service_name": "get_chat_member",
+      "display_name": "Get Chat Member",
+      "description": "Get information about a member of a chat.",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/getChatMember",
+      "request_config": {
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "description": "Bot token",
+            "x-secret": true
+          },
+          "chat_id": {
+            "type": "string",
+            "description": "Unique identifier for the target chat"
+          },
+          "user_id": {
+            "type": "integer",
+            "description": "Unique identifier of the target user"
+          }
+        },
+        "required": [
+          "bot_token",
+          "chat_id",
+          "user_id"
+        ]
+      }
+    },
+    {
+      "service_name": "send_voice",
+      "display_name": "Send Voice",
+      "description": "Sends voice messages to a chat via the Telegram Bot API",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/sendVoice",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "multipart/form-data"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "description": "Telegram bot token",
+            "x-secret": true
+          },
+          "chat_id": {
+            "type": "string",
+            "description": "Target chat id or channel username"
+          },
+          "voice": {
+            "type": "string",
+            "description": "Voice file to send (multipart/form-data) or file_id"
+          },
+          "caption": {
+            "type": "string",
+            "description": "Voice message caption"
+          },
+          "duration": {
+            "type": "integer",
+            "description": "Duration of the voice message in seconds"
+          },
+          "disable_notification": {
+            "type": "boolean"
+          },
+          "reply_to_message_id": {
+            "type": "integer"
+          },
+          "reply_markup": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "bot_token",
+          "chat_id",
+          "voice"
+        ]
+      }
+    },
+    {
+      "service_name": "send_location",
+      "display_name": "Send Location",
+      "description": "Sends point on the map to a chat via Telegram Bot API",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/sendLocation",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "x-secret": true
+          },
+          "chat_id": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "live_period": {
+            "type": "integer"
+          },
+          "heading": {
+            "type": "integer"
+          },
+          "proximity_alert_radius": {
+            "type": "integer"
+          },
+          "disable_notification": {
+            "type": "boolean"
+          },
+          "reply_to_message_id": {
+            "type": "integer"
+          },
+          "reply_markup": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "bot_token",
+          "chat_id",
+          "latitude",
+          "longitude"
+        ]
+      }
+    },
+    {
+      "service_name": "forward_message",
+      "display_name": "Forward Message",
+      "description": "Forwards messages of any type from one chat to another.",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/forwardMessage",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "description": "Telegram bot token",
+            "x-secret": true
+          },
+          "chat_id": {
+            "type": "string",
+            "description": "Unique identifier for the target chat or username of the target channel"
+          },
+          "from_chat_id": {
+            "type": "string",
+            "description": "Unique identifier for the chat where the original message was sent"
+          },
+          "message_id": {
+            "type": "integer",
+            "description": "Message identifier in the chat specified in from_chat_id"
+          },
+          "disable_notification": {
+            "type": "boolean",
+            "description": "Sends the message silently"
+          }
+        },
+        "required": [
+          "bot_token",
+          "chat_id",
+          "from_chat_id",
+          "message_id"
+        ]
+      }
+    },
+    {
+      "service_name": "send_animation",
+      "display_name": "Send Animation",
+      "description": "Sends animation files (GIF or H.264/MPEG-4 AVC video without sound) to a chat.",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/sendAnimation",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "multipart/form-data"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "x-secret": true
+          },
+          "chat_id": {
+            "type": "string"
+          },
+          "animation": {
+            "type": "string",
+            "description": "Animation file to send (multipart/form-data) or file_id"
+          },
+          "duration": {
+            "type": "integer"
+          },
+          "width": {
+            "type": "integer"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "thumb": {
+            "type": "string"
+          },
+          "caption": {
+            "type": "string"
+          },
+          "parse_mode": {
+            "type": "string"
+          },
+          "disable_notification": {
+            "type": "boolean"
+          },
+          "reply_to_message_id": {
+            "type": "integer"
+          },
+          "reply_markup": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "bot_token",
+          "chat_id",
+          "animation"
+        ]
+      }
+    },
+    {
+      "service_name": "send_contact",
+      "display_name": "Send Contact",
+      "description": "Sends phone contacts to a chat via the Telegram Bot API",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/sendContact",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "x-secret": true
+          },
+          "chat_id": {
+            "type": "string"
+          },
+          "phone_number": {
+            "type": "string"
+          },
+          "first_name": {
+            "type": "string"
+          },
+          "last_name": {
+            "type": "string"
+          },
+          "vcard": {
+            "type": "string"
+          },
+          "disable_notification": {
+            "type": "boolean"
+          },
+          "reply_to_message_id": {
+            "type": "integer"
+          },
+          "reply_markup": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "bot_token",
+          "chat_id",
+          "phone_number",
+          "first_name"
+        ]
+      }
+    },
+    {
+      "service_name": "delete_message",
+      "display_name": "Delete Message",
+      "description": "Deletes a message in a chat.",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/deleteMessage",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "x-secret": true
+          },
+          "chat_id": {
+            "type": "string"
+          },
+          "message_id": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "bot_token",
+          "chat_id",
+          "message_id"
+        ]
+      }
+    },
+    {
+      "service_name": "get_chat_administrators",
+      "display_name": "Get Chat Administrators",
+      "description": "Get a list of administrators in a chat.",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/getChatAdministrators",
+      "request_config": {
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "x-secret": true
+          },
+          "chat_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "bot_token",
+          "chat_id"
+        ]
+      }
+    },
+    {
+      "service_name": "promote_chat_member",
+      "display_name": "Promote Chat Member",
+      "description": "Promotes a user to an administrator in a chat.",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/promoteChatMember",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "x-secret": true
+          },
+          "chat_id": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "integer"
+          },
+          "can_change_info": {
+            "type": "boolean"
+          },
+          "can_post_messages": {
+            "type": "boolean"
+          },
+          "can_edit_messages": {
+            "type": "boolean"
+          },
+          "can_delete_messages": {
+            "type": "boolean"
+          },
+          "can_invite_users": {
+            "type": "boolean"
+          },
+          "can_restrict_members": {
+            "type": "boolean"
+          },
+          "can_pin_messages": {
+            "type": "boolean"
+          },
+          "can_promote_members": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "bot_token",
+          "chat_id",
+          "user_id"
+        ]
+      }
+    },
+    {
+      "service_name": "get_chat_member_count",
+      "display_name": "Get Chat Member Count",
+      "description": "Get the number of members in a chat.",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/getChatMemberCount",
+      "request_config": {
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "description": "Telegram bot token",
+            "x-secret": true
+          },
+          "chat_id": {
+            "type": "string",
+            "description": "Unique identifier for the target chat or username of the target channel"
+          },
+          "supergroup_id": {
+            "type": "string",
+            "description": "Optional supergroup id for migration cases"
+          }
+        },
+        "required": [
+          "bot_token",
+          "chat_id"
+        ]
+      }
+    },
+    {
+      "service_name": "get_my_commands",
+      "display_name": "Get My Commands",
+      "description": "Gets the list of the current bot commands.",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/getMyCommands",
+      "request_config": {
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "description": "Telegram bot token",
+            "x-secret": true
+          }
+        },
+        "required": [
+          "bot_token"
+        ]
+      }
+    },
+    {
+      "service_name": "set_my_commands",
+      "display_name": "Set My Commands",
+      "description": "Set the list of the bot's commands.",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/setMyCommands",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "description": "Telegram bot token",
+            "x-secret": true
+          },
+          "commands": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "command": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "bot_token",
+          "commands"
+        ]
+      }
+    },
+    {
+      "service_name": "create_chat_invite_link",
+      "display_name": "Create Chat Invite Link",
+      "description": "Creates an additional invite link for a chat.",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/createChatInviteLink",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "x-secret": true
+          },
+          "chat_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "expire_date": {
+            "type": "integer",
+            "description": "Unix time when link will expire"
+          },
+          "member_limit": {
+            "type": "integer",
+            "description": "Max number of users that can join using the link"
+          },
+          "creates_join_request": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "bot_token",
+          "chat_id"
+        ]
+      }
+    },
+    {
+      "service_name": "get_user_profile_photos",
+      "display_name": "Get User Profile Photos",
+      "description": "Get a user's profile pictures.",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/getUserProfilePhotos",
+      "request_config": {
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "x-secret": true
+          },
+          "user_id": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          },
+          "limit": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "bot_token",
+          "user_id"
+        ]
+      }
+    },
+    {
+      "service_name": "restrict_chat_member",
+      "display_name": "Restrict Chat Member",
+      "description": "Restricts a user in a supergroup.",
+      "service_type": "api_call",
+      "endpoint_template": "/bot{{bot_token}}/restrictChatMember",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "bot_token": {
+            "type": "string",
+            "x-secret": true
+          },
+          "chat_id": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "integer"
+          },
+          "permissions": {
+            "type": "object",
+            "description": "New user permissions object"
+          },
+          "until_date": {
+            "type": "integer",
+            "description": "Unix time when restrictions will be lifted"
+          }
+        },
+        "required": [
+          "bot_token",
+          "chat_id",
+          "user_id",
+          "permissions"
+        ]
+      }
+    }
+  ],
+  "events": [
+    {
+      "event_name": "message_received",
+      "display_name": "Message Received",
+      "description": "Webhook fired when the bot receives a new incoming message or update.",
+      "event_type": "webhook",
+      "event_configuration": {
+        "type": "object",
+        "properties": {
+          "update_id": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "message_id": {
+                "type": "integer"
+              },
+              "from": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer"
+                  },
+                  "is_bot": {
+                    "type": "boolean"
+                  },
+                  "first_name": {
+                    "type": "string"
+                  },
+                  "last_name": {
+                    "type": "string"
+                  },
+                  "username": {
+                    "type": "string"
+                  }
+                }
+              },
+              "chat": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "username": {
+                    "type": "string"
+                  },
+                  "first_name": {
+                    "type": "string"
+                  },
+                  "last_name": {
+                    "type": "string"
+                  }
+                }
+              },
+              "date": {
+                "type": "integer"
+              },
+              "text": {
+                "type": "string"
+              },
+              "entities": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              },
+              "photo": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              },
+              "sticker": {
+                "type": "object"
+              },
+              "document": {
+                "type": "object"
+              },
+              "audio": {
+                "type": "object"
+              },
+              "video": {
+                "type": "object"
+              },
+              "voice": {
+                "type": "object"
+              },
+              "location": {
+                "type": "object"
+              },
+              "contact": {
+                "type": "object"
+              },
+              "caption": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "callback_query_received",
+      "display_name": "Callback Query Received",
+      "description": "Webhook fired when a callback query is received from inline keyboards.",
+      "event_type": "webhook",
+      "event_configuration": {
+        "type": "object",
+        "properties": {
+          "update_id": {
+            "type": "integer"
+          },
+          "callback_query": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "from": {
+                "type": "object"
+              },
+              "message": {
+                "type": "object"
+              },
+              "data": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "edited_message",
+      "display_name": "Edited Message",
+      "description": "Webhook fired when a message is edited.",
+      "event_type": "webhook",
+      "event_configuration": {
+        "type": "object",
+        "properties": {
+          "update_id": {
+            "type": "integer"
+          },
+          "edited_message": {
+            "type": "object"
+          }
+        }
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "inline_query_received",
+      "display_name": "Inline Query Received",
+      "description": "Webhook fired when an inline query is received.",
+      "event_type": "webhook",
+      "event_configuration": {
+        "type": "object",
+        "properties": {
+          "update_id": {
+            "type": "integer"
+          },
+          "inline_query": {
+            "type": "object"
+          }
+        }
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "new_chat_members",
+      "display_name": "New Chat Members",
+      "description": "Webhook fired when new users join the chat.",
+      "event_type": "webhook",
+      "event_configuration": {
+        "type": "object",
+        "properties": {
+          "update_id": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "new_chat_members": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "is_bot": {
+                      "type": "boolean"
+                    },
+                    "first_name": {
+                      "type": "string"
+                    },
+                    "last_name": {
+                      "type": "string"
+                    },
+                    "username": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "event_configuration": {
+          "webhook_method": "POST"
+        }
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    }
+  ],
+  "_validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": [],
+    "validated_at": "2025-11-13T12:40:37.921225"
+  },
+  "metadata": {
+    "last_modified": "2025-11-13T07:10:37.952219",
+    "services_count": 31,
+    "events_count": 5
+  }
+}

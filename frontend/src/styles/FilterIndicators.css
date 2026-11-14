@@ -1,0 +1,114 @@
+/* Filter Indicator Animations */
+
+/* Glowing animation for clear filter button */
+@keyframes glowPulse {
+  0% {
+    background-color: rgba(251, 191, 36, 0.2); /* Yellow with low opacity */
+    box-shadow: 0 0 5px rgba(251, 191, 36, 0.3);
+  }
+  50% {
+    background-color: rgba(251, 191, 36, 0.5); /* Brighter yellow */
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.6), 0 0 30px rgba(251, 191, 36, 0.4);
+  }
+  100% {
+    background-color: rgba(251, 191, 36, 0.2); /* Back to low opacity */
+    box-shadow: 0 0 5px rgba(251, 191, 36, 0.3);
+  }
+}
+
+/* Class for glowing clear filter button */
+.clear-filter-glow {
+  animation: glowPulse 2s ease-in-out infinite;
+  border: 2px solid rgba(251, 191, 36, 0.6) !important;
+  position: relative;
+}
+
+.clear-filter-glow:hover {
+  animation-play-state: paused;
+  background-color: rgba(251, 191, 36, 0.6) !important;
+  box-shadow: 0 0 25px rgba(251, 191, 36, 0.8);
+}
+
+/* Filter active indicator badge */
+.filter-active-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #f59e0b;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  animation: bounce 2s infinite;
+  z-index: 10;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+/* Filter section highlight when filters are active */
+.filter-section-active {
+  position: relative;
+  padding: 12px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.05) 0%, rgba(251, 191, 36, 0.02) 100%);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.filter-section-active::before {
+  content: 'Filters Active';
+  position: absolute;
+  top: -10px;
+  left: 16px;
+  background-color: white;
+  padding: 0 8px;
+  color: #f59e0b;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Individual filter input highlight */
+.filter-input-active {
+  border-color: #f59e0b !important;
+  background-color: rgba(251, 191, 36, 0.05) !important;
+}
+
+/* Filter counter badge */
+.filter-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f59e0b;
+  color: white;
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: bold;
+  margin-left: 8px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 1;
+  }
+}

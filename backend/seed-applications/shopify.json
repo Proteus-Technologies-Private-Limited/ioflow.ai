@@ -1,0 +1,794 @@
+{
+  "key": "shopify",
+  "application": {
+    "app_name": "Shopify",
+    "app_type": "api",
+    "category": "Integration",
+    "auth_type": "api_key",
+    "description": "E-commerce platform for online stores",
+    "base_url": "https://api.shopify.com",
+    "version": "1.0.23",
+    "auth_config": {
+      "header_name": "X-Shopify-Access-Token"
+    }
+  },
+  "services": [
+    {
+      "service_name": "get_product",
+      "display_name": "Get Product",
+      "description": "Retrieves a product by ID",
+      "service_type": "api_call",
+      "endpoint_template": "/admin/api/2024-01/products/{{product_id}}.json",
+      "request_config": {
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "description": "ID of the product to retrieve"
+          }
+        },
+        "required": [
+          "product_id"
+        ]
+      }
+    },
+    {
+      "service_name": "create_product",
+      "display_name": "Create Product",
+      "description": "Creates a new product in Shopify",
+      "service_type": "api_call",
+      "endpoint_template": "/admin/api/2024-01/products.json",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            201,
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Product title"
+          },
+          "body_html": {
+            "type": "string",
+            "description": "Product description HTML"
+          },
+          "vendor": {
+            "type": "string",
+            "description": "Vendor name"
+          },
+          "product_type": {
+            "type": "string",
+            "description": "Product type"
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "price": {
+                  "type": "number"
+                },
+                "sku": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "title"
+        ]
+      }
+    },
+    {
+      "service_name": "update_product",
+      "display_name": "Update Product",
+      "description": "Updates an existing product",
+      "service_type": "api_call",
+      "endpoint_template": "/admin/api/2024-01/products/{{product_id}}.json",
+      "request_config": {
+        "method": "PUT",
+        "headers_template": {
+          "Content-Type": "application/json"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "body_html": {
+            "type": "string"
+          },
+          "variants": {
+            "type": "array"
+          }
+        },
+        "required": [
+          "product_id"
+        ]
+      }
+    },
+    {
+      "service_name": "delete_product",
+      "display_name": "Delete Product",
+      "description": "Deletes a product by ID",
+      "service_type": "api_call",
+      "endpoint_template": "/admin/api/2024-01/products/{{product_id}}.json",
+      "request_config": {
+        "method": "DELETE"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200,
+            204
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_id"
+        ]
+      }
+    },
+    {
+      "service_name": "list_products",
+      "display_name": "List Products",
+      "description": "Lists products with optional pagination",
+      "service_type": "api_call",
+      "endpoint_template": "/admin/api/2024-01/products.json",
+      "request_config": {
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer"
+          },
+          "page": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "create_order",
+      "display_name": "Create Order",
+      "description": "Creates a new order",
+      "service_type": "api_call",
+      "endpoint_template": "/admin/api/2024-01/orders.json",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            201,
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "line_items": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "customer": {
+            "type": "object"
+          },
+          "shipping_address": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "line_items"
+        ]
+      }
+    },
+    {
+      "service_name": "get_order",
+      "display_name": "Get Order",
+      "description": "Retrieves an order by ID",
+      "service_type": "api_call",
+      "endpoint_template": "/admin/api/2024-01/orders/{{order_id}}.json",
+      "request_config": {
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "order_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "order_id"
+        ]
+      }
+    },
+    {
+      "service_name": "update_order",
+      "display_name": "Update Order",
+      "description": "Updates an existing order",
+      "service_type": "api_call",
+      "endpoint_template": "/admin/api/2024-01/orders/{{order_id}}.json",
+      "request_config": {
+        "method": "PUT",
+        "headers_template": {
+          "Content-Type": "application/json"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "order_id": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "order_id"
+        ]
+      }
+    },
+    {
+      "service_name": "cancel_order",
+      "display_name": "Cancel Order",
+      "description": "Cancels an order",
+      "service_type": "api_call",
+      "endpoint_template": "/admin/api/2024-01/orders/{{order_id}}/cancel.json",
+      "request_config": {
+        "method": "POST"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "order_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "order_id"
+        ]
+      }
+    },
+    {
+      "service_name": "list_orders",
+      "display_name": "List Orders",
+      "description": "Lists orders with optional filters",
+      "service_type": "api_call",
+      "endpoint_template": "/admin/api/2024-01/orders.json",
+      "request_config": {
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "create_customer",
+      "display_name": "Create Customer",
+      "description": "Creates a new customer",
+      "service_type": "api_call",
+      "endpoint_template": "/admin/api/2024-01/customers.json",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            201,
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "first_name": {
+            "type": "string"
+          },
+          "last_name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      }
+    },
+    {
+      "service_name": "get_customer",
+      "display_name": "Get Customer",
+      "description": "Retrieves a customer by ID",
+      "service_type": "api_call",
+      "endpoint_template": "/admin/api/2024-01/customers/{{customer_id}}.json",
+      "request_config": {
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "customer_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "customer_id"
+        ]
+      }
+    },
+    {
+      "service_name": "update_customer",
+      "display_name": "Update Customer",
+      "description": "Updates an existing customer",
+      "service_type": "api_call",
+      "endpoint_template": "/admin/api/2024-01/customers/{{customer_id}}.json",
+      "request_config": {
+        "method": "PUT",
+        "headers_template": {
+          "Content-Type": "application/json"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "customer_id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "customer_id"
+        ]
+      }
+    },
+    {
+      "service_name": "list_customers",
+      "display_name": "List Customers",
+      "description": "Lists customers with optional filters",
+      "service_type": "api_call",
+      "endpoint_template": "/admin/api/2024-01/customers.json",
+      "request_config": {
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer"
+          },
+          "page": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "event_name": "order_created",
+      "display_name": "Order Created",
+      "description": "Triggered when a new order is created",
+      "event_type": "webhook",
+      "event_configuration": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "total_price": {
+            "type": "number"
+          },
+          "line_items": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "line_items"
+        ]
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "order_updated",
+      "display_name": "Order Updated",
+      "description": "Triggered when an order is updated",
+      "event_type": "webhook",
+      "event_configuration": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "changes": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "order_cancelled",
+      "display_name": "Order Cancelled",
+      "description": "Triggered when an order is cancelled",
+      "event_type": "webhook",
+      "event_configuration": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "cancelled_at": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "customer_created",
+      "display_name": "Customer Created",
+      "description": "Triggered when a new customer is created",
+      "event_type": "webhook",
+      "event_configuration": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "first_name": {
+            "type": "string"
+          },
+          "last_name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email"
+        ]
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "product_created",
+      "display_name": "Product Created",
+      "description": "Triggered when a new product is created",
+      "event_type": "webhook",
+      "event_configuration": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "variants": {
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ]
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "product_updated",
+      "display_name": "Product Updated",
+      "description": "Triggered when a product is updated",
+      "event_type": "webhook",
+      "event_configuration": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "changes": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "product_deleted",
+      "display_name": "Product Deleted",
+      "description": "Triggered when a product is deleted",
+      "event_type": "webhook",
+      "event_configuration": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "customer_updated",
+      "display_name": "Customer Updated",
+      "description": "Triggered when a customer is updated",
+      "event_type": "webhook",
+      "event_configuration": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "changes": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "refund_created",
+      "display_name": "Refund Created",
+      "description": "Triggered when a refund is issued",
+      "event_type": "webhook",
+      "event_configuration": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "order_id": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "order_id",
+          "amount"
+        ]
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    }
+  ],
+  "_validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": [],
+    "validated_at": "2025-11-07T17:34:47.638704"
+  },
+  "metadata": {
+    "last_modified": "2025-11-07T12:04:47.657997",
+    "services_count": 14,
+    "events_count": 9
+  }
+}

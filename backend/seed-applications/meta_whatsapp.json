@@ -1,0 +1,297 @@
+{
+  "key": "meta_whatsapp",
+  "application": {
+    "app_name": "META",
+    "app_type": "api",
+    "category": "Messaging",
+    "auth_type": "api_key",
+    "description": "Integrates with Meta WhatsApp Cloud API to send WhatsApp template messages. Uses META_BEARER_TOKEN and META_PHONE_NUMBER_ID environment variables.",
+    "base_url": "https://graph.facebook.com/v21.0",
+    "version": "1.0.15",
+    "auth_config": {
+      "header_name": "Authorization",
+      "token_prefix": "Bearer",
+      "token_env_var": "META_BEARER_TOKEN",
+      "phone_number_id_env": "META_PHONE_NUMBER_ID",
+      "notes": "Set META_BEARER_TOKEN and META_PHONE_NUMBER_ID as environment/config variables for the application."
+    }
+  },
+  "webhook_config": {
+    "verification_method": [
+      "hmac",
+      "challenge"
+    ],
+    "url_verification_enabled": true,
+    "signature_header": "X-Hub-Signature-256",
+    "signature_algorithm": "sha256",
+    "signature_format": "sha256={{signature}}",
+    "signature_base_format": "{{body}}",
+    "signing_secret_required": true,
+    "verify_token": "meta_whatsapp_verify_2026",
+    "challenge_configs": [
+      {
+        "name": "Meta WhatsApp Verification",
+        "method": "GET",
+        "conditions": {
+          "hub.mode": "subscribe"
+        },
+        "challenge_field": "hub.challenge",
+        "token_field": "hub.verify_token",
+        "response_format": "plain_text"
+      }
+    ]
+  },
+  "services": [
+    {
+      "service_name": "send_template_message",
+      "display_name": "Send WhatsApp Template Message",
+      "description": "Sends a WhatsApp template message via Meta WhatsApp Cloud API. Supports an optional variable-length 'components' array for templates that have placeholders (header/body variables, buttons, etc.). If the template has no placeholders, omit 'components'.",
+      "service_type": "api_call",
+      "endpoint_template": "https://graph.facebook.com/v21.0/928957563632442/messages",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Authorization": "Bearer {{META_BEARER_TOKEN}}",
+          "Content-Type": "application/json"
+        },
+        "body_template": {
+          "messaging_product": "whatsapp",
+          "to": "{{phone_number}}",
+          "type": "template",
+          "template": {
+            "name": "{{template_name}}",
+            "language": {
+              "code": "{{language_code}}"
+            },
+            "components": "{{components}}"
+          }
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200,
+            201
+          ]
+        },
+        "raw_response": true
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "phone_number": {
+            "type": "string",
+            "description": "Recipient WhatsApp number in international format without + or spaces",
+            "example": "15551234567"
+          },
+          "template_name": {
+            "type": "string",
+            "description": "WhatsApp template name",
+            "default": "hello_world"
+          },
+          "language_code": {
+            "type": "string",
+            "description": "Language code for template",
+            "default": "en_US"
+          },
+          "components": {
+            "type": "array",
+            "description": "Optional. WhatsApp template components array. Use this when the template has variables/placeholders. The number of body variables can vary - include one parameter entry per placeholder (in order). Omit this field entirely if the template has no placeholders. See examples for body variables, header variables, and buttons.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Component type: 'body', 'header', or 'button'",
+                  "enum": [
+                    "body",
+                    "header",
+                    "button"
+                  ]
+                },
+                "sub_type": {
+                  "type": "string",
+                  "description": "Required for button components (e.g. 'quick_reply', 'url')"
+                },
+                "index": {
+                  "type": "string",
+                  "description": "Required for button components - position index as a string ('0', '1', ...)"
+                },
+                "parameters": {
+                  "type": "array",
+                  "description": "List of parameter objects matching the placeholders in this component, in order. Length is variable - add as many entries as there are placeholders.",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              },
+              "required": [
+                "type",
+                "parameters"
+              ]
+            },
+            "example": [
+              {
+                "type": "body",
+                "parameters": [
+                  {
+                    "type": "text",
+                    "text": "John"
+                  },
+                  {
+                    "type": "text",
+                    "text": "ORD-12345"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "required": [
+          "phone_number"
+        ]
+      }
+    },
+    {
+      "service_name": "send_text_message",
+      "display_name": "Send WhatsApp Text Message",
+      "description": "Sends a session-based WhatsApp text message (non-template) via Meta WhatsApp Cloud API. Intended for replying to incoming messages within the 24-hour session window.",
+      "service_type": "api_call",
+      "endpoint_template": "https://graph.facebook.com/v21.0/928957563632442/messages",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Authorization": "Bearer {{META_BEARER_TOKEN}}",
+          "Content-Type": "application/json"
+        },
+        "body_template": {
+          "messaging_product": "whatsapp",
+          "to": "{{phone_number}}",
+          "type": "text",
+          "text": {
+            "body": "{{message_text}}"
+          }
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200,
+            201
+          ]
+        },
+        "raw_response": true
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "phone_number": {
+            "type": "string",
+            "description": "Recipient WhatsApp number in international format without + or spaces",
+            "example": "15551234567"
+          },
+          "message_text": {
+            "type": "string",
+            "description": "Text message content to send",
+            "example": "Thanks for your message!"
+          }
+        },
+        "required": [
+          "phone_number",
+          "message_text"
+        ]
+      }
+    }
+  ],
+  "events": [
+    {
+      "event_name": "message_sent",
+      "display_name": "Message Sent",
+      "description": "Triggered after a WhatsApp template message is successfully sent. Emits the Meta API response including message ID and full payload.",
+      "event_type": "webhook",
+      "event_configuration": {
+        "type": "object",
+        "properties": {
+          "sent": {
+            "type": "boolean"
+          },
+          "message_id": {
+            "type": "string"
+          },
+          "response": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "sent",
+          "response"
+        ]
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "incoming_message",
+      "display_name": "Incoming Message",
+      "description": "Triggered whenever a WhatsApp user sends a message to the connected phone number via Meta WhatsApp Cloud API webhooks.",
+      "event_type": "webhook",
+      "event_configuration": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "Sender WhatsApp number"
+          },
+          "message_type": {
+            "type": "string",
+            "description": "Type of incoming message (text, image, audio, etc.)"
+          },
+          "text": {
+            "type": "string",
+            "description": "Message text content (if type is text)"
+          },
+          "message_id": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string"
+          },
+          "raw_payload": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "from",
+          "message_type",
+          "message_id"
+        ],
+        "description": "Payload follows Meta WhatsApp Cloud API webhook format. Extraction rules: from -> entry[0].changes[0].value.messages[0].from; text -> entry[0].changes[0].value.messages[0].text.body; message_id -> entry[0].changes[0].value.messages[0].id; raw_payload -> full webhook payload."
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    }
+  ],
+  "_validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": [],
+    "validated_at": "2026-01-28T14:02:46.227920"
+  },
+  "metadata": {
+    "last_modified": "2026-05-14T00:00:00.000000",
+    "services_count": 2,
+    "events_count": 2
+  }
+}

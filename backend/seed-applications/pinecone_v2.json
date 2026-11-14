@@ -1,0 +1,149 @@
+{
+  "key": "pinecone_v2",
+  "application": {
+    "app_name": "pinecone",
+    "app_type": "api",
+    "category": "Database",
+    "auth_type": "api_key",
+    "description": "Pinecone vector database for semantic search and product matching.",
+    "base_url": "https://api.pinecone.io",
+    "version": "1.0.3",
+    "auth_config": {
+      "header_name": "X-API-Key"
+    }
+  },
+  "services": [
+    {
+      "service_name": "create_index_for_model",
+      "display_name": "Create Index For Model",
+      "description": "Create a Pinecone index tailored for a specific model",
+      "service_type": "api_call",
+      "endpoint_template": "/indexes/create-for-model",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        },
+        "body_template": {
+          "name": "{{index_name}}",
+          "dimension": "{{dimension}}",
+          "metric": "{{metric}}",
+          "replicas": "{{replicas}}",
+          "pods": "{{pods}}"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200,
+            201
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "index_name": {
+            "type": "string",
+            "description": "Name of the new index"
+          },
+          "dimension": {
+            "type": "integer",
+            "description": "Embedding dimension"
+          },
+          "metric": {
+            "type": "string",
+            "description": "Distance metric (e.g., cosine, euclidean)"
+          },
+          "replicas": {
+            "type": "integer",
+            "description": "Number of replicas (optional)"
+          },
+          "pods": {
+            "type": "integer",
+            "description": "Number of pods (optional)"
+          }
+        },
+        "required": [
+          "index_name",
+          "dimension"
+        ]
+      }
+    },
+    {
+      "service_name": "create_index",
+      "display_name": "Create Index",
+      "description": "Create a Pinecone index",
+      "service_type": "api_call",
+      "endpoint_template": "/indexes",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json"
+        },
+        "body_template": {
+          "name": "{{name}}",
+          "dimension": "{{dimension}}",
+          "metric": "{{metric}}",
+          "replicas": "{{replicas}}",
+          "pods": "{{pods}}",
+          "metadata_config": "{{metadata_config}}"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200,
+            201
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the new index"
+          },
+          "dimension": {
+            "type": "integer",
+            "description": "Embedding dimension"
+          },
+          "metric": {
+            "type": "string",
+            "description": "Distance metric (e.g., cosine, euclidean)"
+          },
+          "replicas": {
+            "type": "integer",
+            "description": "Number of replicas (optional)"
+          },
+          "pods": {
+            "type": "integer",
+            "description": "Number of pods (optional)"
+          },
+          "metadata_config": {
+            "type": "object",
+            "description": "Optional metadata configuration"
+          }
+        },
+        "required": [
+          "name",
+          "dimension"
+        ]
+      }
+    }
+  ],
+  "events": [],
+  "_validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": [],
+    "validated_at": "2026-02-23T11:09:32.569253"
+  },
+  "metadata": {
+    "last_modified": "2026-02-06T07:15:21.180789",
+    "services_count": 2
+  }
+}

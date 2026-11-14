@@ -1,0 +1,14 @@
+[Unit]
+Description=Run the IOFlow backend health monitor every 30s
+
+[Timer]
+# First run shortly after boot, then every 30 seconds thereafter.
+OnBootSec=60s
+OnUnitActiveSec=30s
+AccuracySec=5s
+# Catch up after downtime / suspend so a missed window still runs once.
+Persistent=true
+Unit=ioflow-healthcheck.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,116 @@
+{
+  "version": "1.0",
+  "export_timestamp": "2026-03-22T00:00:00.000Z",
+  "flow": {
+    "flow_name": "HITL Review Workflow Example",
+    "description": "Example flow demonstrating Human in the Loop: Manual trigger -> Transform (simulate LLM) -> Human Review (edit) -> Transform (log result)",
+    "category": "example",
+    "trigger_config": {
+      "type": "manual",
+      "manual_variables": [
+        {
+          "name": "document_text",
+          "dataType": "string",
+          "defaultValue": "Sample document text for review",
+          "required": true
+        }
+      ]
+    },
+    "flow_definition": {
+      "nodes": [
+        {
+          "id": "trigger_1",
+          "type": "trigger",
+          "position": { "x": 100, "y": 200 },
+          "data": {
+            "label": "Manual Input",
+            "triggerType": "manual",
+            "manualVariables": [
+              {
+                "name": "document_text",
+                "dataType": "string",
+                "defaultValue": "Sample document text for review",
+                "required": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "transform_1",
+          "type": "transform",
+          "position": { "x": 400, "y": 200 },
+          "data": {
+            "label": "Simulate LLM Processing",
+            "script": "# Simulate LLM extraction from document\ndocument = input.get('document_text', '')\n\n# Simulated extracted data\noutput = {\n    'name': 'John Doe',\n    'email': 'john@example.com',\n    'phone': '+1-555-0100',\n    'address': '123 Main St, City, ST 12345',\n    'summary': f'Extracted from: {document[:50]}...'\n}"
+          }
+        },
+        {
+          "id": "hitl_1",
+          "type": "human_in_loop",
+          "position": { "x": 700, "y": 200 },
+          "data": {
+            "label": "Review & Correct Data",
+            "taskType": "edit",
+            "title": "Review Extracted Data",
+            "description": "Please review the data extracted by the LLM and correct any errors.",
+            "priority": "medium",
+            "assignmentConfig": {
+              "type": "user",
+              "users": [],
+              "roles": []
+            },
+            "displayConfig": {
+              "format": "form",
+              "fields": []
+            },
+            "inputDataMapping": {
+              "name": "{{node_outputs.transform_1.name}}",
+              "email": "{{node_outputs.transform_1.email}}",
+              "phone": "{{node_outputs.transform_1.phone}}",
+              "address": "{{node_outputs.transform_1.address}}",
+              "summary": "{{node_outputs.transform_1.summary}}"
+            },
+            "timeoutMinutes": 60,
+            "escalationConfig": {
+              "on_timeout": "fail"
+            }
+          }
+        },
+        {
+          "id": "transform_2",
+          "type": "transform",
+          "position": { "x": 1000, "y": 200 },
+          "data": {
+            "label": "Process Reviewed Data",
+            "script": "# Access the human-reviewed data\nhitl_output = node_outputs.get('hitl_1', {})\nresponse_action = hitl_output.get('response_action', 'unknown')\nreviewed_data = hitl_output.get('response_data', {})\n\noutput = {\n    'status': 'processed',\n    'action': response_action,\n    'reviewed_data': reviewed_data,\n    'message': f'Data {response_action} by human reviewer'\n}"
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "edge_1",
+          "source": "trigger_1",
+          "target": "transform_1",
+          "sourceHandle": "bottom",
+          "targetHandle": "top"
+        },
+        {
+          "id": "edge_2",
+          "source": "transform_1",
+          "target": "hitl_1",
+          "sourceHandle": "bottom",
+          "targetHandle": "top"
+        },
+        {
+          "id": "edge_3",
+          "source": "hitl_1",
+          "target": "transform_2",
+          "sourceHandle": "bottom",
+          "targetHandle": "top"
+        }
+      ]
+    },
+    "is_synchronous": false,
+    "sync_timeout": 30
+  }
+}

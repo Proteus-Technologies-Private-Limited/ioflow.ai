@@ -1,0 +1,148 @@
+{
+  "version": "1.0",
+  "export_timestamp": "2025-11-06T00:00:00Z",
+  "flow": {
+    "flow_name": "REST API Data Aggregator",
+    "description": "Fetch data from multiple REST APIs, transform and aggregate the results. Demonstrates parallel API calls, data transformation, and error handling patterns.",
+    "category": "Web & API",
+    "trigger_config": {
+      "type": "manual",
+      "manual_variables": [
+        {
+          "id": "user_id",
+          "name": "user_id",
+          "displayName": "User ID",
+          "dataType": "string",
+          "uiControl": "text",
+          "required": true,
+          "defaultValue": "1"
+        }
+      ]
+    },
+    "flow_definition": {
+      "nodes": [
+        {
+          "id": "trigger_aggregation",
+          "type": "trigger",
+          "position": { "x": 200, "y": 100 },
+          "width": 220,
+          "height": 100,
+          "data": {
+            "label": "Manual Trigger",
+            "triggerType": "manual",
+            "manualVariables": [
+              {
+                "id": "user_id",
+                "name": "user_id",
+                "displayName": "User ID",
+                "dataType": "string",
+                "uiControl": "text",
+                "required": true,
+                "defaultValue": "1"
+              }
+            ]
+          }
+        },
+        {
+          "id": "fetch_user",
+          "type": "action",
+          "position": { "x": 100, "y": 240 },
+          "width": 200,
+          "height": 100,
+          "data": {
+            "label": "Fetch User Data",
+            "comment": "Fetches user information from JSONPlaceholder API",
+            "service": "http_request",
+            "serviceDisplayName": "HTTP Request",
+            "parameterMapping": {
+              "method": { "source": "value", "value": "GET" },
+              "url": { "source": "expression", "value": "f'https://jsonplaceholder.typicode.com/users/{trigger.user_id}'" },
+              "headers": { "source": "value", "value": { "Content-Type": "application/json" } }
+            }
+          }
+        },
+        {
+          "id": "fetch_posts",
+          "type": "action",
+          "position": { "x": 320, "y": 240 },
+          "width": 200,
+          "height": 100,
+          "data": {
+            "label": "Fetch User Posts",
+            "comment": "Fetches posts by user from JSONPlaceholder API",
+            "service": "http_request",
+            "serviceDisplayName": "HTTP Request",
+            "parameterMapping": {
+              "method": { "source": "value", "value": "GET" },
+              "url": { "source": "expression", "value": "f'https://jsonplaceholder.typicode.com/posts?userId={trigger.user_id}'" },
+              "headers": { "source": "value", "value": { "Content-Type": "application/json" } }
+            }
+          }
+        },
+        {
+          "id": "aggregate_data",
+          "type": "transform",
+          "position": { "x": 200, "y": 380 },
+          "width": 240,
+          "height": 160,
+          "data": {
+            "label": "Aggregate & Transform",
+            "script": "import json\n\n# Get data from previous nodes\nuser_response = node_outputs.get('fetch_user', {})\nposts_response = node_outputs.get('fetch_posts', {})\n\n# Parse JSON responses\nuser_data = json.loads(user_response.get('body', '{}')) if isinstance(user_response.get('body'), str) else user_response.get('body', {})\nposts_data = json.loads(posts_response.get('body', '[]')) if isinstance(posts_response.get('body'), str) else posts_response.get('body', [])\n\n# Aggregate data\noutput = {\n  'user_profile': {\n    'id': user_data.get('id'),\n    'name': user_data.get('name'),\n    'email': user_data.get('email'),\n    'company': user_data.get('company', {}).get('name', 'N/A')\n  },\n  'statistics': {\n    'total_posts': len(posts_data),\n    'avg_title_length': sum(len(post.get('title', '')) for post in posts_data) / len(posts_data) if posts_data else 0\n  },\n  'recent_posts': [\n    {\n      'id': post.get('id'),\n      'title': post.get('title'),\n      'excerpt': post.get('body', '')[:100] + '...'\n    }\n    for post in posts_data[:3]\n  ]\n}"
+          }
+        },
+        {
+          "id": "format_output",
+          "type": "transform",
+          "position": { "x": 200, "y": 580 },
+          "width": 240,
+          "height": 140,
+          "data": {
+            "label": "Format Final Output",
+            "script": "import json\nimport datetime\n\naggregated = node_outputs.get('aggregate_data', {})\n\n# Create formatted report\nreport = {\n  'generated_at': datetime.datetime.now().isoformat(),\n  'user_summary': {\n    'name': aggregated.get('user_profile', {}).get('name'),\n    'email': aggregated.get('user_profile', {}).get('email'),\n    'company': aggregated.get('user_profile', {}).get('company')\n  },\n  'content_stats': aggregated.get('statistics', {}),\n  'latest_posts': aggregated.get('recent_posts', []),\n  'status': 'success'\n}\n\noutput = {\n  'report': report,\n  'json_output': json.dumps(report, indent=2)\n}"
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "e1",
+          "source": "trigger_aggregation",
+          "target": "fetch_user",
+          "type": "smoothstep"
+        },
+        {
+          "id": "e2",
+          "source": "trigger_aggregation",
+          "target": "fetch_posts",
+          "type": "smoothstep"
+        },
+        {
+          "id": "e3",
+          "source": "fetch_user",
+          "target": "aggregate_data",
+          "type": "smoothstep"
+        },
+        {
+          "id": "e4",
+          "source": "fetch_posts",
+          "target": "aggregate_data",
+          "type": "smoothstep"
+        },
+        {
+          "id": "e5",
+          "source": "aggregate_data",
+          "target": "format_output",
+          "type": "smoothstep"
+        }
+      ]
+    },
+    "is_synchronous": false,
+    "sync_timeout": 30
+  },
+  "metadata": {
+    "required_applications": [],
+    "source_instance": {
+      "name": "IOFlow Example",
+      "version": "1.0"
+    }
+  }
+}

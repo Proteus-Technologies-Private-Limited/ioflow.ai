@@ -1,0 +1,286 @@
+/* Custom styles for resizable nodes */
+.react-flow__node {
+  /* Ensure the node container respects dimensions */
+  box-sizing: border-box;
+  transition: box-shadow 0.2s ease;
+}
+
+/* Remove blue outline and add default shadow when node is selected */
+.react-flow__node.selected {
+  box-shadow: none !important;
+  border-radius: 0.5rem;
+}
+
+/* Node-specific shadows matching their theme colors */
+/* Green nodes (Trigger) */
+.react-flow__node.selected > div[class*="bg-green-50"] {
+  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.35), 0 2px 8px rgba(34, 197, 94, 0.25);
+}
+
+/* Blue nodes (Action) */
+.react-flow__node.selected > div[class*="bg-blue-50"] {
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.35), 0 2px 8px rgba(59, 130, 246, 0.25);
+}
+
+/* Yellow nodes (Condition) */
+.react-flow__node.selected > div[class*="bg-yellow-50"] {
+  box-shadow: 0 4px 20px rgba(251, 191, 36, 0.35), 0 2px 8px rgba(251, 191, 36, 0.25);
+}
+
+/* Purple nodes (Transform) */
+.react-flow__node.selected > div[class*="bg-purple-50"] {
+  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.35), 0 2px 8px rgba(168, 85, 247, 0.25);
+}
+
+/* Red nodes (Response) */
+.react-flow__node.selected > div[class*="bg-red-50"] {
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.35), 0 2px 8px rgba(239, 68, 68, 0.25);
+}
+
+/* Orange nodes (Manual Trigger) */
+.react-flow__node.selected > div[class*="bg-orange-50"] {
+  box-shadow: 0 4px 20px rgba(249, 115, 22, 0.35), 0 2px 8px rgba(249, 115, 22, 0.25);
+}
+
+/* Amber nodes (Loop) */
+.react-flow__node.selected > div[class*="bg-amber-50"] {
+  box-shadow: 0 4px 20px rgba(251, 146, 60, 0.35), 0 2px 8px rgba(251, 146, 60, 0.25);
+}
+
+/* Indigo nodes */
+.react-flow__node.selected > div[class*="bg-indigo-50"] {
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35), 0 2px 8px rgba(99, 102, 241, 0.25);
+}
+
+/* Gray nodes */
+.react-flow__node.selected > div[class*="bg-gray-50"] {
+  box-shadow: 0 4px 20px rgba(107, 114, 128, 0.25), 0 2px 8px rgba(107, 114, 128, 0.15);
+}
+
+/* Ensure our custom nodes fill their container */
+.react-flow__node > div {
+  width: 100% !important;
+  height: 100% !important;
+  box-sizing: border-box;
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+/* Hide ALL resize controls by default */
+.react-flow__resize-control {
+  display: none !important;
+}
+
+/* Show only the bottom-right corner handle on hover */
+.react-flow__node.selected:hover .react-flow__resize-control.handle.bottom.right {
+  display: block !important;
+  width: 16px !important;
+  height: 16px !important;
+  background: transparent !important;
+  border: none !important;
+  opacity: 0.5 !important;
+  transition: opacity 0.2s ease !important;
+}
+
+.react-flow__node.selected:hover .react-flow__resize-control.handle.bottom.right:hover {
+  opacity: 1 !important;
+}
+
+/* Add a subtle resize icon using CSS */
+.react-flow__resize-control.handle.bottom.right::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid #6b7280;
+  border-bottom: 2px solid #6b7280;
+  border-bottom-right-radius: 2px;
+}
+
+/* Show all handles when actively resizing */
+.react-flow__node.selected .react-flow__resize-control.handle:active {
+  display: block !important;
+  opacity: 0 !important;
+}
+
+/* Cursor styles */
+.react-flow__node {
+  cursor: move;
+}
+
+.react-flow__resize-control.handle.bottom.right {
+  cursor: se-resize !important;
+}
+
+/* Edge and connection styles */
+.react-flow__edge-path {
+  cursor: pointer !important;
+}
+
+/* Hover state for edges */
+.react-flow__edge:hover .react-flow__edge-path {
+  stroke: #60a5fa !important; /* blue-400 on hover */
+  stroke-width: 3 !important;
+}
+
+/* Selected edge styles */
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #3b82f6 !important; /* blue-500 when selected */
+  stroke-width: 3 !important;
+  filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.4));
+}
+
+/* Connection line (when dragging) */
+.react-flow__connection-path {
+  stroke: #60a5fa !important; /* blue-400 */
+  stroke-width: 2 !important;
+  stroke-dasharray: 5 5 !important;
+  animation: dash 1s linear infinite !important;
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+
+/* Handle (connection point) styles */
+.react-flow__handle {
+  cursor: grab !important;
+  z-index: 10 !important;
+  position: absolute !important;
+  width: 12px !important;
+  height: 12px !important;
+  border: 2px solid white !important;
+  opacity: 0.7 !important;
+  transition: opacity 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease !important; /* Only transition visual properties, not position */
+  transform: translate3d(0, 0, 0) !important; /* Force GPU acceleration to prevent layout shifts */
+  box-sizing: border-box !important; /* Include border in width/height */
+  backface-visibility: hidden !important; /* Prevent flicker */
+  -webkit-backface-visibility: hidden !important;
+}
+
+/* Node-specific handle colors matching their theme */
+.react-flow__node div[class*="bg-green-"] .react-flow__handle {
+  background: rgba(34, 197, 94, 0.5) !important;
+}
+
+.react-flow__node div[class*="bg-blue-"] .react-flow__handle {
+  background: rgba(59, 130, 246, 0.5) !important;
+}
+
+.react-flow__node div[class*="bg-yellow-"] .react-flow__handle {
+  background: rgba(251, 191, 36, 0.5) !important;
+}
+
+.react-flow__node div[class*="bg-purple-"] .react-flow__handle {
+  background: rgba(168, 85, 247, 0.5) !important;
+}
+
+.react-flow__node div[class*="bg-red-"] .react-flow__handle {
+  background: rgba(239, 68, 68, 0.5) !important;
+}
+
+.react-flow__node div[class*="bg-orange-"] .react-flow__handle {
+  background: rgba(249, 115, 22, 0.5) !important;
+}
+
+.react-flow__node div[class*="bg-amber-"] .react-flow__handle {
+  background: rgba(251, 146, 60, 0.5) !important;
+}
+
+/* Handle hover state - no position shift, only shadow */
+.react-flow__handle:hover {
+  opacity: 1 !important;
+  cursor: pointer !important;
+  transform: translate3d(0, 0, 0) !important; /* Same transform as base state */
+  z-index: 11 !important;
+  width: 12px !important;  /* Keep exact same size */
+  height: 12px !important; /* Keep exact same size */
+  position: absolute !important; /* Ensure position doesn't change */
+  border: 2px solid white !important; /* Keep same border */
+  box-sizing: border-box !important; /* Include border in width/height */
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+}
+
+/* Node-specific handle hover shadows */
+.react-flow__node div[class*="bg-green-"] .react-flow__handle:hover {
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.6) !important;
+  background: rgba(34, 197, 94, 0.8) !important;
+}
+
+.react-flow__node div[class*="bg-blue-"] .react-flow__handle:hover {
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.6) !important;
+  background: rgba(59, 130, 246, 0.8) !important;
+}
+
+.react-flow__node div[class*="bg-yellow-"] .react-flow__handle:hover {
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.6) !important;
+  background: rgba(251, 191, 36, 0.8) !important;
+}
+
+.react-flow__node div[class*="bg-purple-"] .react-flow__handle:hover {
+  box-shadow: 0 0 8px rgba(168, 85, 247, 0.6) !important;
+  background: rgba(168, 85, 247, 0.8) !important;
+}
+
+.react-flow__node div[class*="bg-red-"] .react-flow__handle:hover {
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6) !important;
+  background: rgba(239, 68, 68, 0.8) !important;
+}
+
+.react-flow__node div[class*="bg-orange-"] .react-flow__handle:hover {
+  box-shadow: 0 0 8px rgba(249, 115, 22, 0.6) !important;
+  background: rgba(249, 115, 22, 0.8) !important;
+}
+
+.react-flow__node div[class*="bg-amber-"] .react-flow__handle:hover {
+  box-shadow: 0 0 8px rgba(251, 146, 60, 0.6) !important;
+  background: rgba(251, 146, 60, 0.8) !important;
+}
+
+/* Ensure handles are above node content */
+.react-flow__node .react-flow__handle {
+  z-index: 10 !important;
+}
+
+/* Prevent accidental node selection when interacting with handles */
+.react-flow__handle:active {
+  z-index: 12 !important;
+  cursor: grabbing !important;
+  opacity: 1 !important;
+}
+
+/* Make handle interaction area larger for easier clicking */
+.react-flow__handle::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 36px;  /* Fixed size instead of using negative margins */
+  height: 36px; /* Fixed size instead of using negative margins */
+  transform: translate(-50%, -50%); /* Center the interaction area */
+  cursor: inherit; /* Inherit cursor from parent */
+  z-index: -1; /* Behind the handle itself */
+}
+
+/* Connection indicator when hovering over a valid connection target */
+.react-flow__handle-connecting {
+  background: #10b981 !important; /* green-500 */
+  transform: translateZ(0) !important; /* Same transform as base */
+  width: 12px !important;
+  height: 12px !important;
+  position: absolute !important;
+}
+
+/* Handle when a valid connection can be made */
+.react-flow__handle-valid {
+  background: #10b981 !important; /* green-500 */
+  transform: translateZ(0) !important; /* Same transform as base */
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.6) !important;
+  width: 12px !important;
+  height: 12px !important;
+  position: absolute !important;
+}

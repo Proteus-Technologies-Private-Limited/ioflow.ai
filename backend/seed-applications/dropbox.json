@@ -1,0 +1,144 @@
+{
+  "key": "dropbox",
+  "application": {
+    "app_name": "Dropbox",
+    "app_type": "api",
+    "category": "Integration",
+    "auth_type": "oauth2",
+    "description": "File storage and sharing service",
+    "base_url": "https://api.dropboxapi.com",
+    "version": "1.0.3",
+    "auth_config": {
+      "authorization_url": "https://www.dropbox.com/oauth2/authorize",
+      "token_url": "https://api.dropboxapi.com/oauth2/token"
+    }
+  },
+  "services": [
+    {
+      "service_name": "upload_file",
+      "display_name": "Upload File",
+      "description": "Uploads a file to Dropbox using /files/upload",
+      "service_type": "api_call",
+      "endpoint_template": "/2/files/upload",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/octet-stream",
+          "Dropbox-API-Arg": "{\"path\": \"/{{path}}\",\"mode\":\"add\",\"autorename\":true,\"mute\":false}"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200,
+            201
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Path in Dropbox where the file will be uploaded"
+          },
+          "contents": {
+            "type": "string",
+            "description": "Base64-encoded file contents or raw binary depending on implementation"
+          }
+        },
+        "required": [
+          "path",
+          "contents"
+        ]
+      }
+    },
+    {
+      "service_name": "download_file",
+      "display_name": "Download File",
+      "description": "Downloads a file from Dropbox using /files/download",
+      "service_type": "api_call",
+      "endpoint_template": "/2/files/download",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Dropbox-API-Arg": "{\"path\": \"/{{path}}\"}",
+          "Content-Type": "application/octet-stream"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Path in Dropbox to download"
+          },
+          "dest": {
+            "type": "string",
+            "description": "Local destination path for the downloaded file"
+          }
+        },
+        "required": [
+          "path"
+        ]
+      }
+    }
+  ],
+  "events": [
+    {
+      "event_name": "file_changes",
+      "display_name": "File Changes",
+      "description": "Webhook fired when files or folders change in the user's Dropbox",
+      "event_type": "webhook",
+      "event_configuration": {
+        "type": "object",
+        "properties": {
+          "delta": {
+            "type": "object",
+            "description": "Change delta information"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "cursor": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "entries",
+          "cursor"
+        ]
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    }
+  ],
+  "_validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": [],
+    "validated_at": "2025-11-26T03:47:53.807841"
+  },
+  "metadata": {
+    "last_modified": "2025-11-25T22:17:53.822331",
+    "services_count": 2,
+    "events_count": 1
+  }
+}

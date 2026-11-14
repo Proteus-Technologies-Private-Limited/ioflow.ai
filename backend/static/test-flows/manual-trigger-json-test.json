@@ -1,0 +1,176 @@
+{
+  "flow_id": "test-manual-json-001",
+  "flow_name": "Manual Trigger JSON Test Flow",
+  "description": "Test flow to verify JSON-type variables in manual trigger modal",
+  "status": "active",
+  "trigger_config": {
+    "type": "manual",
+    "manual_variables": [
+      {
+        "id": "var1",
+        "name": "userName",
+        "displayName": "User Name",
+        "dataType": "string",
+        "uiControl": "text",
+        "required": true,
+        "description": "Enter the user's name",
+        "defaultValue": "John Doe"
+      },
+      {
+        "id": "var2",
+        "name": "userAge",
+        "displayName": "User Age",
+        "dataType": "number",
+        "uiControl": "number",
+        "required": true,
+        "description": "Enter the user's age",
+        "defaultValue": 25,
+        "validation": {
+          "min": 0,
+          "max": 150
+        }
+      },
+      {
+        "id": "var3",
+        "name": "userPreferences",
+        "displayName": "User Preferences",
+        "dataType": "json",
+        "uiControl": "code",
+        "required": false,
+        "description": "User preferences as JSON object",
+        "defaultValue": {
+          "theme": "dark",
+          "notifications": true,
+          "language": "en"
+        }
+      },
+      {
+        "id": "var4",
+        "name": "complexData",
+        "displayName": "Complex Nested Data",
+        "dataType": "json",
+        "required": false,
+        "description": "Complex nested JSON structure",
+        "defaultValue": {
+          "user": {
+            "profile": {
+              "firstName": "Jane",
+              "lastName": "Smith",
+              "email": "jane.smith@example.com"
+            },
+            "settings": {
+              "privacy": {
+                "showEmail": false,
+                "showPhone": false
+              },
+              "features": ["dashboard", "reports", "analytics"]
+            }
+          },
+          "metadata": {
+            "createdAt": "2024-01-01T00:00:00Z",
+            "lastModified": "2024-01-15T10:30:00Z",
+            "version": "2.0"
+          }
+        }
+      },
+      {
+        "id": "var5",
+        "name": "apiConfig",
+        "displayName": "API Configuration",
+        "dataType": "json",
+        "uiControl": "code",
+        "required": false,
+        "description": "API configuration settings",
+        "defaultValue": {
+          "endpoints": {
+            "users": "/api/v1/users",
+            "products": "/api/v1/products"
+          },
+          "headers": {
+            "Accept": "application/json",
+            "X-API-Version": "1.0"
+          },
+          "timeout": 30000
+        }
+      },
+      {
+        "id": "var6",
+        "name": "isActive",
+        "displayName": "Is Active",
+        "dataType": "boolean",
+        "uiControl": "checkbox",
+        "required": false,
+        "description": "Whether the user is active",
+        "defaultValue": true
+      },
+      {
+        "id": "var7",
+        "name": "notes",
+        "displayName": "Additional Notes",
+        "dataType": "string",
+        "uiControl": "textarea",
+        "required": false,
+        "description": "Any additional notes or comments",
+        "defaultValue": "This is a test flow for JSON variables"
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "id": "trigger",
+      "type": "trigger",
+      "position": { "x": 100, "y": 100 },
+      "data": {
+        "label": "Manual Trigger",
+        "config": {
+          "type": "manual"
+        }
+      }
+    },
+    {
+      "id": "action1",
+      "type": "action",
+      "position": { "x": 300, "y": 100 },
+      "data": {
+        "label": "Process Data",
+        "config": {
+          "action": "log",
+          "parameters": {
+            "message": "Processing manual trigger data",
+            "data": "{{trigger.data}}"
+          }
+        }
+      }
+    },
+    {
+      "id": "response",
+      "type": "response",
+      "position": { "x": 500, "y": 100 },
+      "data": {
+        "label": "Success Response",
+        "config": {
+          "status": 200,
+          "body": {
+            "message": "Flow completed successfully",
+            "receivedData": "{{trigger.data}}",
+            "processedAt": "{{now()}}"
+          }
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "trigger",
+      "target": "action1"
+    },
+    {
+      "id": "e2",
+      "source": "action1",
+      "target": "response"
+    }
+  ],
+  "created_at": "2024-01-20T10:00:00Z",
+  "updated_at": "2024-01-20T10:00:00Z"
+}

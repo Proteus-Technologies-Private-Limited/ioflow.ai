@@ -1,0 +1,2034 @@
+{
+  "key": "google_sheets",
+  "application": {
+    "app_name": "Google Sheets",
+    "app_type": "database",
+    "description": "Google Sheets API v4 - Read, write, and format Google Sheets data. Create and manage spreadsheets, worksheets, and cells programmatically.",
+    "category": "Database",
+    "auth_type": "oauth2",
+    "auth_config": {
+      "authorization_url": "https://accounts.google.com/o/oauth2/v2/auth",
+      "token_url": "https://oauth2.googleapis.com/token",
+      "scopes": [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive.file",
+        "https://www.googleapis.com/auth/drive.readonly"
+      ],
+      "grant_type": "authorization_code",
+      "authorization_params": {
+        "access_type": "offline",
+        "prompt": "consent"
+      }
+    },
+    "version": "2.6.0",
+    "base_url": "https://sheets.googleapis.com/v4",
+    "icon_url": "https://ssl.gstatic.com/docs/common/product/sheets_app_icon3.png",
+    "auth_example": {
+      "client_id": "your_client_id",
+      "client_secret": "your_client_secret",
+      "redirect_uri": "http://localhost:8000/api/v1/oauth/callback"
+    },
+    "app_scope": "tenant"
+  },
+  "services": [
+    {
+      "service_name": "list_spreadsheets",
+      "description": "Lists spreadsheets from Google Drive",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "query_params",
+        "query_params_template": {
+          "q": "mimeType='application/vnd.google-apps.spreadsheet'",
+          "fields": "files(id,name)",
+          "pageSize": "100"
+        },
+        "method": "GET"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      },
+      "sample_input": {},
+      "sample_output": {
+        "files": [
+          {
+            "id": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+            "name": "My Spreadsheet"
+          },
+          {
+            "id": "1kFGzfh_Sz5pVAK-Pr3u5jpX6J7uU1mChDGfmUMTqrY8",
+            "name": "Budget 2025"
+          }
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "files": {
+            "type": "array",
+            "description": "List of spreadsheet files",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "The spreadsheet ID"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The spreadsheet name"
+                }
+              }
+            }
+          }
+        }
+      },
+      "endpoint_template": "https://www.googleapis.com/drive/v3/files"
+    },
+    {
+      "service_name": "create_spreadsheet",
+      "description": "Creates a new spreadsheet, returning the newly created spreadsheet",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "body_template": {
+          "properties": {
+            "title": "{{title}}",
+            "locale": "{{locale}}",
+            "autoRecalc": "{{autoRecalc}}",
+            "timeZone": "{{timeZone}}"
+          },
+          "sheets": "{{sheets}}"
+        },
+        "method": "POST"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "The title of the spreadsheet"
+          },
+          "locale": {
+            "type": "string",
+            "description": "The locale of the spreadsheet"
+          },
+          "autoRecalc": {
+            "type": "string",
+            "description": "How often to recalculate volatile functions",
+            "enum": [
+              "ON_CHANGE",
+              "MINUTE",
+              "HOUR"
+            ]
+          },
+          "timeZone": {
+            "type": "string",
+            "description": "The time zone of the spreadsheet"
+          },
+          "sheets": {
+            "type": "array",
+            "description": "Array of sheet specifications to create"
+          }
+        },
+        "required": [
+          "title"
+        ]
+      },
+      "sample_input": {
+        "title": "My New Spreadsheet",
+        "locale": "en_US",
+        "timeZone": "America/New_York"
+      },
+      "sample_output": {
+        "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+        "properties": {
+          "title": "My New Spreadsheet",
+          "locale": "en_US",
+          "timeZone": "America/New_York"
+        },
+        "sheets": [
+          {
+            "properties": {
+              "sheetId": 0,
+              "title": "Sheet1",
+              "index": 0
+            }
+          }
+        ],
+        "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "spreadsheetId": {
+            "type": "string",
+            "description": "The ID of the created spreadsheet"
+          },
+          "properties": {
+            "type": "object",
+            "description": "Properties of the spreadsheet",
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "Title of the spreadsheet"
+              },
+              "locale": {
+                "type": "string",
+                "description": "Locale of the spreadsheet"
+              },
+              "timeZone": {
+                "type": "string",
+                "description": "Time zone of the spreadsheet"
+              }
+            }
+          },
+          "sheets": {
+            "type": "array",
+            "description": "List of sheets in the spreadsheet",
+            "items": {
+              "type": "object",
+              "properties": {
+                "properties": {
+                  "type": "object",
+                  "properties": {
+                    "sheetId": {
+                      "type": "integer",
+                      "description": "The ID of the sheet"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "The name of the sheet"
+                    },
+                    "index": {
+                      "type": "integer",
+                      "description": "The index of the sheet"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "spreadsheetUrl": {
+            "type": "string",
+            "description": "The URL of the spreadsheet"
+          }
+        }
+      },
+      "endpoint_template": "/spreadsheets"
+    },
+    {
+      "service_name": "get_spreadsheet",
+      "description": "Returns the spreadsheet at the given ID. The caller must specify the spreadsheet ID.",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "query_params_template": {
+          "ranges": "{{ranges}}",
+          "includeGridData": "{{includeGridData}}"
+        },
+        "method": "GET"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "spreadsheetId": {
+            "type": "string",
+            "description": "The ID of the spreadsheet to retrieve",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_spreadsheets",
+              "method": "GET",
+              "endpoint": "https://www.googleapis.com/drive/v3/files?q=mimeType='application/vnd.google-apps.spreadsheet'&fields=files(id,name)&pageSize=100",
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select from available spreadsheets"
+            }
+          },
+          "ranges": {
+            "type": "array",
+            "description": "The ranges to retrieve from the spreadsheet",
+            "items": {
+              "type": "string",
+              "parameterLookup": {
+                "type": "static",
+                "options": [
+                  {
+                    "value": "Sheet1!A1:Z1000",
+                    "display": "Sheet1 - Full Range (A1:Z1000)"
+                  },
+                  {
+                    "value": "Sheet1!A:A",
+                    "display": "Sheet1 - Column A"
+                  },
+                  {
+                    "value": "Sheet1!1:1",
+                    "display": "Sheet1 - Row 1"
+                  },
+                  {
+                    "value": "Sheet1!A1:E10",
+                    "display": "Sheet1 - Small Range (A1:E10)"
+                  },
+                  {
+                    "value": "Sheet1",
+                    "display": "Sheet1 - Entire Sheet"
+                  }
+                ],
+                "description": "Select a common range or enter custom"
+              }
+            }
+          },
+          "includeGridData": {
+            "type": "boolean",
+            "description": "True if grid data should be returned"
+          }
+        },
+        "required": [
+          "spreadsheetId"
+        ]
+      },
+      "sample_input": {
+        "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+        "includeGridData": false
+      },
+      "sample_output": {
+        "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+        "properties": {
+          "title": "My Spreadsheet",
+          "locale": "en_US",
+          "timeZone": "America/New_York"
+        },
+        "sheets": [
+          {
+            "properties": {
+              "sheetId": 0,
+              "title": "Sheet1",
+              "index": 0,
+              "sheetType": "GRID",
+              "gridProperties": {
+                "rowCount": 1000,
+                "columnCount": 26
+              }
+            }
+          }
+        ],
+        "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "spreadsheetId": {
+            "type": "string",
+            "description": "The ID of the spreadsheet"
+          },
+          "properties": {
+            "type": "object",
+            "description": "Properties of the spreadsheet",
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "Title of the spreadsheet"
+              },
+              "locale": {
+                "type": "string",
+                "description": "Locale of the spreadsheet"
+              },
+              "timeZone": {
+                "type": "string",
+                "description": "Time zone of the spreadsheet"
+              }
+            }
+          },
+          "sheets": {
+            "type": "array",
+            "description": "List of sheets in the spreadsheet",
+            "items": {
+              "type": "object",
+              "properties": {
+                "properties": {
+                  "type": "object",
+                  "properties": {
+                    "sheetId": {
+                      "type": "integer",
+                      "description": "The ID of the sheet"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "The name of the sheet"
+                    },
+                    "index": {
+                      "type": "integer",
+                      "description": "The index of the sheet"
+                    },
+                    "sheetType": {
+                      "type": "string",
+                      "description": "The type of the sheet"
+                    },
+                    "gridProperties": {
+                      "type": "object",
+                      "properties": {
+                        "rowCount": {
+                          "type": "integer",
+                          "description": "Number of rows in the sheet"
+                        },
+                        "columnCount": {
+                          "type": "integer",
+                          "description": "Number of columns in the sheet"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "spreadsheetUrl": {
+            "type": "string",
+            "description": "The URL of the spreadsheet"
+          }
+        }
+      },
+      "endpoint_template": "/spreadsheets/{{spreadsheetId}}"
+    },
+    {
+      "service_name": "batch_update",
+      "description": "Applies one or more updates to the spreadsheet. Each request is validated and applied atomically.",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "body_template": {
+          "requests": "{{requests}}",
+          "includeSpreadsheetInResponse": "{{includeSpreadsheetInResponse}}",
+          "responseRanges": "{{responseRanges}}",
+          "responseIncludeGridData": "{{responseIncludeGridData}}"
+        },
+        "method": "POST"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "spreadsheetId": {
+            "type": "string",
+            "description": "The spreadsheet to apply the updates to",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_spreadsheets",
+              "method": "GET",
+              "endpoint": "https://www.googleapis.com/drive/v3/files?q=mimeType='application/vnd.google-apps.spreadsheet'&fields=files(id,name)&pageSize=100",
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select from available spreadsheets"
+            }
+          },
+          "requests": {
+            "type": "array",
+            "description": "Array of update requests to apply"
+          },
+          "includeSpreadsheetInResponse": {
+            "type": "boolean",
+            "description": "True if the response should include the spreadsheet resource"
+          },
+          "responseRanges": {
+            "type": "array",
+            "description": "Ranges to return in the response"
+          },
+          "responseIncludeGridData": {
+            "type": "boolean",
+            "description": "True if the response should include grid data"
+          }
+        },
+        "required": [
+          "spreadsheetId",
+          "requests"
+        ]
+      },
+      "sample_input": {
+        "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+        "requests": [
+          {
+            "updateSpreadsheetProperties": {
+              "properties": {
+                "title": "Updated Title"
+              },
+              "fields": "title"
+            }
+          }
+        ]
+      },
+      "sample_output": {
+        "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+        "replies": [
+          {}
+        ],
+        "updatedSpreadsheet": {
+          "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+          "properties": {
+            "title": "Updated Title"
+          }
+        }
+      },
+      "endpoint_template": "/spreadsheets/{{spreadsheetId}}:batchUpdate",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "spreadsheetId": {
+            "type": "string",
+            "description": "The spreadsheetId"
+          },
+          "replies": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {}
+            },
+            "description": "List of replies"
+          },
+          "updatedSpreadsheet": {
+            "type": "object",
+            "properties": {
+              "spreadsheetId": {
+                "type": "string",
+                "description": "The spreadsheetId"
+              },
+              "properties": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "description": "The title"
+                  }
+                },
+                "description": "Properties of the object"
+              }
+            },
+            "description": "The updatedSpreadsheet"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_values",
+      "description": "Returns a range of values from a spreadsheet. The caller must specify the spreadsheet ID and a range.",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "query_params_template": {
+          "majorDimension": "{{majorDimension}}",
+          "valueRenderOption": "{{valueRenderOption}}",
+          "dateTimeRenderOption": "{{dateTimeRenderOption}}"
+        },
+        "method": "GET"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "spreadsheetId": {
+            "type": "string",
+            "description": "The ID of the spreadsheet to retrieve data from",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_spreadsheets",
+              "method": "GET",
+              "endpoint": "https://www.googleapis.com/drive/v3/files?q=mimeType='application/vnd.google-apps.spreadsheet'&fields=files(id,name)&pageSize=100",
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select from available spreadsheets"
+            }
+          },
+          "range": {
+            "type": "string",
+            "description": "The A1 notation of the values to retrieve",
+            "parameterLookup": {
+              "type": "static",
+              "options": [
+                {
+                  "value": "Sheet1!A1:Z1000",
+                  "display": "Sheet1 - Full Range (A1:Z1000)"
+                },
+                {
+                  "value": "Sheet1!A:A",
+                  "display": "Sheet1 - Column A"
+                },
+                {
+                  "value": "Sheet1!1:1",
+                  "display": "Sheet1 - Row 1"
+                },
+                {
+                  "value": "Sheet1!A1:E10",
+                  "display": "Sheet1 - Small Range (A1:E10)"
+                },
+                {
+                  "value": "Sheet1",
+                  "display": "Sheet1 - Entire Sheet"
+                },
+                {
+                  "value": "A1:Z1000",
+                  "display": "Active Sheet - Full Range (A1:Z1000)"
+                },
+                {
+                  "value": "A:A",
+                  "display": "Active Sheet - Column A"
+                },
+                {
+                  "value": "1:1",
+                  "display": "Active Sheet - Row 1"
+                },
+                {
+                  "value": "A1:E10",
+                  "display": "Active Sheet - Small Range (A1:E10)"
+                }
+              ],
+              "description": "Select a common range or enter custom"
+            }
+          },
+          "majorDimension": {
+            "type": "string",
+            "description": "The major dimension of the values",
+            "enum": [
+              "ROWS",
+              "COLUMNS"
+            ]
+          },
+          "valueRenderOption": {
+            "type": "string",
+            "description": "How values should be represented in the output",
+            "enum": [
+              "FORMATTED_VALUE",
+              "UNFORMATTED_VALUE",
+              "FORMULA"
+            ]
+          },
+          "dateTimeRenderOption": {
+            "type": "string",
+            "description": "How dates should be represented",
+            "enum": [
+              "SERIAL_NUMBER",
+              "FORMATTED_STRING"
+            ]
+          }
+        },
+        "required": [
+          "spreadsheetId",
+          "range"
+        ]
+      },
+      "sample_input": {
+        "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+        "range": "Sheet1!A1:D5"
+      },
+      "sample_output": {
+        "range": "Sheet1!A1:D5",
+        "majorDimension": "ROWS",
+        "values": [
+          [
+            "Name",
+            "Age",
+            "City",
+            "Country"
+          ],
+          [
+            "John",
+            "25",
+            "New York",
+            "USA"
+          ],
+          [
+            "Maria",
+            "30",
+            "London",
+            "UK"
+          ],
+          [
+            "Lee",
+            "28",
+            "Tokyo",
+            "Japan"
+          ],
+          [
+            "Anna",
+            "22",
+            "Paris",
+            "France"
+          ]
+        ]
+      },
+      "endpoint_template": "/spreadsheets/{{spreadsheetId}}/values/{{range}}",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "range": {
+            "type": "string",
+            "description": "The range"
+          },
+          "majorDimension": {
+            "type": "string",
+            "description": "The majorDimension"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "description": "The valuess"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "update_values",
+      "description": "Sets values in a range of a spreadsheet. The caller must specify the spreadsheet ID, range, and a valueInputOption.",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "query_params_template": {
+          "valueInputOption": "{{valueInputOption}}",
+          "includeValuesInResponse": "{{includeValuesInResponse}}",
+          "responseValueRenderOption": "{{responseValueRenderOption}}",
+          "responseDateTimeRenderOption": "{{responseDateTimeRenderOption}}"
+        },
+        "body_template": {
+          "range": "{{range}}",
+          "majorDimension": "{{majorDimension}}",
+          "values": "{{values}}"
+        },
+        "method": "PUT"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "spreadsheetId": {
+            "type": "string",
+            "description": "The ID of the spreadsheet to update",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_spreadsheets",
+              "method": "GET",
+              "endpoint": "https://www.googleapis.com/drive/v3/files?q=mimeType='application/vnd.google-apps.spreadsheet'&fields=files(id,name)&pageSize=100",
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select from available spreadsheets"
+            }
+          },
+          "range": {
+            "type": "string",
+            "description": "The A1 notation of the values to update",
+            "parameterLookup": {
+              "type": "static",
+              "options": [
+                {
+                  "value": "Sheet1!A1:Z1000",
+                  "display": "Sheet1 - Full Range (A1:Z1000)"
+                },
+                {
+                  "value": "Sheet1!A:A",
+                  "display": "Sheet1 - Column A"
+                },
+                {
+                  "value": "Sheet1!1:1",
+                  "display": "Sheet1 - Row 1"
+                },
+                {
+                  "value": "Sheet1!A1:E10",
+                  "display": "Sheet1 - Small Range (A1:E10)"
+                },
+                {
+                  "value": "Sheet1",
+                  "display": "Sheet1 - Entire Sheet"
+                },
+                {
+                  "value": "A1:Z1000",
+                  "display": "Active Sheet - Full Range (A1:Z1000)"
+                },
+                {
+                  "value": "A:A",
+                  "display": "Active Sheet - Column A"
+                },
+                {
+                  "value": "1:1",
+                  "display": "Active Sheet - Row 1"
+                },
+                {
+                  "value": "A1:E10",
+                  "display": "Active Sheet - Small Range (A1:E10)"
+                }
+              ],
+              "description": "Select a common range or enter custom"
+            }
+          },
+          "valueInputOption": {
+            "type": "string",
+            "description": "How the input data should be interpreted",
+            "enum": [
+              "RAW",
+              "USER_ENTERED"
+            ]
+          },
+          "values": {
+            "type": "array",
+            "description": "The data to write to the range"
+          },
+          "majorDimension": {
+            "type": "string",
+            "description": "The major dimension of the values",
+            "enum": [
+              "ROWS",
+              "COLUMNS"
+            ]
+          },
+          "includeValuesInResponse": {
+            "type": "boolean",
+            "description": "Include the values in the response"
+          },
+          "responseValueRenderOption": {
+            "type": "string",
+            "description": "How values should be represented in response",
+            "enum": [
+              "FORMATTED_VALUE",
+              "UNFORMATTED_VALUE",
+              "FORMULA"
+            ]
+          },
+          "responseDateTimeRenderOption": {
+            "type": "string",
+            "description": "How dates should be represented in response",
+            "enum": [
+              "SERIAL_NUMBER",
+              "FORMATTED_STRING"
+            ]
+          }
+        },
+        "required": [
+          "spreadsheetId",
+          "range",
+          "valueInputOption",
+          "values"
+        ]
+      },
+      "sample_input": {
+        "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+        "range": "Sheet1!A1:C2",
+        "valueInputOption": "USER_ENTERED",
+        "values": [
+          [
+            "Name",
+            "Age",
+            "City"
+          ],
+          [
+            "John Doe",
+            "30",
+            "New York"
+          ]
+        ]
+      },
+      "sample_output": {
+        "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+        "updatedRange": "Sheet1!A1:C2",
+        "updatedRows": 2,
+        "updatedColumns": 3,
+        "updatedCells": 6
+      },
+      "endpoint_template": "/spreadsheets/{{spreadsheetId}}/values/{{range}}",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "spreadsheetId": {
+            "type": "string",
+            "description": "The spreadsheetId"
+          },
+          "updatedRange": {
+            "type": "string",
+            "description": "The updatedRange"
+          },
+          "updatedRows": {
+            "type": "integer",
+            "description": "The updatedRows"
+          },
+          "updatedColumns": {
+            "type": "integer",
+            "description": "The updatedColumns"
+          },
+          "updatedCells": {
+            "type": "integer",
+            "description": "The updatedCells"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "append_values",
+      "description": "Appends values to a spreadsheet. The caller must specify the spreadsheet ID, a range, and a valueInputOption.",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "query_params_template": {
+          "valueInputOption": "{{valueInputOption}}",
+          "insertDataOption": "{{insertDataOption}}",
+          "includeValuesInResponse": "{{includeValuesInResponse}}",
+          "responseValueRenderOption": "{{responseValueRenderOption}}",
+          "responseDateTimeRenderOption": "{{responseDateTimeRenderOption}}"
+        },
+        "body_template": {
+          "range": "{{range}}",
+          "majorDimension": "{{majorDimension}}",
+          "values": "{{values}}"
+        },
+        "method": "POST"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "spreadsheetId": {
+            "type": "string",
+            "description": "The ID of the spreadsheet to update",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_spreadsheets",
+              "method": "GET",
+              "endpoint": "https://www.googleapis.com/drive/v3/files?q=mimeType='application/vnd.google-apps.spreadsheet'&fields=files(id,name)&pageSize=100",
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select from available spreadsheets"
+            }
+          },
+          "range": {
+            "type": "string",
+            "description": "The A1 notation of a range to search for a table",
+            "parameterLookup": {
+              "type": "static",
+              "options": [
+                {
+                  "value": "Sheet1!A1:Z1000",
+                  "display": "Sheet1 - Full Range (A1:Z1000)"
+                },
+                {
+                  "value": "Sheet1!A:A",
+                  "display": "Sheet1 - Column A"
+                },
+                {
+                  "value": "Sheet1!1:1",
+                  "display": "Sheet1 - Row 1"
+                },
+                {
+                  "value": "Sheet1!A1:E10",
+                  "display": "Sheet1 - Small Range (A1:E10)"
+                },
+                {
+                  "value": "Sheet1",
+                  "display": "Sheet1 - Entire Sheet"
+                },
+                {
+                  "value": "A1:Z1000",
+                  "display": "Active Sheet - Full Range (A1:Z1000)"
+                },
+                {
+                  "value": "A:A",
+                  "display": "Active Sheet - Column A"
+                },
+                {
+                  "value": "1:1",
+                  "display": "Active Sheet - Row 1"
+                },
+                {
+                  "value": "A1:E10",
+                  "display": "Active Sheet - Small Range (A1:E10)"
+                }
+              ],
+              "description": "Select a common range or enter custom"
+            }
+          },
+          "valueInputOption": {
+            "type": "string",
+            "description": "How the input data should be interpreted",
+            "enum": [
+              "RAW",
+              "USER_ENTERED"
+            ]
+          },
+          "values": {
+            "type": "array",
+            "description": "The data to append to the table"
+          },
+          "insertDataOption": {
+            "type": "string",
+            "description": "How the input data should be inserted",
+            "enum": [
+              "OVERWRITE",
+              "INSERT_ROWS"
+            ]
+          },
+          "majorDimension": {
+            "type": "string",
+            "description": "The major dimension of the values",
+            "enum": [
+              "ROWS",
+              "COLUMNS"
+            ]
+          },
+          "includeValuesInResponse": {
+            "type": "boolean",
+            "description": "Include the appended values in the response"
+          },
+          "responseValueRenderOption": {
+            "type": "string",
+            "description": "How values should be represented in response",
+            "enum": [
+              "FORMATTED_VALUE",
+              "UNFORMATTED_VALUE",
+              "FORMULA"
+            ]
+          },
+          "responseDateTimeRenderOption": {
+            "type": "string",
+            "description": "How dates should be represented in response",
+            "enum": [
+              "SERIAL_NUMBER",
+              "FORMATTED_STRING"
+            ]
+          }
+        },
+        "required": [
+          "spreadsheetId",
+          "range",
+          "valueInputOption",
+          "values"
+        ]
+      },
+      "sample_input": {
+        "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+        "range": "Sheet1!A1",
+        "valueInputOption": "USER_ENTERED",
+        "values": [
+          [
+            "Jane Smith",
+            "28",
+            "Los Angeles"
+          ]
+        ]
+      },
+      "sample_output": {
+        "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+        "tableRange": "Sheet1!A1:C5",
+        "updates": {
+          "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+          "updatedRange": "Sheet1!A6:C6",
+          "updatedRows": 1,
+          "updatedColumns": 3,
+          "updatedCells": 3
+        }
+      },
+      "endpoint_template": "/spreadsheets/{{spreadsheetId}}/values/{{range}}:append",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "spreadsheetId": {
+            "type": "string",
+            "description": "The spreadsheetId"
+          },
+          "tableRange": {
+            "type": "string",
+            "description": "The tableRange"
+          },
+          "updates": {
+            "type": "object",
+            "properties": {
+              "spreadsheetId": {
+                "type": "string",
+                "description": "The spreadsheetId"
+              },
+              "updatedRange": {
+                "type": "string",
+                "description": "The updatedRange"
+              },
+              "updatedRows": {
+                "type": "integer",
+                "description": "The updatedRows"
+              },
+              "updatedColumns": {
+                "type": "integer",
+                "description": "The updatedColumns"
+              },
+              "updatedCells": {
+                "type": "integer",
+                "description": "The updatedCells"
+              }
+            },
+            "description": "The updates"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "clear_values",
+      "description": "Clears values from a spreadsheet. The caller must specify the spreadsheet ID and range.",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "body_template": {},
+        "method": "POST"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "spreadsheetId": {
+            "type": "string",
+            "description": "The ID of the spreadsheet to update",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_spreadsheets",
+              "method": "GET",
+              "endpoint": "https://www.googleapis.com/drive/v3/files?q=mimeType='application/vnd.google-apps.spreadsheet'&fields=files(id,name)&pageSize=100",
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select from available spreadsheets"
+            }
+          },
+          "range": {
+            "type": "string",
+            "description": "The A1 notation of the values to clear",
+            "parameterLookup": {
+              "type": "static",
+              "options": [
+                {
+                  "value": "Sheet1!A1:Z1000",
+                  "display": "Sheet1 - Full Range (A1:Z1000)"
+                },
+                {
+                  "value": "Sheet1!A:A",
+                  "display": "Sheet1 - Column A"
+                },
+                {
+                  "value": "Sheet1!1:1",
+                  "display": "Sheet1 - Row 1"
+                },
+                {
+                  "value": "Sheet1!A1:E10",
+                  "display": "Sheet1 - Small Range (A1:E10)"
+                },
+                {
+                  "value": "Sheet1",
+                  "display": "Sheet1 - Entire Sheet"
+                },
+                {
+                  "value": "A1:Z1000",
+                  "display": "Active Sheet - Full Range (A1:Z1000)"
+                },
+                {
+                  "value": "A:A",
+                  "display": "Active Sheet - Column A"
+                },
+                {
+                  "value": "1:1",
+                  "display": "Active Sheet - Row 1"
+                },
+                {
+                  "value": "A1:E10",
+                  "display": "Active Sheet - Small Range (A1:E10)"
+                }
+              ],
+              "description": "Select a common range or enter custom"
+            }
+          }
+        },
+        "required": [
+          "spreadsheetId",
+          "range"
+        ]
+      },
+      "sample_input": {
+        "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+        "range": "Sheet1!A1:D10"
+      },
+      "sample_output": {
+        "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+        "clearedRange": "Sheet1!A1:D10"
+      },
+      "endpoint_template": "/spreadsheets/{{spreadsheetId}}/values/{{range}}:clear",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "spreadsheetId": {
+            "type": "string",
+            "description": "The spreadsheetId"
+          },
+          "clearedRange": {
+            "type": "string",
+            "description": "The clearedRange"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "batch_get_values",
+      "description": "Returns one or more ranges of values from a spreadsheet. The caller must specify the spreadsheet ID and one or more ranges.",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "query_params_template": {
+          "ranges": "{{ranges}}",
+          "majorDimension": "{{majorDimension}}",
+          "valueRenderOption": "{{valueRenderOption}}",
+          "dateTimeRenderOption": "{{dateTimeRenderOption}}"
+        },
+        "method": "GET"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "spreadsheetId": {
+            "type": "string",
+            "description": "The ID of the spreadsheet to retrieve data from",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_spreadsheets",
+              "method": "GET",
+              "endpoint": "https://www.googleapis.com/drive/v3/files?q=mimeType='application/vnd.google-apps.spreadsheet'&fields=files(id,name)&pageSize=100",
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select from available spreadsheets"
+            }
+          },
+          "ranges": {
+            "type": "array",
+            "description": "The A1 notation of the values to retrieve",
+            "items": {
+              "type": "string"
+            }
+          },
+          "majorDimension": {
+            "type": "string",
+            "description": "The major dimension of the values",
+            "enum": [
+              "ROWS",
+              "COLUMNS"
+            ]
+          },
+          "valueRenderOption": {
+            "type": "string",
+            "description": "How values should be represented in the output",
+            "enum": [
+              "FORMATTED_VALUE",
+              "UNFORMATTED_VALUE",
+              "FORMULA"
+            ]
+          },
+          "dateTimeRenderOption": {
+            "type": "string",
+            "description": "How dates should be represented",
+            "enum": [
+              "SERIAL_NUMBER",
+              "FORMATTED_STRING"
+            ]
+          }
+        },
+        "required": [
+          "spreadsheetId",
+          "ranges"
+        ]
+      },
+      "sample_input": {
+        "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+        "ranges": [
+          "Sheet1!A1:B2",
+          "Sheet1!D1:E2"
+        ]
+      },
+      "sample_output": {
+        "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+        "valueRanges": [
+          {
+            "range": "Sheet1!A1:B2",
+            "majorDimension": "ROWS",
+            "values": [
+              [
+                "A1",
+                "B1"
+              ],
+              [
+                "A2",
+                "B2"
+              ]
+            ]
+          },
+          {
+            "range": "Sheet1!D1:E2",
+            "majorDimension": "ROWS",
+            "values": [
+              [
+                "D1",
+                "E1"
+              ],
+              [
+                "D2",
+                "E2"
+              ]
+            ]
+          }
+        ]
+      },
+      "endpoint_template": "/spreadsheets/{{spreadsheetId}}/values:batchGet",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "spreadsheetId": {
+            "type": "string",
+            "description": "The spreadsheetId"
+          },
+          "valueRanges": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "range": {
+                  "type": "string",
+                  "description": "The range"
+                },
+                "majorDimension": {
+                  "type": "string",
+                  "description": "The majorDimension"
+                },
+                "values": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "description": "The valuess"
+                }
+              }
+            },
+            "description": "The valueRanges"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "batch_update_values",
+      "description": "Sets values in one or more ranges of a spreadsheet. The caller must specify the spreadsheet ID, a valueInputOption, and one or more ValueRanges.",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "body_template": {
+          "valueInputOption": "{{valueInputOption}}",
+          "data": "{{data}}",
+          "includeValuesInResponse": "{{includeValuesInResponse}}",
+          "responseValueRenderOption": "{{responseValueRenderOption}}",
+          "responseDateTimeRenderOption": "{{responseDateTimeRenderOption}}"
+        },
+        "method": "POST"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "spreadsheetId": {
+            "type": "string",
+            "description": "The ID of the spreadsheet to update",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_spreadsheets",
+              "method": "GET",
+              "endpoint": "https://www.googleapis.com/drive/v3/files?q=mimeType='application/vnd.google-apps.spreadsheet'&fields=files(id,name)&pageSize=100",
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select from available spreadsheets"
+            }
+          },
+          "valueInputOption": {
+            "type": "string",
+            "description": "How the input data should be interpreted",
+            "enum": [
+              "RAW",
+              "USER_ENTERED"
+            ]
+          },
+          "data": {
+            "type": "array",
+            "description": "Array of value range objects to update"
+          },
+          "includeValuesInResponse": {
+            "type": "boolean",
+            "description": "Include the values in the response"
+          },
+          "responseValueRenderOption": {
+            "type": "string",
+            "description": "How values should be represented in response",
+            "enum": [
+              "FORMATTED_VALUE",
+              "UNFORMATTED_VALUE",
+              "FORMULA"
+            ]
+          },
+          "responseDateTimeRenderOption": {
+            "type": "string",
+            "description": "How dates should be represented in response",
+            "enum": [
+              "SERIAL_NUMBER",
+              "FORMATTED_STRING"
+            ]
+          }
+        },
+        "required": [
+          "spreadsheetId",
+          "valueInputOption",
+          "data"
+        ]
+      },
+      "sample_input": {
+        "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+        "valueInputOption": "USER_ENTERED",
+        "data": [
+          {
+            "range": "Sheet1!A1:B2",
+            "values": [
+              [
+                "Updated A1",
+                "Updated B1"
+              ],
+              [
+                "Updated A2",
+                "Updated B2"
+              ]
+            ]
+          },
+          {
+            "range": "Sheet1!D1:E2",
+            "values": [
+              [
+                "New D1",
+                "New E1"
+              ],
+              [
+                "New D2",
+                "New E2"
+              ]
+            ]
+          }
+        ]
+      },
+      "sample_output": {
+        "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+        "totalUpdatedRows": 4,
+        "totalUpdatedColumns": 4,
+        "totalUpdatedCells": 8,
+        "totalUpdatedSheets": 1,
+        "responses": [
+          {
+            "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+            "updatedRange": "Sheet1!A1:B2",
+            "updatedRows": 2,
+            "updatedColumns": 2,
+            "updatedCells": 4
+          },
+          {
+            "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+            "updatedRange": "Sheet1!D1:E2",
+            "updatedRows": 2,
+            "updatedColumns": 2,
+            "updatedCells": 4
+          }
+        ]
+      },
+      "endpoint_template": "/spreadsheets/{{spreadsheetId}}/values:batchUpdate",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "spreadsheetId": {
+            "type": "string",
+            "description": "The spreadsheetId"
+          },
+          "totalUpdatedRows": {
+            "type": "integer",
+            "description": "The totalUpdatedRows"
+          },
+          "totalUpdatedColumns": {
+            "type": "integer",
+            "description": "The totalUpdatedColumns"
+          },
+          "totalUpdatedCells": {
+            "type": "integer",
+            "description": "The totalUpdatedCells"
+          },
+          "totalUpdatedSheets": {
+            "type": "integer",
+            "description": "The totalUpdatedSheets"
+          },
+          "responses": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "spreadsheetId": {
+                  "type": "string",
+                  "description": "The spreadsheetId"
+                },
+                "updatedRange": {
+                  "type": "string",
+                  "description": "The updatedRange"
+                },
+                "updatedRows": {
+                  "type": "integer",
+                  "description": "The updatedRows"
+                },
+                "updatedColumns": {
+                  "type": "integer",
+                  "description": "The updatedColumns"
+                },
+                "updatedCells": {
+                  "type": "integer",
+                  "description": "The updatedCells"
+                }
+              }
+            },
+            "description": "List of responses"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "batch_clear_values",
+      "description": "Clears one or more ranges of values from a spreadsheet. The caller must specify the spreadsheet ID and one or more ranges.",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "body_template": {
+          "ranges": "{{ranges}}"
+        },
+        "method": "POST"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "spreadsheetId": {
+            "type": "string",
+            "description": "The ID of the spreadsheet to update",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_spreadsheets",
+              "method": "GET",
+              "endpoint": "https://www.googleapis.com/drive/v3/files?q=mimeType='application/vnd.google-apps.spreadsheet'&fields=files(id,name)&pageSize=100",
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select from available spreadsheets"
+            }
+          },
+          "ranges": {
+            "type": "array",
+            "description": "The A1 notation of the values to clear",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "spreadsheetId",
+          "ranges"
+        ]
+      },
+      "sample_input": {
+        "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+        "ranges": [
+          "Sheet1!A1:B10",
+          "Sheet1!D1:E10"
+        ]
+      },
+      "sample_output": {
+        "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+        "clearedRanges": [
+          "Sheet1!A1:B10",
+          "Sheet1!D1:E10"
+        ]
+      },
+      "endpoint_template": "/spreadsheets/{{spreadsheetId}}/values:batchClear",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "spreadsheetId": {
+            "type": "string",
+            "description": "The spreadsheetId"
+          },
+          "clearedRanges": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The clearedRanges"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "copy_sheet",
+      "description": "Copies a single sheet from a spreadsheet to another spreadsheet. Returns the properties of the newly created sheet.",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "body_template": {
+          "destinationSpreadsheetId": "{{destinationSpreadsheetId}}"
+        },
+        "method": "POST"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "spreadsheetId": {
+            "type": "string",
+            "description": "The ID of the spreadsheet containing the sheet to copy",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_spreadsheets",
+              "method": "GET",
+              "endpoint": "https://www.googleapis.com/drive/v3/files?q=mimeType='application/vnd.google-apps.spreadsheet'&fields=files(id,name)&pageSize=100",
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select from available spreadsheets"
+            }
+          },
+          "sheetId": {
+            "type": "integer",
+            "description": "The ID of the sheet to copy",
+            "parameterLookup": {
+              "type": "static",
+              "options": [
+                {
+                  "value": 0,
+                  "display": "Sheet1 (ID: 0)"
+                },
+                {
+                  "value": 1,
+                  "display": "Sheet2 (ID: 1)"
+                },
+                {
+                  "value": 2,
+                  "display": "Sheet3 (ID: 2)"
+                }
+              ],
+              "description": "Select a sheet ID or enter custom"
+            }
+          },
+          "destinationSpreadsheetId": {
+            "type": "string",
+            "description": "The ID of the spreadsheet to copy the sheet to"
+          }
+        },
+        "required": [
+          "spreadsheetId",
+          "sheetId",
+          "destinationSpreadsheetId"
+        ]
+      },
+      "sample_input": {
+        "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+        "sheetId": 0,
+        "destinationSpreadsheetId": "1kFGzfh_Sz5pVAK-Pr3u5jpX6J7uU1mChDGfmUMTqrY8"
+      },
+      "sample_output": {
+        "sheetId": 1234567890,
+        "title": "Copy of Sheet1",
+        "index": 1,
+        "sheetType": "GRID",
+        "gridProperties": {
+          "rowCount": 1000,
+          "columnCount": 26
+        }
+      },
+      "endpoint_template": "/spreadsheets/{{spreadsheetId}}/sheets/{{sheetId}}:copyTo",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "sheetId": {
+            "type": "integer",
+            "description": "The sheetId"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title"
+          },
+          "index": {
+            "type": "integer",
+            "description": "The index"
+          },
+          "sheetType": {
+            "type": "string",
+            "description": "The sheetType"
+          },
+          "gridProperties": {
+            "type": "object",
+            "properties": {
+              "rowCount": {
+                "type": "integer",
+                "description": "Number of rows"
+              },
+              "columnCount": {
+                "type": "integer",
+                "description": "Number of columns"
+              }
+            },
+            "description": "The gridProperties"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_developer_metadata",
+      "description": "Returns the developer metadata with the specified ID. The caller must specify the spreadsheet ID and the developer metadata's unique metadataId.",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "method": "GET"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "spreadsheetId": {
+            "type": "string",
+            "description": "The ID of the spreadsheet to retrieve metadata from",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_spreadsheets",
+              "method": "GET",
+              "endpoint": "https://www.googleapis.com/drive/v3/files?q=mimeType='application/vnd.google-apps.spreadsheet'&fields=files(id,name)&pageSize=100",
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select from available spreadsheets"
+            }
+          },
+          "metadataId": {
+            "type": "integer",
+            "description": "The ID of the developer metadata to retrieve"
+          }
+        },
+        "required": [
+          "spreadsheetId",
+          "metadataId"
+        ]
+      },
+      "sample_input": {
+        "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+        "metadataId": 123456
+      },
+      "sample_output": {
+        "metadataId": 123456,
+        "metadataKey": "myKey",
+        "metadataValue": "myValue",
+        "location": {
+          "locationType": "SPREADSHEET"
+        },
+        "visibility": "PROJECT"
+      },
+      "endpoint_template": "/spreadsheets/{{spreadsheetId}}/developerMetadata/{{metadataId}}",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "metadataId": {
+            "type": "integer",
+            "description": "The metadataId"
+          },
+          "metadataKey": {
+            "type": "string",
+            "description": "The metadataKey"
+          },
+          "metadataValue": {
+            "type": "string",
+            "description": "The metadataValues"
+          },
+          "location": {
+            "type": "object",
+            "properties": {
+              "locationType": {
+                "type": "string",
+                "description": "The locationType"
+              }
+            },
+            "description": "The location"
+          },
+          "visibility": {
+            "type": "string",
+            "description": "The visibility"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "search_developer_metadata",
+      "description": "Returns all developer metadata matching the specified DataFilter. If the provided DataFilter represents a DeveloperMetadataLookup object, this will return all DeveloperMetadata entries selected by it.",
+      "service_type": "api_call",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "body_template": {
+          "dataFilters": "{{dataFilters}}"
+        },
+        "method": "POST"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "spreadsheetId": {
+            "type": "string",
+            "description": "The ID of the spreadsheet to retrieve metadata from",
+            "parameterLookup": {
+              "type": "api_call",
+              "service": "list_spreadsheets",
+              "method": "GET",
+              "endpoint": "https://www.googleapis.com/drive/v3/files?q=mimeType='application/vnd.google-apps.spreadsheet'&fields=files(id,name)&pageSize=100",
+              "extractPath": "files",
+              "valueField": "id",
+              "displayField": "name",
+              "description": "Select from available spreadsheets"
+            }
+          },
+          "dataFilters": {
+            "type": "array",
+            "description": "The data filters describing the criteria used to determine which DeveloperMetadata entries to return"
+          }
+        },
+        "required": [
+          "spreadsheetId",
+          "dataFilters"
+        ]
+      },
+      "sample_input": {
+        "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+        "dataFilters": [
+          {
+            "developerMetadataLookup": {
+              "metadataKey": "myKey"
+            }
+          }
+        ]
+      },
+      "sample_output": {
+        "matchedDeveloperMetadata": [
+          {
+            "developerMetadata": {
+              "metadataId": 123456,
+              "metadataKey": "myKey",
+              "metadataValue": "myValue",
+              "location": {
+                "locationType": "SPREADSHEET"
+              },
+              "visibility": "PROJECT"
+            },
+            "dataFilters": [
+              {
+                "developerMetadataLookup": {
+                  "metadataKey": "myKey"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "endpoint_template": "/spreadsheets/{{spreadsheetId}}/developerMetadata:search",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "matchedDeveloperMetadata": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "developerMetadata": {
+                  "type": "object",
+                  "properties": {
+                    "metadataId": {
+                      "type": "integer",
+                      "description": "The metadataId"
+                    },
+                    "metadataKey": {
+                      "type": "string",
+                      "description": "The metadataKey"
+                    },
+                    "metadataValue": {
+                      "type": "string",
+                      "description": "The metadataValues"
+                    },
+                    "location": {
+                      "type": "object",
+                      "properties": {
+                        "locationType": {
+                          "type": "string",
+                          "description": "The locationType"
+                        }
+                      },
+                      "description": "The location"
+                    },
+                    "visibility": {
+                      "type": "string",
+                      "description": "The visibility"
+                    }
+                  },
+                  "description": "The developerMetadata"
+                },
+                "dataFilters": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "developerMetadataLookup": {
+                        "type": "object",
+                        "properties": {
+                          "metadataKey": {
+                            "type": "string",
+                            "description": "The metadataKey"
+                          }
+                        },
+                        "description": "The developerMetadataLookup"
+                      }
+                    }
+                  },
+                  "description": "The dataFilters"
+                }
+              }
+            },
+            "description": "The matchedDeveloperMetadata"
+          }
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "event_name": "manual_trigger",
+      "description": "Manually trigger Google Sheets API operations",
+      "event_type": "manual",
+      "event_configuration": {
+        "description": "Use this to manually trigger Google Sheets operations"
+      },
+      "sample_payload": "{}",
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "event_name": "sheet_change_notification",
+      "description": "Receive notifications when changes occur in Google Sheets. Requires setting up Google Drive API push notifications.",
+      "event_type": "webhook",
+      "event_configuration": {
+        "webhook_url": "/webhooks/google_sheets/{{webhook_id}}",
+        "method": "POST",
+        "headers_validation": {
+          "Content-Type": "application/json"
+        },
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Unique identifier for this notification"
+            },
+            "resourceId": {
+              "type": "string",
+              "description": "An opaque ID that identifies the watched resource"
+            },
+            "resourceUri": {
+              "type": "string",
+              "description": "The URI of the watched resource"
+            },
+            "token": {
+              "type": "string",
+              "description": "An arbitrary string provided by the client"
+            },
+            "expiration": {
+              "type": "string",
+              "description": "Expiration time of the notification channel"
+            },
+            "resourceState": {
+              "type": "string",
+              "description": "The state of the resource"
+            },
+            "messageNumber": {
+              "type": "string",
+              "description": "A number that uniquely identifies this message"
+            }
+          }
+        }
+      },
+      "sample_payload": "{\"id\": \"01234567-89ab-cdef-0123456789ab\", \"resourceId\": \"o-AJmj5Ymv1234567890\", \"resourceUri\": \"https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms\", \"token\": \"target=myApp-myFilesChannelId\", \"expiration\": \"1426325213000\", \"resourceState\": \"update\", \"messageNumber\": \"1\"}",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.id",
+            "mapping": "$.id"
+          },
+          "event_type": {
+            "type": "string",
+            "description": "Parameter extracted from $.type",
+            "mapping": "$.type"
+          },
+          "data": {
+            "type": "string",
+            "description": "Parameter extracted from $.data",
+            "mapping": "$.data"
+          }
+        },
+        "required": [],
+        "parameter_extraction": {
+          "method": "json_path",
+          "mappings": {
+            "event_id": "$.id",
+            "event_type": "$.type",
+            "data": "$.data"
+          }
+        }
+      }
+    },
+    {
+      "event_name": "scheduled_sync",
+      "description": "Periodically sync or check Google Sheets data at specified intervals",
+      "event_type": "schedule",
+      "event_configuration": {
+        "schedule": "0,15,30,45 * * * *",
+        "timezone": "UTC",
+        "description": "Sync Google Sheets data every 15 minutes"
+      },
+      "sample_payload": "{\"timestamp\": \"2025-07-27T18:00:00Z\", \"schedule_name\": \"google_sheets_sync\", \"execution_id\": \"exec_123456\"}",
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  ],
+  "metadata": {
+    "created_at": "2025-07-27T18:13:20.157103",
+    "created_by": "IOFlow",
+    "author": "IOFlow",
+    "tags": [
+      "database"
+    ],
+    "documentation_url": "https://docs.example.com/google_sheets",
+    "support_email": "support@example.com",
+    "last_modified": "2025-08-11T23:54:40.444257",
+    "modified_by": "claude-code",
+    "changelog": {
+      "1.0.24": "Fixed parameter_method for get_values, get_spreadsheet, and batch_get_values services - changed from query_params to url_pattern to properly handle path parameters",
+      "1.0.23": "Previous version",
+      "2.0.0": "MAJOR UPDATE: Added comprehensive parameter lookup functionality for enhanced user experience. Spreadsheet IDs now support dropdown selection with real-time data from Google Drive API. Range parameters include common range patterns for quick selection. Sheet IDs provide standard options. This eliminates manual ID entry and significantly improves usability.",
+      "2.1.0": "Added missing list_spreadsheets service to support parameter lookups for spreadsheet ID selection. This service queries Google Drive API to list available spreadsheets.",
+      "2.2.0": "Simplified list_spreadsheets service to use full URL in endpoint_template, leveraging existing URL handling that skips base_url prepending for absolute URLs."
+    },
+    "services_count": 14,
+    "events_count": 3
+  }
+}

@@ -1,0 +1,844 @@
+{
+  "key": "linkedin",
+  "application": {
+    "app_name": "LinkedIn",
+    "app_type": "api",
+    "description": "LinkedIn API integration for professional networking, content sharing, and business development. Supports OAuth 2.0 authentication, profile management, posts creation, and organization management.",
+    "category": "Communication",
+    "auth_type": "oauth2",
+    "auth_config": {
+      "authorization_url": "https://www.linkedin.com/oauth/v2/authorization",
+      "token_url": "https://www.linkedin.com/oauth/v2/accessToken",
+      "scopes": [
+        "r_liteprofile",
+        "r_emailaddress",
+        "w_member_social",
+        "r_organization",
+        "w_organization_social",
+        "r_basicprofile",
+        "r_1st_connections"
+      ],
+      "client_id_param": "client_id",
+      "client_secret_param": "client_secret",
+      "grant_type": "authorization_code",
+      "redirect_uri_required": true,
+      "pkce_required": false,
+      "state_required": true,
+      "response_type": "code",
+      "token_expiry": 5184000,
+      "refresh_token_supported": false,
+      "header_prefix": "Bearer",
+      "additional_params": {
+        "scope_delimiter": " "
+      }
+    },
+    "version": "1.1.0",
+    "base_url": "https://api.linkedin.com",
+    "icon_url": "https://upload.wikimedia.org/wikipedia/commons/c/ca/LinkedIn_logo_initials.png",
+    "auth_example": {
+      "client_id": "your_client_id",
+      "client_secret": "your_client_secret",
+      "redirect_uri": "http://localhost:8000/api/v1/oauth/callback"
+    },
+    "app_scope": "global"
+  },
+  "services": [
+    {
+      "service_name": "get_profile",
+      "description": "Get authenticated user's LinkedIn profile information including name, headline, location, and profile picture",
+      "service_type": "api_call",
+      "request_config": {
+        "headers_template": {
+          "X-Restli-Protocol-Version": "2.0.0"
+        },
+        "query_params": {
+          "projection": "(id,firstName,lastName,profilePicture(displayImage~:playableStreams))"
+        },
+        "method": "GET"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "projection": {
+            "type": "string",
+            "description": "Fields to retrieve from profile"
+          }
+        },
+        "required": []
+      },
+      "sample_output": {
+        "id": "dXJuOmxpOnBlcnNvbjoxMjM0NTY",
+        "firstName": {
+          "localized": {
+            "en_US": "John"
+          },
+          "preferredLocale": {
+            "country": "US",
+            "language": "en"
+          }
+        },
+        "lastName": {
+          "localized": {
+            "en_US": "Doe"
+          },
+          "preferredLocale": {
+            "country": "US",
+            "language": "en"
+          }
+        },
+        "profilePicture": {
+          "displayImage~": {
+            "elements": [
+              {
+                "identifiers": [
+                  {
+                    "identifier": "https://media.licdn.com/dms/image/profile.jpg"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "endpoint_template": "/v2/me",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id"
+          },
+          "firstName": {
+            "type": "object",
+            "properties": {
+              "localized": {
+                "type": "object",
+                "properties": {
+                  "en_US": {
+                    "type": "string",
+                    "description": "The en_US"
+                  }
+                },
+                "description": "The localized"
+              },
+              "preferredLocale": {
+                "type": "object",
+                "properties": {
+                  "country": {
+                    "type": "string",
+                    "description": "Number of rys"
+                  },
+                  "language": {
+                    "type": "string",
+                    "description": "The language"
+                  }
+                },
+                "description": "The preferredLocale"
+              }
+            },
+            "description": "The firstName"
+          },
+          "lastName": {
+            "type": "object",
+            "properties": {
+              "localized": {
+                "type": "object",
+                "properties": {
+                  "en_US": {
+                    "type": "string",
+                    "description": "The en_US"
+                  }
+                },
+                "description": "The localized"
+              },
+              "preferredLocale": {
+                "type": "object",
+                "properties": {
+                  "country": {
+                    "type": "string",
+                    "description": "Number of rys"
+                  },
+                  "language": {
+                    "type": "string",
+                    "description": "The language"
+                  }
+                },
+                "description": "The preferredLocale"
+              }
+            },
+            "description": "The lastName"
+          },
+          "profilePicture": {
+            "type": "object",
+            "properties": {
+              "displayImage~": {
+                "type": "object",
+                "properties": {
+                  "elements": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "identifiers": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "identifier": {
+                                "type": "string",
+                                "description": "The identifier"
+                              }
+                            }
+                          },
+                          "description": "The identifiers"
+                        }
+                      }
+                    },
+                    "description": "The elements"
+                  }
+                },
+                "description": "The displayImage~"
+              }
+            },
+            "description": "The profilePicture"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "create_post",
+      "description": "Create a new post on LinkedIn profile or company page. Supports text, images, videos, and articles.",
+      "service_type": "api_call",
+      "request_config": {
+        "headers_template": {
+          "X-Restli-Protocol-Version": "2.0.0",
+          "LinkedIn-Version": "202506",
+          "Content-Type": "application/json"
+        },
+        "method": "POST"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "author": {
+            "type": "string",
+            "description": "URN of the author (person or organization)"
+          },
+          "commentary": {
+            "type": "string",
+            "description": "Text content of the post"
+          },
+          "visibility": {
+            "type": "string",
+            "description": "Post visibility (PUBLIC, CONNECTIONS)"
+          },
+          "media": {
+            "type": "object",
+            "description": "Media content (image, video, article)"
+          }
+        },
+        "required": [
+          "author",
+          "commentary"
+        ]
+      },
+      "sample_input": {
+        "author": "urn:li:person:123456",
+        "commentary": "Check out this amazing update!",
+        "visibility": "PUBLIC"
+      },
+      "sample_output": {
+        "id": "urn:li:share:6844785523593134080",
+        "author": "urn:li:person:123456",
+        "lifecycleState": "PUBLISHED",
+        "visibility": "PUBLIC"
+      },
+      "endpoint_template": "/rest/posts",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id"
+          },
+          "author": {
+            "type": "string",
+            "description": "The author"
+          },
+          "lifecycleState": {
+            "type": "string",
+            "description": "The lifecycleState"
+          },
+          "visibility": {
+            "type": "string",
+            "description": "The visibility"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_connections",
+      "description": "Get the authenticated user's 1st-degree LinkedIn connections with profile details",
+      "service_type": "api_call",
+      "request_config": {
+        "headers_template": {
+          "X-Restli-Protocol-Version": "2.0.0"
+        },
+        "query_params": {
+          "q": "viewer",
+          "projection": "(elements(*(to~)),paging)"
+        },
+        "method": "GET"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "integer",
+            "description": "Starting index for pagination"
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of connections to retrieve (max 50)"
+          }
+        },
+        "required": []
+      },
+      "sample_input": {
+        "start": 0,
+        "count": 10
+      },
+      "sample_output": {
+        "elements": [
+          {
+            "to": "urn:li:person:ABC123",
+            "to~": {
+              "id": "ABC123",
+              "firstName": {
+                "localized": {
+                  "en_US": "Jane"
+                }
+              },
+              "lastName": {
+                "localized": {
+                  "en_US": "Smith"
+                }
+              }
+            }
+          }
+        ],
+        "paging": {
+          "total": 500,
+          "count": 10,
+          "start": 0
+        }
+      },
+      "endpoint_template": "/v2/connections",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "elements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "to": {
+                  "type": "string",
+                  "description": "The to"
+                },
+                "to~": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "The id"
+                    },
+                    "firstName": {
+                      "type": "object",
+                      "properties": {
+                        "localized": {
+                          "type": "object",
+                          "properties": {
+                            "en_US": {
+                              "type": "string",
+                              "description": "The en_US"
+                            }
+                          },
+                          "description": "The localized"
+                        }
+                      },
+                      "description": "The firstName"
+                    },
+                    "lastName": {
+                      "type": "object",
+                      "properties": {
+                        "localized": {
+                          "type": "object",
+                          "properties": {
+                            "en_US": {
+                              "type": "string",
+                              "description": "The en_US"
+                            }
+                          },
+                          "description": "The localized"
+                        }
+                      },
+                      "description": "The lastName"
+                    }
+                  },
+                  "description": "The to~"
+                }
+              }
+            },
+            "description": "The elements"
+          },
+          "paging": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer",
+                "description": "The total"
+              },
+              "count": {
+                "type": "integer",
+                "description": "Number of s"
+              },
+              "start": {
+                "type": "integer",
+                "description": "The start"
+              }
+            },
+            "description": "The paging"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_organizations",
+      "description": "Get organizations (companies) where the authenticated user has admin access",
+      "service_type": "api_call",
+      "request_config": {
+        "headers_template": {
+          "X-Restli-Protocol-Version": "2.0.0"
+        },
+        "query_params": {
+          "q": "roleAssignee",
+          "projection": "(elements(*(organization~))))"
+        },
+        "method": "GET"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "integer",
+            "description": "Starting index for pagination"
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of organizations to retrieve"
+          }
+        },
+        "required": []
+      },
+      "sample_output": {
+        "elements": [
+          {
+            "roleAssignee": "urn:li:person:123456",
+            "organization": "urn:li:organization:12345",
+            "organization~": {
+              "id": 12345,
+              "localizedName": "Acme Corporation",
+              "vanityName": "acme-corp",
+              "logoV2": {
+                "original": "https://media.licdn.com/logo.png"
+              }
+            }
+          }
+        ],
+        "paging": {
+          "count": 10,
+          "start": 0,
+          "total": 2
+        }
+      },
+      "endpoint_template": "/v2/organizationAcls",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "elements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "roleAssignee": {
+                  "type": "string",
+                  "description": "The roleAssignee"
+                },
+                "organization": {
+                  "type": "string",
+                  "description": "The organization"
+                },
+                "organization~": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "description": "The id"
+                    },
+                    "localizedName": {
+                      "type": "string",
+                      "description": "The localizedName"
+                    },
+                    "vanityName": {
+                      "type": "string",
+                      "description": "The vanityName"
+                    },
+                    "logoV2": {
+                      "type": "object",
+                      "properties": {
+                        "original": {
+                          "type": "string",
+                          "description": "The original"
+                        }
+                      },
+                      "description": "The logoV2"
+                    }
+                  },
+                  "description": "The organization~"
+                }
+              }
+            },
+            "description": "The elements"
+          },
+          "paging": {
+            "type": "object",
+            "properties": {
+              "count": {
+                "type": "integer",
+                "description": "Number of s"
+              },
+              "start": {
+                "type": "integer",
+                "description": "The start"
+              },
+              "total": {
+                "type": "integer",
+                "description": "The total"
+              }
+            },
+            "description": "The paging"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_posts",
+      "description": "Get posts by a specific author (person or organization)",
+      "service_type": "api_call",
+      "request_config": {
+        "headers_template": {
+          "X-Restli-Protocol-Version": "2.0.0",
+          "LinkedIn-Version": "202506"
+        },
+        "query_params": {
+          "q": "author",
+          "author": "{{author_urn}}"
+        },
+        "method": "GET"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "author_urn": {
+            "type": "string",
+            "description": "URN of the author (e.g., urn:li:person:123 or urn:li:organization:456)"
+          },
+          "start": {
+            "type": "integer",
+            "description": "Starting index for pagination"
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of posts to retrieve"
+          }
+        },
+        "required": [
+          "author_urn"
+        ]
+      },
+      "sample_input": {
+        "author_urn": "urn:li:organization:12345",
+        "start": 0,
+        "count": 10
+      },
+      "sample_output": {
+        "elements": [
+          {
+            "id": "urn:li:share:123456",
+            "author": "urn:li:organization:12345",
+            "commentary": "We're excited to announce...",
+            "visibility": "PUBLIC",
+            "lifecycleState": "PUBLISHED",
+            "created": {
+              "time": 1627488000000
+            }
+          }
+        ],
+        "paging": {
+          "count": 10,
+          "start": 0,
+          "total": 250
+        }
+      },
+      "endpoint_template": "/rest/posts",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "elements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "The id"
+                },
+                "author": {
+                  "type": "string",
+                  "description": "The author"
+                },
+                "commentary": {
+                  "type": "string",
+                  "description": "The commentary"
+                },
+                "visibility": {
+                  "type": "string",
+                  "description": "The visibility"
+                },
+                "lifecycleState": {
+                  "type": "string",
+                  "description": "The lifecycleState"
+                },
+                "created": {
+                  "type": "object",
+                  "properties": {
+                    "time": {
+                      "type": "integer",
+                      "description": "The time"
+                    }
+                  },
+                  "description": "The created"
+                }
+              }
+            },
+            "description": "The elements"
+          },
+          "paging": {
+            "type": "object",
+            "properties": {
+              "count": {
+                "type": "integer",
+                "description": "Number of s"
+              },
+              "start": {
+                "type": "integer",
+                "description": "The start"
+              },
+              "total": {
+                "type": "integer",
+                "description": "The total"
+              }
+            },
+            "description": "The paging"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "send_message",
+      "description": "Send a direct message to a LinkedIn connection",
+      "service_type": "api_call",
+      "request_config": {
+        "headers_template": {
+          "X-Restli-Protocol-Version": "2.0.0",
+          "Content-Type": "application/json"
+        },
+        "method": "POST"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "recipients": {
+            "type": "array",
+            "description": "Array of recipient URNs"
+          },
+          "subject": {
+            "type": "string",
+            "description": "Message subject"
+          },
+          "body": {
+            "type": "string",
+            "description": "Message body text"
+          },
+          "messageType": {
+            "type": "string",
+            "description": "Type of message (MEMBER_TO_MEMBER)"
+          }
+        },
+        "required": [
+          "recipients",
+          "body"
+        ]
+      },
+      "sample_input": {
+        "recipients": [
+          "urn:li:person:ABC123"
+        ],
+        "subject": "Great connecting!",
+        "body": "Hi Jane, it was great meeting you at the conference.",
+        "messageType": "MEMBER_TO_MEMBER"
+      },
+      "sample_output": {
+        "id": "urn:li:message:123456789",
+        "createdAt": 1627488000000,
+        "status": "SENT"
+      },
+      "endpoint_template": "/v2/messages",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id"
+          },
+          "createdAt": {
+            "type": "integer",
+            "description": "The createdAt"
+          },
+          "status": {
+            "type": "string",
+            "description": "The status"
+          }
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "event_name": "organization_social_actions",
+      "description": "Webhook notifications for social actions (likes, comments, shares) on organization posts. Requires LinkedIn Partner Program access.",
+      "event_type": "webhook",
+      "event_configuration": {
+        "webhook_url": "{{webhook_url}}",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "validation": {
+          "type": "challenge_response",
+          "challenge_param": "challengeCode",
+          "response_field": "challengeResponse",
+          "signature_header": "X-LI-Signature",
+          "signature_method": "HMACSHA256",
+          "secret": "{{client_secret}}"
+        },
+        "retry_policy": {
+          "max_retries": 3,
+          "retry_on": [
+            500,
+            502,
+            503,
+            504
+          ],
+          "backoff_multiplier": 2
+        }
+      },
+      "sample_payload": "{\"notificationId\": \"urn:li:notification:123456\", \"eventType\": \"ORGANIZATION_SOCIAL_ACTION_NOTIFICATIONS\", \"organizationUrn\": \"urn:li:organization:12345\", \"actorUrn\": \"urn:li:person:67890\", \"objectUrn\": \"urn:li:share:123456\", \"verb\": \"LIKED\", \"eventTime\": 1627488000000}",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "description": "Parameter extracted from $.id",
+            "mapping": "$.id"
+          },
+          "event_type": {
+            "type": "string",
+            "description": "Parameter extracted from $.type",
+            "mapping": "$.type"
+          },
+          "data": {
+            "type": "string",
+            "description": "Parameter extracted from $.data",
+            "mapping": "$.data"
+          }
+        },
+        "required": [],
+        "parameter_extraction": {
+          "method": "json_path",
+          "mappings": {
+            "event_id": "$.id",
+            "event_type": "$.type",
+            "data": "$.data"
+          }
+        }
+      }
+    },
+    {
+      "event_name": "new_connections",
+      "description": "Poll for new connections added to the user's network",
+      "event_type": "polling",
+      "event_configuration": {
+        "service_name": "get_connections",
+        "interval_seconds": 3600,
+        "comparison_field": "to",
+        "comparison_type": "new_items",
+        "store_state": true,
+        "initial_poll_limit": 50
+      },
+      "sample_payload": "{\"to\": \"urn:li:person:ABC123\", \"to~\": {\"id\": \"ABC123\", \"firstName\": {\"localized\": {\"en_US\": \"Jane\"}}, \"lastName\": {\"localized\": {\"en_US\": \"Smith\"}}, \"headline\": {\"localized\": {\"en_US\": \"Software Engineer at TechCorp\"}}}}",
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "event_name": "new_posts",
+      "description": "Poll for new posts from a specific author (person or organization)",
+      "event_type": "polling",
+      "event_configuration": {
+        "service_name": "get_posts",
+        "interval_seconds": 1800,
+        "comparison_field": "id",
+        "comparison_type": "new_items",
+        "store_state": true,
+        "initial_poll_limit": 10,
+        "service_params": {
+          "author_urn": "{{monitored_author_urn}}"
+        }
+      },
+      "sample_payload": "{\"id\": \"urn:li:share:123456\", \"author\": \"urn:li:organization:12345\", \"commentary\": \"We're excited to announce our new product launch!\", \"visibility\": \"PUBLIC\", \"lifecycleState\": \"PUBLISHED\", \"created\": {\"time\": 1627488000000}, \"distribution\": {\"feedDistribution\": \"MAIN_FEED\"}}",
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  ],
+  "metadata": {
+    "created_at": "2025-07-28T10:25:18.103171",
+    "created_by": "IOFlow",
+    "author": "IOFlow",
+    "tags": [
+      "communication"
+    ],
+    "documentation_url": "https://docs.example.com/linkedin",
+    "support_email": "support@example.com",
+    "last_modified": "2025-08-23T12:53:14.106106",
+    "modified_by": "claude-code",
+    "services_count": 6,
+    "events_count": 3
+  }
+}

@@ -1,0 +1,4 @@
+# MCP Server specific requirements
+# Required for IOFlow MCP Server functionality
+mcp>=1.0.0
+httpx>=0.27.0

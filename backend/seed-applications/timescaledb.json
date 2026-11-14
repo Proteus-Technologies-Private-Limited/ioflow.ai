@@ -1,0 +1,463 @@
+{
+  "key": "timescaledb",
+  "application": {
+    "app_name": "TimescaleDB MQTT Store",
+    "app_type": "database",
+    "description": "Dedicated TimescaleDB time-series database for storing and analyzing MQTT message data. Uses the mqtt_messages hypertable (columns: time, tenant_id, flow_id, app_id, topic, payload JSONB, payload_raw, qos, retain) with topic/time indexes and 7-day compression.",
+    "icon_url": "https://avatars.githubusercontent.com/u/8986001?s=200&v=4",
+    "category": "Database",
+    "base_url": "postgresql://localhost:5433/ioflow_mqtt",
+    "auth_type": "basic",
+    "auth_config": {
+      "database_type": "postgresql",
+      "autocommit": true,
+      "connection_pool_size": 10,
+      "connection_timeout": 30,
+      "ssl_mode": "prefer",
+      "credential_fields": {
+        "username": {
+          "label": "Database Username",
+          "type": "text",
+          "required": true,
+          "placeholder": "ioflow",
+          "help_text": "TimescaleDB database user"
+        },
+        "password": {
+          "label": "Database Password",
+          "type": "password",
+          "required": true,
+          "placeholder": "Enter database password",
+          "help_text": "Password for the database user"
+        }
+      }
+    },
+    "version": "1.1.0",
+    "app_scope": "tenant"
+  },
+  "events": [],
+  "services": [
+    {
+      "service_name": "store_mqtt_message",
+      "description": "Insert a single MQTT message into the mqtt_messages hypertable. Typically wired to an MQTT-triggered flow using the trigger variables.",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "execute",
+        "timeout_seconds": 30,
+        "transaction_mode": "auto"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "description": "INSERT statement with :param placeholders. Default template stores the standard MQTT trigger variables.",
+            "example": "INSERT INTO mqtt_messages (topic, payload, payload_raw, qos, retain, tenant_id, flow_id) VALUES (:topic, CAST(:payload AS JSONB), :payload_raw, :qos, :retain, :tenant_id, :flow_id)"
+          }
+        },
+        "required": [
+          "sql"
+        ],
+        "additionalProperties": true
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the insert executed successfully"
+          },
+          "affected_rows": {
+            "type": "integer",
+            "description": "Number of rows inserted"
+          },
+          "message": {
+            "type": "string",
+            "description": "Success or error message"
+          },
+          "error": {
+            "type": "boolean",
+            "description": "Whether an error occurred"
+          }
+        }
+      },
+      "timeout_seconds": 30,
+      "is_active": true
+    },
+    {
+      "service_name": "store_mqtt_batch",
+      "description": "Insert multiple MQTT messages in one transaction (pairs with batched MQTT triggers where variables.messages is an array).",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "batch",
+        "timeout_seconds": 60,
+        "transaction_mode": "manual"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "batch_queries": {
+            "type": "array",
+            "description": "Array of INSERT commands, one per MQTT message, executed in a single transaction with rollback on error",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sql": {
+                  "type": "string",
+                  "description": "INSERT statement with :param_name placeholders"
+                },
+                "parameters": {
+                  "type": "object",
+                  "description": "Parameter values for this message"
+                }
+              },
+              "required": [
+                "sql"
+              ]
+            },
+            "example": [
+              {
+                "sql": "INSERT INTO mqtt_messages (topic, payload, qos, tenant_id, flow_id) VALUES (:topic, CAST(:payload AS JSONB), :qos, :tenant_id, :flow_id)",
+                "parameters": {
+                  "topic": "sensors/temp/device1",
+                  "payload": "{\"value\": 22.5}",
+                  "qos": 1,
+                  "tenant_id": "tenant-uuid",
+                  "flow_id": "flow-uuid"
+                }
+              }
+            ]
+          }
+        },
+        "required": [
+          "batch_queries"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether all inserts executed successfully"
+          },
+          "results": {
+            "type": "array",
+            "description": "Result for each insert",
+            "items": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "The SQL command that was executed"
+                },
+                "affected_rows": {
+                  "type": "integer",
+                  "description": "Number of rows affected"
+                }
+              }
+            }
+          },
+          "total_queries": {
+            "type": "integer",
+            "description": "Total number of inserts executed"
+          },
+          "message": {
+            "type": "string",
+            "description": "Success or error message"
+          },
+          "error": {
+            "type": "boolean",
+            "description": "Whether an error occurred (transaction rolled back)"
+          }
+        }
+      },
+      "timeout_seconds": 60,
+      "is_active": true
+    },
+    {
+      "service_name": "query_mqtt_messages",
+      "description": "Query stored MQTT messages by topic pattern and/or time range, returned as a JSON array",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "query",
+        "result_format": "json_array",
+        "max_rows": 10000,
+        "timeout_seconds": 180,
+        "fetch_size": 1000
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "format": "sql",
+            "description": "SELECT query against mqtt_messages with :param placeholders",
+            "example": "SELECT time, topic, payload, qos FROM mqtt_messages WHERE topic LIKE :topic_pattern AND time > now() - INTERVAL '1 hour' ORDER BY time DESC LIMIT 100"
+          }
+        },
+        "required": [
+          "sql"
+        ],
+        "additionalProperties": true
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the query executed successfully"
+          },
+          "data": {
+            "type": "array",
+            "description": "Matching MQTT messages",
+            "items": {
+              "type": "object"
+            }
+          },
+          "row_count": {
+            "type": "integer",
+            "description": "Number of rows returned"
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "Whether results were truncated due to max_rows limit"
+          },
+          "error": {
+            "type": "boolean",
+            "description": "Whether an error occurred"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message if error occurred"
+          }
+        }
+      },
+      "timeout_seconds": 30,
+      "is_active": true
+    },
+    {
+      "service_name": "aggregate_time_bucket",
+      "description": "Time-series aggregation over MQTT payload values using TimescaleDB time_bucket()",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "query",
+        "result_format": "json_array",
+        "max_rows": 10000,
+        "timeout_seconds": 180
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "format": "sql",
+            "description": "Aggregation query using time_bucket() with :param placeholders",
+            "example": "SELECT time_bucket('5 minutes', time) AS bucket, topic, avg((payload->>'value')::numeric) AS avg_value, count(*) AS samples FROM mqtt_messages WHERE topic = :topic AND time > now() - INTERVAL '24 hours' GROUP BY bucket, topic ORDER BY bucket DESC"
+          }
+        },
+        "required": [
+          "sql"
+        ],
+        "additionalProperties": true
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the query executed successfully"
+          },
+          "data": {
+            "type": "array",
+            "description": "Aggregated buckets",
+            "items": {
+              "type": "object"
+            }
+          },
+          "row_count": {
+            "type": "integer",
+            "description": "Number of buckets returned"
+          },
+          "error": {
+            "type": "boolean",
+            "description": "Whether an error occurred"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message if error occurred"
+          }
+        }
+      },
+      "timeout_seconds": 30,
+      "is_active": true
+    },
+    {
+      "service_name": "get_latest_message",
+      "description": "Get the most recent MQTT message for a topic as a single JSON object",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "query",
+        "result_format": "json_object",
+        "max_rows": 1,
+        "timeout_seconds": 180
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "description": "Query returning the single latest row for a topic",
+            "example": "SELECT time, topic, payload, qos, retain FROM mqtt_messages WHERE topic = :topic ORDER BY time DESC LIMIT 1"
+          }
+        },
+        "required": [
+          "sql"
+        ],
+        "additionalProperties": true
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the query executed successfully"
+          },
+          "data": {
+            "type": "object",
+            "description": "Latest message row (null if no rows)"
+          },
+          "row_count": {
+            "type": "integer",
+            "description": "Number of rows returned (0 or 1)"
+          },
+          "error": {
+            "type": "boolean",
+            "description": "Whether an error occurred"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message if error occurred"
+          }
+        }
+      },
+      "timeout_seconds": 30,
+      "is_active": true
+    },
+    {
+      "service_name": "execute_command",
+      "description": "Execute maintenance or DDL commands on the MQTT store (retention policies, continuous aggregates, deletes)",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "execute",
+        "timeout_seconds": 180,
+        "transaction_mode": "auto"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "description": "SQL command with :param_name placeholders",
+            "example": "SELECT add_retention_policy('mqtt_messages', INTERVAL '90 days', if_not_exists => TRUE)"
+          }
+        },
+        "required": [
+          "sql"
+        ],
+        "additionalProperties": true
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the command executed successfully"
+          },
+          "affected_rows": {
+            "type": "integer",
+            "description": "Number of rows affected by the command"
+          },
+          "message": {
+            "type": "string",
+            "description": "Success or error message"
+          },
+          "error": {
+            "type": "boolean",
+            "description": "Whether an error occurred"
+          }
+        }
+      },
+      "timeout_seconds": 30,
+      "is_active": true
+    },
+    {
+      "service_name": "commit_transaction",
+      "description": "Commit the flow-scoped TimescaleDB MQTT Store transaction. Use with an explicit step when the application is configured with autocommit=false.",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "commit",
+        "timeout_seconds": 30,
+        "transaction_mode": "manual"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the commit step ran"
+          },
+          "committed": {
+            "type": "boolean",
+            "description": "True if an open transaction was committed"
+          },
+          "message": {
+            "type": "string",
+            "description": "Result message"
+          }
+        }
+      },
+      "timeout_seconds": 30,
+      "is_active": true
+    },
+    {
+      "service_name": "rollback_transaction",
+      "description": "Roll back the flow-scoped TimescaleDB MQTT Store transaction. Use with an explicit step when the application is configured with autocommit=false.",
+      "service_type": "database_query",
+      "service_config": {
+        "operation_type": "rollback",
+        "timeout_seconds": 30,
+        "transaction_mode": "manual"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the rollback step ran"
+          },
+          "rolled_back": {
+            "type": "boolean",
+            "description": "True if an open transaction was rolled back"
+          },
+          "message": {
+            "type": "string",
+            "description": "Result message"
+          }
+        }
+      },
+      "timeout_seconds": 30,
+      "is_active": true
+    }
+  ]
+}

@@ -1,0 +1,177 @@
+{
+  "flow_id": "test-manual-json-003",
+  "flow_name": "Manual Trigger JSON Validation Test",
+  "description": "Test flow for JSON validation and edge cases",
+  "status": "active",
+  "trigger_config": {
+    "type": "manual",
+    "manual_variables": [
+      {
+        "id": "var1",
+        "name": "simpleText",
+        "displayName": "Simple Text (Control)",
+        "dataType": "string",
+        "uiControl": "text",
+        "required": true,
+        "description": "Regular text input for comparison",
+        "defaultValue": "Hello World"
+      },
+      {
+        "id": "var2",
+        "name": "jsonWithSpecialChars",
+        "displayName": "JSON with Special Characters",
+        "dataType": "json",
+        "uiControl": "code",
+        "required": false,
+        "description": "Test JSON with special characters and escaping",
+        "defaultValue": {
+          "message": "Hello \"World\"",
+          "path": "C:\\Users\\test\\file.txt",
+          "regex": "^[a-zA-Z0-9]+$",
+          "unicode": "Hello 🌍",
+          "html": "<div>Test</div>"
+        }
+      },
+      {
+        "id": "var3",
+        "name": "deeplyNested",
+        "displayName": "Deeply Nested JSON",
+        "dataType": "json",
+        "required": false,
+        "description": "Test with deep nesting levels",
+        "defaultValue": {
+          "level1": {
+            "level2": {
+              "level3": {
+                "level4": {
+                  "level5": {
+                    "value": "Deep value",
+                    "array": [1, 2, 3]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "var4",
+        "name": "mixedTypes",
+        "displayName": "Mixed Type JSON",
+        "dataType": "json",
+        "uiControl": "code",
+        "required": false,
+        "description": "JSON with mixed data types",
+        "defaultValue": {
+          "string": "text",
+          "number": 42,
+          "float": 3.14159,
+          "boolean": true,
+          "null": null,
+          "array": [1, "two", true, null],
+          "object": {
+            "nested": "value"
+          }
+        }
+      },
+      {
+        "id": "var5",
+        "name": "largeJson",
+        "displayName": "Large JSON Structure",
+        "dataType": "json",
+        "required": false,
+        "description": "Larger JSON for performance testing",
+        "defaultValue": {
+          "users": [
+            {"id": 1, "name": "User 1", "email": "user1@example.com", "active": true},
+            {"id": 2, "name": "User 2", "email": "user2@example.com", "active": false},
+            {"id": 3, "name": "User 3", "email": "user3@example.com", "active": true},
+            {"id": 4, "name": "User 4", "email": "user4@example.com", "active": true},
+            {"id": 5, "name": "User 5", "email": "user5@example.com", "active": false}
+          ],
+          "settings": {
+            "theme": "dark",
+            "language": "en",
+            "timezone": "UTC",
+            "features": {
+              "dashboard": true,
+              "reports": true,
+              "analytics": false
+            }
+          },
+          "metadata": {
+            "version": "1.0.0",
+            "lastSync": "2024-01-20T10:00:00Z"
+          }
+        }
+      },
+      {
+        "id": "var6",
+        "name": "invalidJsonTest",
+        "displayName": "Invalid JSON Test",
+        "dataType": "json",
+        "required": false,
+        "description": "Start with invalid JSON to test error handling",
+        "defaultValue": "{invalid json}"
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "id": "trigger",
+      "type": "trigger",
+      "position": { "x": 100, "y": 100 },
+      "data": {
+        "label": "Manual Trigger",
+        "config": {
+          "type": "manual"
+        }
+      }
+    },
+    {
+      "id": "validate",
+      "type": "action",
+      "position": { "x": 300, "y": 100 },
+      "data": {
+        "label": "Validate JSON Data",
+        "config": {
+          "action": "validate",
+          "parameters": {
+            "data": "{{trigger.data}}"
+          }
+        }
+      }
+    },
+    {
+      "id": "response",
+      "type": "response",
+      "position": { "x": 500, "y": 100 },
+      "data": {
+        "label": "Return Validation Results",
+        "config": {
+          "status": 200,
+          "body": {
+            "success": true,
+            "receivedVariables": "{{Object.keys(trigger.data)}}",
+            "jsonVariableCount": "{{Object.keys(trigger.data).filter(k => typeof trigger.data[k] === 'object').length}}",
+            "fullData": "{{trigger.data}}"
+          }
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "trigger",
+      "target": "validate"
+    },
+    {
+      "id": "e2",
+      "source": "validate",
+      "target": "response"
+    }
+  ],
+  "created_at": "2024-01-20T12:00:00Z",
+  "updated_at": "2024-01-20T12:00:00Z"
+}

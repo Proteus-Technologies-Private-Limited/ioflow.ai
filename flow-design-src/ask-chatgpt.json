@@ -1,0 +1,166 @@
+{
+  "version": "1.0",
+  "export_timestamp": "2025-11-19T10:22:19.995591Z",
+  "flow": {
+    "flow_name": "Ask ChatGPT",
+    "description": "Ask a question and ioflow will get the answer from Open AI and display. This is a simple example flow on how to make LLM calls in ioflow",
+    "category": "AI & Automation",
+    "trigger_config": {
+      "type": "manual",
+      "app_id": null,
+      "event_name": null,
+      "schedule": null,
+      "manual_variables": [
+        {
+          "id": "question",
+          "name": "question",
+          "displayName": "Your Question",
+          "dataType": "string",
+          "uiControl": "textarea",
+          "required": true,
+          "defaultValue": "What is the capital of France?"
+        }
+      ],
+      "execute_immediately": null,
+      "folder_path": null,
+      "listener_type": null,
+      "file_pattern": null,
+      "recursive": null,
+      "debounce_seconds": null
+    },
+    "flow_definition": {
+      "nodes": [
+        {
+          "id": "trigger_1",
+          "type": "trigger",
+          "position": {
+            "x": 486.4168152866241,
+            "y": 1.8488888888888653
+          },
+          "data": {
+            "label": "Ask Question",
+            "triggerType": "manual",
+            "manualVariables": [
+              {
+                "id": "question",
+                "name": "question",
+                "displayName": "Your Question",
+                "dataType": "string",
+                "uiControl": "textarea",
+                "required": true,
+                "defaultValue": "What is the capital of France?"
+              }
+            ],
+            "executeImmediately": null,
+            "width": 200,
+            "height": 100
+          }
+        },
+        {
+          "id": "ai_action",
+          "type": "action",
+          "position": {
+            "x": 485.6289952592623,
+            "y": 155.5762337246817
+          },
+          "data": {
+            "label": "Ask AI",
+            "appId": "01b8e055-537c-4446-8bb4-3e7ea556b31e",
+            "appName": "OpenAI",
+            "serviceId": "fc508636-d815-49e1-a374-495d73ff5393",
+            "service": "create_chat_completion",
+            "serviceDisplayName": "Create Chat Completion",
+            "useParameterMapping": true,
+            "parameterMapping": {
+              "model": {
+                "source": "static",
+                "value": "gpt-5-mini"
+              },
+              "messages": {
+                "source": "static",
+                "value": [
+                  {
+                    "role": "user",
+                    "content": "{{input.question}}"
+                  }
+                ]
+              },
+              "temperature": {
+                "source": "static",
+                "value": 1
+              }
+            },
+            "parameters": {},
+            "parametersRaw": "",
+            "width": 200,
+            "height": 100
+          }
+        },
+        {
+          "id": "format_response",
+          "type": "transform",
+          "position": {
+            "x": 485.46851670047795,
+            "y": 311.3208369635994
+          },
+          "data": {
+            "label": "Format Response",
+            "script": "import json\n\nai = node_outputs.get('ai_action', {})\nstatus = ai.get('status', None)\nraw = ai.get('data', '')\nanswer = ''\n\nif isinstance(raw, str):\n    answer = raw\nelif isinstance(raw, dict):\n    choices = raw.get('choices')\n    if isinstance(choices, list) and len(choices) > 0:\n        parts = []\n        for c in choices:\n            if isinstance(c, dict):\n                msg = c.get('message') or c.get('delta') or {}\n                if isinstance(msg, dict):\n                    part = msg.get('content') or msg.get('text') or ''\n                else:\n                    part = c.get('text', '')\n                if not part:\n                    part = c.get('text', '')\n                if part:\n                    parts.append(part)\n        if parts:\n            answer = \"\\n\".join(parts)\n        else:\n            answer = raw.get('text', json.dumps(raw, ensure_ascii=False))\n    else:\n        if 'message' in raw and isinstance(raw.get('message'), dict):\n            answer = raw.get('message', {}).get('content', '')\n        elif 'text' in raw:\n            answer = raw.get('text', '')\n        else:\n            answer = json.dumps(raw, ensure_ascii=False)\nelif isinstance(raw, list):\n    items = []\n    for it in raw:\n        items.append(it if isinstance(it, str) else json.dumps(it, ensure_ascii=False))\n    answer = \"\\n\".join(items)\nelse:\n    answer = str(raw)\n\noutput = {}\noutput['status'] = status\noutput['success'] = ai.get('success', True if status == 200 else False)\noutput['answer'] = answer\noutput['raw'] = raw",
+            "width": 200,
+            "height": 100
+          }
+        },
+        {
+          "id": "show_response",
+          "type": "response",
+          "position": {
+            "x": 483.88558926790904,
+            "y": 463.1195256742945
+          },
+          "data": {
+            "label": "Show Answer",
+            "variable": "{{node_outputs.format_response.answer}}",
+            "statusCode": 200,
+            "width": 200,
+            "height": 100
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "e1",
+          "source": "trigger_1",
+          "target": "ai_action",
+          "sourceHandle": null,
+          "targetHandle": null,
+          "label": null
+        },
+        {
+          "id": "e2",
+          "source": "ai_action",
+          "target": "format_response",
+          "sourceHandle": null,
+          "targetHandle": null,
+          "label": null
+        },
+        {
+          "id": "e3",
+          "source": "format_response",
+          "target": "show_response",
+          "sourceHandle": null,
+          "targetHandle": null,
+          "label": null
+        }
+      ]
+    },
+    "is_synchronous": true,
+    "sync_timeout": 60
+  },
+  "metadata": {
+    "required_applications": [],
+    "source_instance": {
+      "name": "IOFlow",
+      "version": "1.0"
+    }
+  }
+}

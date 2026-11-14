@@ -1,0 +1,249 @@
+{
+  "key": "discord",
+  "application": {
+    "app_name": "Discord",
+    "app_type": "api",
+    "category": "Communication",
+    "auth_type": "oauth2",
+    "description": "Discord API integration for bots and apps (send messages, read channels, list guilds).",
+    "base_url": "https://discord.com/api",
+    "version": "1.0.5",
+    "auth_config": {
+      "authorization_url": "https://discord.com/api/oauth2/authorize",
+      "token_url": "https://discord.com/api/oauth2/token",
+      "scopes": [
+        "identify",
+        "email",
+        "guilds",
+        "messages.read",
+        "messages.write",
+        "bot"
+      ]
+    }
+  },
+  "services": [
+    {
+      "service_name": "list_guilds",
+      "display_name": "List Guilds",
+      "description": "Retrieve a list of guilds (servers) the current user is a member of.",
+      "service_type": "api_call",
+      "endpoint_template": "/users/@me/guilds",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "Authorization": "Bearer {{oauth_token}}",
+          "Content-Type": "application/json"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "service_name": "get_guild_channels",
+      "display_name": "Get Guild Channels",
+      "description": "List channels for a guild (server).",
+      "service_type": "api_call",
+      "endpoint_template": "/guilds/{{guild_id}}/channels",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "Authorization": "Bot {{bot_token}}",
+          "Content-Type": "application/json"
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "guild_id": {
+            "type": "string",
+            "description": "ID of the guild"
+          },
+          "bot_token": {
+            "type": "string",
+            "description": "Bot token for authorization if using bot credentials"
+          }
+        },
+        "required": [
+          "guild_id"
+        ]
+      }
+    },
+    {
+      "service_name": "create_channel_message",
+      "display_name": "Create Channel Message",
+      "description": "Send a message to a channel.",
+      "service_type": "api_call",
+      "endpoint_template": "/channels/{{channel_id}}/messages",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Authorization": "Bot {{bot_token}}",
+          "Content-Type": "application/json"
+        },
+        "body_template": {
+          "content": "{{content}}",
+          "tts": false
+        }
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200,
+            201
+          ]
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "channel_id": {
+            "type": "string",
+            "description": "ID of the channel to send message to"
+          },
+          "content": {
+            "type": "string",
+            "description": "Message content"
+          },
+          "bot_token": {
+            "type": "string",
+            "description": "Bot token for authorization if using bot credentials"
+          }
+        },
+        "required": [
+          "channel_id",
+          "content",
+          "bot_token"
+        ]
+      }
+    }
+  ],
+  "events": [
+    {
+      "event_name": "message_create",
+      "display_name": "Message Created",
+      "description": "Triggered when a new message is created in a channel the bot can access.",
+      "event_type": "webhook",
+      "event_configuration": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "channel_id": {
+            "type": "string"
+          },
+          "guild_id": {
+            "type": "string"
+          },
+          "author": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "username": {
+                "type": "string"
+              },
+              "discriminator": {
+                "type": "string"
+              }
+            }
+          },
+          "content": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "channel_id",
+          "author",
+          "content",
+          "timestamp"
+        ]
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "guild_member_add",
+      "display_name": "Guild Member Added",
+      "description": "Triggered when a new member joins a guild.",
+      "event_type": "webhook",
+      "event_configuration": {
+        "type": "object",
+        "properties": {
+          "guild_id": {
+            "type": "string"
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "username": {
+                "type": "string"
+              }
+            }
+          },
+          "joined_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "guild_id",
+          "user",
+          "joined_at"
+        ]
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    }
+  ],
+  "_validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": [],
+    "validated_at": "2025-12-01T15:02:20.406735"
+  },
+  "metadata": {
+    "last_modified": "2025-12-01T09:32:20.465356",
+    "services_count": 3,
+    "events_count": 2
+  }
+}

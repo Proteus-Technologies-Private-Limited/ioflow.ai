@@ -1,0 +1,1062 @@
+{
+  "key": "gmail",
+  "application": {
+    "app_name": "Gmail",
+    "app_type": "api",
+    "description": "Google Gmail API - Access and manage Gmail messages, labels, drafts, and settings",
+    "category": "Email",
+    "auth_type": "oauth2",
+    "auth_config": {
+      "authorization_url": "https://accounts.google.com/o/oauth2/v2/auth",
+      "token_url": "https://oauth2.googleapis.com/token",
+      "redirect_uri": "http://localhost:5173/oauth/callback",
+      "scopes": [
+        "https://www.googleapis.com/auth/gmail.readonly",
+        "https://www.googleapis.com/auth/gmail.send",
+        "https://www.googleapis.com/auth/gmail.compose",
+        "https://www.googleapis.com/auth/gmail.modify",
+        "https://www.googleapis.com/auth/gmail.labels",
+        "https://www.googleapis.com/auth/gmail.settings.basic",
+        "https://www.googleapis.com/auth/gmail.settings.sharing"
+      ],
+      "grant_type": "authorization_code",
+      "authorization_params": {
+        "access_type": "offline",
+        "prompt": "consent"
+      }
+    },
+    "version": "1.2.0",
+    "base_url": "https://gmail.googleapis.com/gmail/v1",
+    "icon_url": "https://ssl.gstatic.com/ui/v1/icons/mail/rfr/logo_gmail_lockup_default_1x_r5.png",
+    "app_scope": "global"
+  },
+  "services": [
+    {
+      "service_name": "List Messages",
+      "service_type": "api_call",
+      "description": "Lists the messages in the user's mailbox",
+      "request_config": {
+        "parameter_method": "query_params",
+        "query_params_template": {
+          "q": "{{query}}",
+          "labelIds": "{{labelIds}}",
+          "maxResults": "{{maxResults}}",
+          "pageToken": "{{pageToken}}",
+          "includeSpamTrash": "{{includeSpamTrash}}"
+        },
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "error_extraction": {
+          "error_field": "error.message",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "default": "me",
+            "description": "The user's email address or 'me' for authenticated user"
+          },
+          "query": {
+            "type": "string",
+            "description": "Query string to filter messages (e.g., 'is:unread', 'from:user@example.com')"
+          },
+          "labelIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Array of label IDs to filter messages"
+          },
+          "maxResults": {
+            "type": "integer",
+            "default": 10,
+            "minimum": 1,
+            "maximum": 500,
+            "description": "Maximum number of messages to return"
+          },
+          "pageToken": {
+            "type": "string",
+            "description": "Page token to retrieve a specific page of results"
+          },
+          "includeSpamTrash": {
+            "type": "boolean",
+            "default": false,
+            "description": "Include messages from SPAM and TRASH"
+          }
+        },
+        "required": [
+          "userId"
+        ]
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "/users/{{userId}}/messages"
+    },
+    {
+      "service_name": "Get Message",
+      "service_type": "api_call",
+      "description": "Gets the specified message",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "query_params_template": {
+          "format": "{{format}}",
+          "metadataHeaders": "{{metadataHeaders}}"
+        },
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "error_extraction": {
+          "error_field": "error.message",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "default": "me",
+            "description": "The user's email address or 'me'"
+          },
+          "messageId": {
+            "type": "string",
+            "description": "The ID of the message to retrieve"
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "full",
+              "metadata",
+              "minimal",
+              "raw"
+            ],
+            "default": "full",
+            "description": "The format to return the message in"
+          },
+          "metadataHeaders": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Headers to include when format is metadata"
+          }
+        },
+        "required": [
+          "userId",
+          "messageId"
+        ]
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "/users/{{userId}}/messages/{{messageId}}"
+    },
+    {
+      "service_name": "Send Message",
+      "service_type": "api_call",
+      "description": "Sends the specified message",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "body_template": {
+          "raw": "{{raw}}"
+        },
+        "method": "POST"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "error_extraction": {
+          "error_field": "error.message",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "default": "me",
+            "description": "The user's email address or 'me'"
+          },
+          "raw": {
+            "type": "string",
+            "description": "Base64 encoded email message in RFC 2822 format"
+          }
+        },
+        "required": [
+          "userId",
+          "raw"
+        ]
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "/users/{{userId}}/messages/send"
+    },
+    {
+      "service_name": "Delete Message",
+      "service_type": "api_call",
+      "description": "Immediately and permanently deletes the specified message",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "method": "DELETE"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            204
+          ]
+        },
+        "error_extraction": {
+          "error_field": "error.message",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "default": "me",
+            "description": "The user's email address or 'me'"
+          },
+          "messageId": {
+            "type": "string",
+            "description": "The ID of the message to delete"
+          }
+        },
+        "required": [
+          "userId",
+          "messageId"
+        ]
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "/users/{{userId}}/messages/{{messageId}}"
+    },
+    {
+      "service_name": "Modify Message",
+      "service_type": "api_call",
+      "description": "Modifies the labels on the specified message",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "body_template": {
+          "addLabelIds": "{{addLabelIds}}",
+          "removeLabelIds": "{{removeLabelIds}}"
+        },
+        "method": "POST"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "error_extraction": {
+          "error_field": "error.message",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "default": "me",
+            "description": "The user's email address or 'me'"
+          },
+          "messageId": {
+            "type": "string",
+            "description": "The ID of the message to modify"
+          },
+          "addLabelIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of label IDs to add"
+          },
+          "removeLabelIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of label IDs to remove"
+          }
+        },
+        "required": [
+          "userId",
+          "messageId"
+        ]
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "/users/{{userId}}/messages/{{messageId}}/modify"
+    },
+    {
+      "service_name": "List Labels",
+      "service_type": "api_call",
+      "description": "Lists all labels in the user's mailbox",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "error_extraction": {
+          "error_field": "error.message",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "default": "me",
+            "description": "The user's email address or 'me'"
+          }
+        },
+        "required": [
+          "userId"
+        ]
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "/users/{{userId}}/labels"
+    },
+    {
+      "service_name": "Create Label",
+      "service_type": "api_call",
+      "description": "Creates a new label",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "body_template": {
+          "name": "{{name}}",
+          "messageListVisibility": "{{messageListVisibility}}",
+          "labelListVisibility": "{{labelListVisibility}}",
+          "color": {
+            "textColor": "{{textColor}}",
+            "backgroundColor": "{{backgroundColor}}"
+          }
+        },
+        "method": "POST"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "error_extraction": {
+          "error_field": "error.message",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "default": "me",
+            "description": "The user's email address or 'me'"
+          },
+          "name": {
+            "type": "string",
+            "description": "The display name of the label"
+          },
+          "messageListVisibility": {
+            "type": "string",
+            "enum": [
+              "show",
+              "hide"
+            ],
+            "default": "show",
+            "description": "The visibility of messages with this label in the message list"
+          },
+          "labelListVisibility": {
+            "type": "string",
+            "enum": [
+              "labelShow",
+              "labelShowIfUnread",
+              "labelHide"
+            ],
+            "default": "labelShow",
+            "description": "The visibility of the label in the label list"
+          },
+          "textColor": {
+            "type": "string",
+            "description": "Text color of the label (hex color code)"
+          },
+          "backgroundColor": {
+            "type": "string",
+            "description": "Background color of the label (hex color code)"
+          }
+        },
+        "required": [
+          "userId",
+          "name"
+        ]
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "/users/{{userId}}/labels"
+    },
+    {
+      "service_name": "Delete Label",
+      "service_type": "api_call",
+      "description": "Immediately and permanently deletes the specified label",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "method": "DELETE"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            204
+          ]
+        },
+        "error_extraction": {
+          "error_field": "error.message",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "default": "me",
+            "description": "The user's email address or 'me'"
+          },
+          "labelId": {
+            "type": "string",
+            "description": "The ID of the label to delete"
+          }
+        },
+        "required": [
+          "userId",
+          "labelId"
+        ]
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "/users/{{userId}}/labels/{{labelId}}"
+    },
+    {
+      "service_name": "List Drafts",
+      "service_type": "api_call",
+      "description": "Lists the drafts in the user's mailbox",
+      "request_config": {
+        "parameter_method": "query_params",
+        "query_params_template": {
+          "maxResults": "{{maxResults}}",
+          "pageToken": "{{pageToken}}",
+          "q": "{{query}}",
+          "includeSpamTrash": "{{includeSpamTrash}}"
+        },
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "error_extraction": {
+          "error_field": "error.message",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "default": "me",
+            "description": "The user's email address or 'me'"
+          },
+          "maxResults": {
+            "type": "integer",
+            "default": 10,
+            "minimum": 1,
+            "maximum": 500,
+            "description": "Maximum number of drafts to return"
+          },
+          "pageToken": {
+            "type": "string",
+            "description": "Page token to retrieve a specific page of results"
+          },
+          "query": {
+            "type": "string",
+            "description": "Query string to filter drafts"
+          },
+          "includeSpamTrash": {
+            "type": "boolean",
+            "default": false,
+            "description": "Include drafts from SPAM and TRASH"
+          }
+        },
+        "required": [
+          "userId"
+        ]
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "/users/{{userId}}/drafts"
+    },
+    {
+      "service_name": "Create Draft",
+      "service_type": "api_call",
+      "description": "Creates a new draft with the DRAFT label",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "body_template": {
+          "message": {
+            "raw": "{{raw}}"
+          }
+        },
+        "method": "POST"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "error_extraction": {
+          "error_field": "error.message",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "default": "me",
+            "description": "The user's email address or 'me'"
+          },
+          "raw": {
+            "type": "string",
+            "description": "Base64 encoded email message in RFC 2822 format"
+          }
+        },
+        "required": [
+          "userId",
+          "raw"
+        ]
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "/users/{{userId}}/drafts"
+    },
+    {
+      "service_name": "Send Draft",
+      "service_type": "api_call",
+      "description": "Sends the specified draft",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "body_template": {
+          "id": "{{draftId}}"
+        },
+        "method": "POST"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "error_extraction": {
+          "error_field": "error.message",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "default": "me",
+            "description": "The user's email address or 'me'"
+          },
+          "draftId": {
+            "type": "string",
+            "description": "The ID of the draft to send"
+          }
+        },
+        "required": [
+          "userId",
+          "draftId"
+        ]
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "/users/{{userId}}/drafts/send"
+    },
+    {
+      "service_name": "Delete Draft",
+      "service_type": "api_call",
+      "description": "Immediately and permanently deletes the specified draft",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "method": "DELETE"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            204
+          ]
+        },
+        "error_extraction": {
+          "error_field": "error.message",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "default": "me",
+            "description": "The user's email address or 'me'"
+          },
+          "draftId": {
+            "type": "string",
+            "description": "The ID of the draft to delete"
+          }
+        },
+        "required": [
+          "userId",
+          "draftId"
+        ]
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "/users/{{userId}}/drafts/{{draftId}}"
+    },
+    {
+      "service_name": "Trash Message",
+      "service_type": "api_call",
+      "description": "Moves the specified message to the trash",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "method": "POST"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "error_extraction": {
+          "error_field": "error.message",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "default": "me",
+            "description": "The user's email address or 'me'"
+          },
+          "messageId": {
+            "type": "string",
+            "description": "The ID of the message to trash"
+          }
+        },
+        "required": [
+          "userId",
+          "messageId"
+        ]
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "/users/{{userId}}/messages/{{messageId}}/trash"
+    },
+    {
+      "service_name": "Untrash Message",
+      "service_type": "api_call",
+      "description": "Removes the specified message from the trash",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "method": "POST"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "error_extraction": {
+          "error_field": "error.message",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "default": "me",
+            "description": "The user's email address or 'me'"
+          },
+          "messageId": {
+            "type": "string",
+            "description": "The ID of the message to untrash"
+          }
+        },
+        "required": [
+          "userId",
+          "messageId"
+        ]
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "/users/{{userId}}/messages/{{messageId}}/untrash"
+    },
+    {
+      "service_name": "Get Vacation Settings",
+      "service_type": "api_call",
+      "description": "Gets vacation responder settings",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "method": "GET"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "error_extraction": {
+          "error_field": "error.message",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "default": "me",
+            "description": "The user's email address or 'me'"
+          }
+        },
+        "required": [
+          "userId"
+        ]
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "/users/{{userId}}/settings/vacation"
+    },
+    {
+      "service_name": "Update Vacation Settings",
+      "service_type": "api_call",
+      "description": "Updates vacation responder settings",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "body_template": {
+          "enableAutoReply": "{{enableAutoReply}}",
+          "responseSubject": "{{responseSubject}}",
+          "responseBodyPlainText": "{{responseBodyPlainText}}",
+          "responseBodyHtml": "{{responseBodyHtml}}",
+          "restrictToContacts": "{{restrictToContacts}}",
+          "restrictToDomain": "{{restrictToDomain}}",
+          "startTime": "{{startTime}}",
+          "endTime": "{{endTime}}"
+        },
+        "method": "PUT"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "error_extraction": {
+          "error_field": "error.message",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "default": "me",
+            "description": "The user's email address or 'me'"
+          },
+          "enableAutoReply": {
+            "type": "boolean",
+            "description": "Enable or disable vacation responder"
+          },
+          "responseSubject": {
+            "type": "string",
+            "description": "Vacation responder subject"
+          },
+          "responseBodyPlainText": {
+            "type": "string",
+            "description": "Vacation responder body in plain text"
+          },
+          "responseBodyHtml": {
+            "type": "string",
+            "description": "Vacation responder body in HTML"
+          },
+          "restrictToContacts": {
+            "type": "boolean",
+            "default": false,
+            "description": "Only send responses to users in your contacts"
+          },
+          "restrictToDomain": {
+            "type": "boolean",
+            "default": false,
+            "description": "Only send responses to users in your domain"
+          },
+          "startTime": {
+            "type": "integer",
+            "description": "Start time in epoch milliseconds"
+          },
+          "endTime": {
+            "type": "integer",
+            "description": "End time in epoch milliseconds"
+          }
+        },
+        "required": [
+          "userId",
+          "enableAutoReply"
+        ]
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "/users/{{userId}}/settings/vacation"
+    },
+    {
+      "service_name": "Watch Mailbox",
+      "service_type": "api_call",
+      "description": "Set up or update a push notification watch on the given user mailbox",
+      "request_config": {
+        "parameter_method": "json_payload",
+        "body_template": {
+          "topicName": "{{topicName}}",
+          "labelIds": "{{labelIds}}",
+          "labelFilterAction": "{{labelFilterAction}}"
+        },
+        "method": "POST"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            200
+          ]
+        },
+        "error_extraction": {
+          "error_field": "error.message",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "default": "me",
+            "description": "The user's email address or 'me'"
+          },
+          "topicName": {
+            "type": "string",
+            "description": "Cloud Pub/Sub topic name"
+          },
+          "labelIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of label IDs to watch"
+          },
+          "labelFilterAction": {
+            "type": "string",
+            "enum": [
+              "include",
+              "exclude"
+            ],
+            "default": "include",
+            "description": "Whether to include or exclude the specified labels"
+          }
+        },
+        "required": [
+          "userId",
+          "topicName"
+        ]
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "/users/{{userId}}/watch"
+    },
+    {
+      "service_name": "Stop Watch",
+      "service_type": "api_call",
+      "description": "Stop receiving push notifications for the given user mailbox",
+      "request_config": {
+        "parameter_method": "url_pattern",
+        "method": "POST"
+      },
+      "response_config": {
+        "success_check": {
+          "type": "status_code",
+          "success_status_codes": [
+            204
+          ]
+        },
+        "error_extraction": {
+          "error_field": "error.message",
+          "message_field": "error.message"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "default": "me",
+            "description": "The user's email address or 'me'"
+          }
+        },
+        "required": [
+          "userId"
+        ]
+      },
+      "sync_mode": "synchronous",
+      "endpoint_template": "/users/{{userId}}/stop"
+    }
+  ],
+  "events": [
+    {
+      "event_name": "Manual Trigger",
+      "event_type": "manual",
+      "description": "Manually trigger Gmail API operations",
+      "event_configuration": {
+        "description": "Use this to manually trigger Gmail operations"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "event_name": "New Email Received",
+      "event_type": "polling",
+      "description": "Polls Gmail for new unread emails and returns message IDs",
+      "event_configuration": {
+        "polling_service": "List Messages",
+        "interval_seconds": 300,
+        "polling_parameters": {
+          "userId": "me",
+          "query": "is:unread",
+          "maxResults": 50,
+          "includeSpamTrash": false
+        },
+        "change_detection": {
+          "method": "new_items",
+          "identifier_field": "id"
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Gmail message ID - use this with Get Message to fetch full details"
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Gmail thread ID"
+          }
+        },
+        "required": [
+          "id",
+          "threadId"
+        ]
+      }
+    },
+    {
+      "event_name": "Gmail Push Notification",
+      "event_type": "webhook",
+      "description": "Receive push notifications when mailbox changes occur",
+      "api_endpoint": "/gmail/push-notifications",
+      "event_configuration": {
+        "webhook_method": "POST",
+        "headers_validation": {
+          "Content-Type": "application/json"
+        },
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "message": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "string",
+                  "description": "Base64 encoded notification data"
+                },
+                "messageId": {
+                  "type": "string"
+                },
+                "publishTime": {
+                  "type": "string"
+                }
+              }
+            },
+            "subscription": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  ],
+  "metadata": {
+    "author": "IOFlow Team",
+    "created_at": "2025-01-23",
+    "tags": [
+      "email",
+      "gmail",
+      "google",
+      "oauth2",
+      "messaging"
+    ],
+    "notes": "Gmail API requires OAuth 2.0 authentication. Users need to configure their Google Cloud project and enable Gmail API. The base64 encoded messages should be in RFC 2822 format.",
+    "last_modified": "2025-08-29T14:30:00.000000",
+    "modified_by": "claude-code",
+    "events_count": 3
+  }
+}

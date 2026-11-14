@@ -1,0 +1,1245 @@
+{
+  "key": "web_scraping",
+  "application": {
+    "app_name": "Web Scraping",
+    "app_type": "api",
+    "app_scope": "tenant",
+    "description": "Comprehensive web scraping services for extracting data from websites, including static and dynamic content",
+    "category": "Data Extraction",
+    "auth_type": "none",
+    "version": "1.0.0",
+    "base_url": "web://",
+    "icon_url": "https://cdn.jsdelivr.net/npm/heroicons@2.0.18/24/solid/globe-alt.svg",
+    "base_url_placeholder": "web://",
+    "base_url_help_text": "Web scraping service protocol"
+  },
+  "services": [
+    {
+      "service_name": "scrape_page",
+      "display_name": "Scrape Page HTML",
+      "service_type": "file_operation",
+      "description": "Scrape a webpage and return its HTML content",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "scrape_page",
+            "enum": ["scrape_page"],
+            "ui_control": "hidden"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of the webpage to scrape",
+            "example": "https://example.com"
+          },
+          "headers": {
+            "type": "object",
+            "description": "Custom HTTP headers",
+            "additionalProperties": {"type": "string"},
+            "ui_control": "json",
+            "help_text": "Optional custom headers for the request"
+          },
+          "cookies": {
+            "type": "object",
+            "description": "Cookies to send with request",
+            "additionalProperties": {"type": "string"},
+            "ui_control": "json"
+          },
+          "timeout": {
+            "type": "integer",
+            "default": 30,
+            "minimum": 1,
+            "maximum": 300,
+            "description": "Request timeout in seconds"
+          }
+        },
+        "required": ["url"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "url": {"type": "string"},
+          "html": {"type": "string"},
+          "status_code": {"type": "integer"},
+          "headers": {"type": "object"},
+          "content_length": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 60
+    },
+    {
+      "service_name": "extract_text",
+      "display_name": "Extract Text Content",
+      "service_type": "file_operation",
+      "description": "Extract all text content from a webpage",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "extract_text",
+            "enum": ["extract_text"],
+            "ui_control": "hidden"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of the webpage",
+            "help_text": "Either URL or HTML content is required"
+          },
+          "html": {
+            "type": "string",
+            "description": "HTML content to extract from",
+            "ui_control": "textarea",
+            "help_text": "Provide HTML directly instead of fetching from URL"
+          },
+          "include_headers": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include header tags (h1-h6)"
+          },
+          "include_paragraphs": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include paragraph text"
+          },
+          "include_lists": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include list items"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "url": {"type": "string"},
+          "text": {"type": "string"},
+          "structured_text": {"type": "object"},
+          "word_count": {"type": "integer"},
+          "character_count": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "extract_links",
+      "display_name": "Extract Links",
+      "service_type": "file_operation",
+      "description": "Extract all links from a webpage",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "extract_links",
+            "enum": ["extract_links"],
+            "ui_control": "hidden"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of the webpage"
+          },
+          "html": {
+            "type": "string",
+            "description": "HTML content to extract from",
+            "ui_control": "textarea"
+          },
+          "include_external": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include external links"
+          },
+          "include_internal": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include internal links"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "url": {"type": "string"},
+          "links": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "url": {"type": "string"},
+                "text": {"type": "string"},
+                "title": {"type": "string"},
+                "target": {"type": "string"},
+                "rel": {"type": "array", "items": {"type": "string"}}
+              }
+            }
+          },
+          "total_links": {"type": "integer"},
+          "internal_count": {"type": "integer"},
+          "external_count": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "extract_images",
+      "display_name": "Extract Images",
+      "service_type": "file_operation",
+      "description": "Extract all image URLs from a webpage",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "extract_images",
+            "enum": ["extract_images"],
+            "ui_control": "hidden"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of the webpage"
+          },
+          "html": {
+            "type": "string",
+            "description": "HTML content to extract from",
+            "ui_control": "textarea"
+          },
+          "include_data_urls": {
+            "type": "boolean",
+            "default": false,
+            "description": "Include base64 encoded data URLs"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "url": {"type": "string"},
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "url": {"type": "string"},
+                "alt": {"type": "string"},
+                "title": {"type": "string"},
+                "width": {"type": "string"},
+                "height": {"type": "string"}
+              }
+            }
+          },
+          "style_images": {"type": "array"},
+          "picture_images": {"type": "array"},
+          "total_images": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "extract_metadata",
+      "display_name": "Extract Page Metadata",
+      "service_type": "file_operation",
+      "description": "Extract metadata, Open Graph, and Twitter Card data from a webpage",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "extract_metadata",
+            "enum": ["extract_metadata"],
+            "ui_control": "hidden"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of the webpage"
+          },
+          "html": {
+            "type": "string",
+            "description": "HTML content to extract from",
+            "ui_control": "textarea"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "url": {"type": "string"},
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "title": {"type": "string"},
+              "description": {"type": "string"},
+              "keywords": {"type": "string"},
+              "author": {"type": "string"}
+            }
+          },
+          "meta_tags": {"type": "object"},
+          "open_graph": {"type": "object"},
+          "twitter_card": {"type": "object"},
+          "canonical_url": {"type": "string"},
+          "favicon": {"type": "string"},
+          "feeds": {"type": "array"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "extract_tables",
+      "display_name": "Extract Tables",
+      "service_type": "file_operation",
+      "description": "Extract HTML tables as structured data",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "extract_tables",
+            "enum": ["extract_tables"],
+            "ui_control": "hidden"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of the webpage"
+          },
+          "html": {
+            "type": "string",
+            "description": "HTML content to extract from",
+            "ui_control": "textarea"
+          },
+          "as_dataframe": {
+            "type": "boolean",
+            "default": false,
+            "description": "Convert tables to DataFrame format"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "url": {"type": "string"},
+          "tables": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "index": {"type": "integer"},
+                "headers": {"type": "array", "items": {"type": "string"}},
+                "data": {"type": "array"},
+                "rows": {"type": "integer"},
+                "columns": {"type": "integer"}
+              }
+            }
+          },
+          "table_count": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "extract_by_css",
+      "display_name": "Extract by CSS Selector",
+      "service_type": "file_operation",
+      "description": "Extract content using CSS selectors",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "extract_by_selector",
+            "enum": ["extract_by_selector"],
+            "ui_control": "hidden"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of the webpage"
+          },
+          "html": {
+            "type": "string",
+            "description": "HTML content to extract from",
+            "ui_control": "textarea"
+          },
+          "selector": {
+            "type": "string",
+            "description": "CSS selector",
+            "example": "div.content p",
+            "help_text": "CSS selector to find elements"
+          },
+          "extract_type": {
+            "type": "string",
+            "enum": ["text", "html", "attributes"],
+            "default": "text",
+            "description": "What to extract from matched elements"
+          },
+          "multiple": {
+            "type": "boolean",
+            "default": true,
+            "description": "Extract all matching elements or just first"
+          }
+        },
+        "required": ["selector"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "url": {"type": "string"},
+          "selector": {"type": "string"},
+          "results": {"type": ["array", "string", "object", "null"]},
+          "count": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "extract_by_xpath",
+      "display_name": "Extract by XPath",
+      "service_type": "file_operation",
+      "description": "Extract content using XPath expressions",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "extract_by_xpath",
+            "enum": ["extract_by_xpath"],
+            "ui_control": "hidden"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of the webpage"
+          },
+          "html": {
+            "type": "string",
+            "description": "HTML content to extract from",
+            "ui_control": "textarea"
+          },
+          "xpath": {
+            "type": "string",
+            "description": "XPath expression",
+            "example": "//div[@class='content']//p",
+            "help_text": "XPath expression to find elements"
+          },
+          "extract_type": {
+            "type": "string",
+            "enum": ["text", "html", "attributes"],
+            "default": "text",
+            "description": "What to extract from matched elements"
+          }
+        },
+        "required": ["xpath"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "url": {"type": "string"},
+          "xpath": {"type": "string"},
+          "results": {"type": "array"},
+          "count": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "extract_structured_data",
+      "display_name": "Extract Structured Data",
+      "service_type": "file_operation",
+      "description": "Extract JSON-LD, microdata, and RDFa structured data",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "extract_structured_data",
+            "enum": ["extract_structured_data"],
+            "ui_control": "hidden"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of the webpage"
+          },
+          "html": {
+            "type": "string",
+            "description": "HTML content to extract from",
+            "ui_control": "textarea"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "url": {"type": "string"},
+          "json_ld": {"type": "array"},
+          "microdata": {"type": "array"},
+          "rdfa": {"type": "array"},
+          "total_items": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "scrape_dynamic_content",
+      "display_name": "Scrape Dynamic Content",
+      "service_type": "file_operation",
+      "description": "Scrape JavaScript-rendered content using browser automation",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "scrape_dynamic",
+            "enum": ["scrape_dynamic"],
+            "ui_control": "hidden"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of the webpage"
+          },
+          "wait_for": {
+            "type": "string",
+            "enum": ["load", "domcontentloaded", "networkidle"],
+            "default": "load",
+            "description": "Wait condition for page load"
+          },
+          "wait_selector": {
+            "type": "string",
+            "description": "CSS selector to wait for",
+            "help_text": "Wait for specific element to appear"
+          },
+          "timeout": {
+            "type": "integer",
+            "default": 30000,
+            "description": "Timeout in milliseconds"
+          },
+          "viewport": {
+            "type": "object",
+            "properties": {
+              "width": {"type": "integer", "default": 1920},
+              "height": {"type": "integer", "default": 1080}
+            },
+            "description": "Browser viewport size"
+          }
+        },
+        "required": ["url"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "url": {"type": "string"},
+          "original_url": {"type": "string"},
+          "html": {"type": "string"},
+          "title": {"type": "string"},
+          "content_length": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 60
+    },
+    {
+      "service_name": "screenshot_webpage",
+      "display_name": "Screenshot Webpage",
+      "service_type": "file_operation",
+      "description": "Take a screenshot of a webpage",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "screenshot_page",
+            "enum": ["screenshot_page"],
+            "ui_control": "hidden"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of the webpage"
+          },
+          "full_page": {
+            "type": "boolean",
+            "default": false,
+            "description": "Capture full page or just viewport"
+          },
+          "viewport": {
+            "type": "object",
+            "properties": {
+              "width": {"type": "integer", "default": 1920},
+              "height": {"type": "integer", "default": 1080}
+            },
+            "description": "Browser viewport size"
+          },
+          "wait_for": {
+            "type": "string",
+            "enum": ["load", "domcontentloaded", "networkidle"],
+            "default": "networkidle",
+            "description": "Wait condition before screenshot"
+          },
+          "format": {
+            "type": "string",
+            "enum": ["png", "jpeg"],
+            "default": "png",
+            "description": "Screenshot format"
+          }
+        },
+        "required": ["url"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "url": {"type": "string"},
+          "screenshot": {"type": "string", "format": "base64"},
+          "format": {"type": "string"},
+          "title": {"type": "string"},
+          "full_page": {"type": "boolean"},
+          "size": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 60
+    },
+    {
+      "service_name": "fill_web_form",
+      "display_name": "Fill Web Form",
+      "service_type": "file_operation",
+      "description": "Fill and submit a web form",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "fill_form",
+            "enum": ["fill_form"],
+            "ui_control": "hidden"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of the form page"
+          },
+          "form_data": {
+            "type": "object",
+            "description": "Form field selectors and values",
+            "additionalProperties": true,
+            "help_text": "Object with CSS selectors as keys and values to fill"
+          },
+          "submit_button_selector": {
+            "type": "string",
+            "description": "CSS selector for submit button",
+            "example": "button[type='submit']"
+          },
+          "form_selector": {
+            "type": "string",
+            "description": "CSS selector for the form element"
+          },
+          "wait_after_submit": {
+            "type": "string",
+            "enum": ["load", "domcontentloaded", "networkidle"],
+            "default": "networkidle",
+            "description": "Wait condition after form submission"
+          }
+        },
+        "required": ["url", "form_data"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "original_url": {"type": "string"},
+          "result_url": {"type": "string"},
+          "result_html": {"type": "string"},
+          "result_title": {"type": "string"},
+          "form_submitted": {"type": "boolean"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 60
+    },
+    {
+      "service_name": "click_and_extract",
+      "display_name": "Click and Extract",
+      "service_type": "file_operation",
+      "description": "Click elements on a page and extract resulting content",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "click_and_extract",
+            "enum": ["click_and_extract"],
+            "ui_control": "hidden"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of the webpage"
+          },
+          "click_selectors": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "CSS selectors for elements to click",
+            "help_text": "List of CSS selectors to click in sequence"
+          },
+          "extract_selector": {
+            "type": "string",
+            "description": "CSS selector for content to extract after clicks"
+          },
+          "wait_after_click": {
+            "type": "integer",
+            "default": 2000,
+            "description": "Milliseconds to wait after each click"
+          }
+        },
+        "required": ["url", "click_selectors"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "url": {"type": "string"},
+          "results": {"type": "array"},
+          "total_clicks": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 60
+    },
+    {
+      "service_name": "scroll_infinite_page",
+      "display_name": "Scroll Infinite Page",
+      "service_type": "file_operation",
+      "description": "Scroll page to load infinite scroll content",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "scroll_and_load",
+            "enum": ["scroll_and_load"],
+            "ui_control": "hidden"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of the webpage"
+          },
+          "max_scrolls": {
+            "type": "integer",
+            "default": 10,
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Maximum number of scrolls"
+          },
+          "scroll_delay": {
+            "type": "integer",
+            "default": 2000,
+            "description": "Milliseconds to wait between scrolls"
+          },
+          "extract_selector": {
+            "type": "string",
+            "description": "CSS selector for content to extract",
+            "help_text": "Elements to extract during scrolling"
+          }
+        },
+        "required": ["url"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "url": {"type": "string"},
+          "content": {"type": ["array", "string"]},
+          "scroll_count": {"type": "integer"},
+          "items_found": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 120
+    },
+    {
+      "service_name": "wait_and_extract",
+      "display_name": "Wait and Extract",
+      "service_type": "file_operation",
+      "description": "Wait for specific elements to load then extract content",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "wait_and_extract",
+            "enum": ["wait_and_extract"],
+            "ui_control": "hidden"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of the webpage"
+          },
+          "wait_selector": {
+            "type": "string",
+            "description": "CSS selector to wait for",
+            "help_text": "Element that must appear before extraction"
+          },
+          "extract_selectors": {
+            "type": "array",
+            "items": {
+              "type": ["string", "object"],
+              "properties": {
+                "selector": {"type": "string"},
+                "name": {"type": "string"}
+              }
+            },
+            "description": "Selectors to extract after wait"
+          },
+          "timeout": {
+            "type": "integer",
+            "default": 30000,
+            "description": "Timeout in milliseconds"
+          }
+        },
+        "required": ["url", "wait_selector"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "url": {"type": "string"},
+          "waited_for": {"type": "string"},
+          "results": {"type": "object"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 60
+    },
+    {
+      "service_name": "scrape_multiple_pages",
+      "display_name": "Scrape Multiple Pages",
+      "service_type": "file_operation",
+      "description": "Navigate through pagination and scrape multiple pages",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "multi_page_scrape",
+            "enum": ["multi_page_scrape"],
+            "ui_control": "hidden"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Starting URL"
+          },
+          "next_button_selector": {
+            "type": "string",
+            "description": "CSS selector for next page button",
+            "help_text": "Button or link to navigate to next page"
+          },
+          "max_pages": {
+            "type": "integer",
+            "default": 10,
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Maximum pages to scrape"
+          },
+          "extract_selector": {
+            "type": "string",
+            "description": "CSS selector for content to extract"
+          },
+          "page_delay": {
+            "type": "integer",
+            "default": 2000,
+            "description": "Milliseconds to wait between pages"
+          }
+        },
+        "required": ["url", "next_button_selector"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "start_url": {"type": "string"},
+          "pages_scraped": {"type": "integer"},
+          "results": {"type": "array"},
+          "total_items": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 300
+    },
+    {
+      "service_name": "scrape_with_authentication",
+      "display_name": "Scrape with Authentication",
+      "service_type": "file_operation",
+      "description": "Scrape pages requiring login authentication",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "scrape_with_auth",
+            "enum": ["scrape_with_auth"],
+            "ui_control": "hidden"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Target URL to scrape after login"
+          },
+          "login_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Login page URL"
+          },
+          "username_selector": {
+            "type": "string",
+            "description": "CSS selector for username field"
+          },
+          "password_selector": {
+            "type": "string",
+            "description": "CSS selector for password field"
+          },
+          "username": {
+            "type": "string",
+            "description": "Login username",
+            "ui_control": "text"
+          },
+          "password": {
+            "type": "string",
+            "description": "Login password",
+            "ui_control": "password"
+          },
+          "submit_selector": {
+            "type": "string",
+            "description": "CSS selector for login button"
+          },
+          "extract_selector": {
+            "type": "string",
+            "description": "CSS selector for content to extract"
+          }
+        },
+        "required": ["url"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "url": {"type": "string"},
+          "authenticated": {"type": "boolean"},
+          "content": {"type": ["array", "string"]}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 60
+    },
+    {
+      "service_name": "download_page_files",
+      "display_name": "Download Page Files",
+      "service_type": "file_operation",
+      "description": "Download files linked from a webpage (e.g. monthly portfolio disclosures). Links are matched on their URL path or query value, narrowed by url_contains, and files a previous run took are left out via skip_urls. Set render_js for pages whose links are drawn by JavaScript, include_content=false to list links only.",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "download_files",
+            "enum": [
+              "download_files"
+            ],
+            "ui_control": "hidden"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of the webpage"
+          },
+          "file_extensions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [
+              ".pdf",
+              ".doc",
+              ".docx",
+              ".xls",
+              ".xlsx",
+              ".zip"
+            ],
+            "description": "File extensions to download"
+          },
+          "max_files": {
+            "type": "integer",
+            "default": 10,
+            "minimum": 1,
+            "maximum": 200,
+            "description": "Maximum files to download (up to 200)"
+          },
+          "url_contains": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Keep only links whose URL or link text contains one of these (case-insensitive), e.g. [\"2026\", \"flexi\"]"
+          },
+          "skip_urls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "File URLs already processed by an earlier run; they are not downloaded again"
+          },
+          "render_js": {
+            "type": "boolean",
+            "default": false,
+            "description": "Render the page in a headless browser first (links added by JavaScript)"
+          },
+          "wait_selector": {
+            "type": "string",
+            "description": "With render_js: CSS selector to wait for before reading links"
+          },
+          "include_content": {
+            "type": "boolean",
+            "default": true,
+            "description": "false = return the matching links only, without downloading"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "url": {
+            "type": "string"
+          },
+          "files_found": {
+            "type": "integer"
+          },
+          "files_downloaded": {
+            "type": "integer"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                },
+                "filename": {
+                  "type": "string"
+                },
+                "extension": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string",
+                  "format": "base64"
+                },
+                "size": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 120
+    },
+    {
+      "service_name": "monitor_page_changes",
+      "display_name": "Monitor Page Changes",
+      "service_type": "file_operation",
+      "description": "Check if a webpage has changed since last check",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "monitor_changes",
+            "enum": ["monitor_changes"],
+            "ui_control": "hidden"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL to monitor"
+          },
+          "selector": {
+            "type": "string",
+            "description": "CSS selector for specific element to monitor",
+            "help_text": "Leave empty to monitor entire page"
+          },
+          "previous_hash": {
+            "type": "string",
+            "description": "Hash from previous check",
+            "help_text": "Compare with this hash to detect changes"
+          }
+        },
+        "required": ["url"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "url": {"type": "string"},
+          "selector": {"type": "string"},
+          "current_hash": {"type": "string"},
+          "previous_hash": {"type": "string"},
+          "has_changed": {"type": "boolean"},
+          "content": {"type": "string"},
+          "timestamp": {"type": "string", "format": "date-time"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "scrape_sitemap",
+      "display_name": "Scrape Sitemap",
+      "service_type": "file_operation",
+      "description": "Extract URLs from a website sitemap",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "sitemap_scrape",
+            "enum": ["sitemap_scrape"],
+            "ui_control": "hidden"
+          },
+          "sitemap_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Direct sitemap URL",
+            "example": "https://example.com/sitemap.xml"
+          },
+          "base_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Base URL to find sitemap",
+            "help_text": "Will check standard sitemap locations"
+          },
+          "max_urls": {
+            "type": "integer",
+            "default": 100,
+            "minimum": 1,
+            "maximum": 1000,
+            "description": "Maximum URLs to extract"
+          },
+          "filter_pattern": {
+            "type": "string",
+            "description": "Regex pattern to filter URLs",
+            "help_text": "Only include URLs matching this pattern"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "sitemap_url": {"type": "string"},
+          "urls": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "url": {"type": "string"},
+                "lastmod": {"type": "string"},
+                "changefreq": {"type": "string"},
+                "priority": {"type": "string"}
+              }
+            }
+          },
+          "url_count": {"type": "integer"},
+          "child_sitemaps": {"type": "array", "items": {"type": "string"}},
+          "is_index": {"type": "boolean"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 60
+    },
+    {
+      "service_name": "discover_api_endpoints",
+      "display_name": "Discover API Endpoints",
+      "service_type": "file_operation",
+      "description": "Discover API endpoints and documentation from a webpage",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "api_discover",
+            "enum": ["api_discover"],
+            "ui_control": "hidden"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of the webpage"
+          },
+          "html": {
+            "type": "string",
+            "description": "HTML content to analyze",
+            "ui_control": "textarea"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "url": {"type": "string"},
+          "api_endpoints": {"type": "array", "items": {"type": "string"}},
+          "api_documentation": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "url": {"type": "string"},
+                "text": {"type": "string"}
+              }
+            }
+          },
+          "api_metadata": {"type": "object"},
+          "total_endpoints": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    }
+  ],
+  "events": []
+}

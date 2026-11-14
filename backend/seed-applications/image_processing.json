@@ -1,0 +1,936 @@
+{
+  "key": "image_processing",
+  "application": {
+    "app_name": "Image Processing",
+    "app_type": "api",
+    "app_scope": "tenant",
+    "description": "Comprehensive image processing services including manipulation, OCR, QR/barcode reading, and various transformations",
+    "category": "AI/ML",
+    "auth_type": "none",
+    "version": "1.0.0",
+    "base_url": "image://",
+    "icon_url": "https://cdn.jsdelivr.net/npm/heroicons@2.0.18/24/solid/photo.svg",
+    "base_url_placeholder": "image://",
+    "base_url_help_text": "Local image processing service"
+  },
+  "services": [
+    {
+      "service_name": "resize_image",
+      "display_name": "Resize Image",
+      "service_type": "file_operation",
+      "description": "Resize an image to specific dimensions with optional aspect ratio preservation",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "resize",
+            "enum": ["resize"],
+            "ui_control": "hidden"
+          },
+          "image": {
+            "type": "string",
+            "description": "Image file to resize",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "image/*",
+            "help_text": "Upload an image file to resize"
+          },
+          "width": {
+            "type": "integer",
+            "description": "Target width in pixels",
+            "minimum": 1,
+            "maximum": 10000,
+            "example": 800
+          },
+          "height": {
+            "type": "integer",
+            "description": "Target height in pixels",
+            "minimum": 1,
+            "maximum": 10000,
+            "example": 600
+          },
+          "maintain_aspect_ratio": {
+            "type": "boolean",
+            "default": true,
+            "description": "Maintain original aspect ratio",
+            "help_text": "When true, image will be resized to fit within specified dimensions"
+          },
+          "output_format": {
+            "type": "string",
+            "enum": ["PNG", "JPEG", "WEBP", "BMP"],
+            "default": "PNG",
+            "description": "Output image format"
+          }
+        },
+        "required": ["image"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "image": {"type": "string", "format": "base64"},
+          "format": {"type": "string"},
+          "width": {"type": "integer"},
+          "height": {"type": "integer"},
+          "original_width": {"type": "integer"},
+          "original_height": {"type": "integer"},
+          "size": {"type": "integer"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "crop_image",
+      "display_name": "Crop Image",
+      "service_type": "file_operation",
+      "description": "Crop an image to a specific region",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "crop",
+            "enum": ["crop"],
+            "ui_control": "hidden"
+          },
+          "image": {
+            "type": "string",
+            "description": "Image file to crop",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "image/*"
+          },
+          "left": {
+            "type": "integer",
+            "default": 0,
+            "description": "Left position (X coordinate)",
+            "minimum": 0
+          },
+          "top": {
+            "type": "integer",
+            "default": 0,
+            "description": "Top position (Y coordinate)",
+            "minimum": 0
+          },
+          "width": {
+            "type": "integer",
+            "description": "Crop width",
+            "minimum": 1
+          },
+          "height": {
+            "type": "integer",
+            "description": "Crop height",
+            "minimum": 1
+          },
+          "output_format": {
+            "type": "string",
+            "enum": ["PNG", "JPEG", "WEBP", "BMP"],
+            "default": "PNG"
+          }
+        },
+        "required": ["image", "width", "height"]
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "rotate_image",
+      "display_name": "Rotate Image",
+      "service_type": "file_operation",
+      "description": "Rotate an image by a specified angle",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "rotate",
+            "enum": ["rotate"],
+            "ui_control": "hidden"
+          },
+          "image": {
+            "type": "string",
+            "description": "Image file to rotate",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "image/*"
+          },
+          "angle": {
+            "type": "number",
+            "description": "Rotation angle in degrees (positive = clockwise)",
+            "minimum": -360,
+            "maximum": 360,
+            "example": 90
+          },
+          "expand": {
+            "type": "boolean",
+            "default": true,
+            "description": "Expand canvas to fit rotated image"
+          },
+          "fill_color": {
+            "type": "string",
+            "default": "white",
+            "description": "Background fill color for expanded areas"
+          },
+          "output_format": {
+            "type": "string",
+            "enum": ["PNG", "JPEG", "WEBP", "BMP"],
+            "default": "PNG"
+          }
+        },
+        "required": ["image", "angle"]
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "reduce_resolution",
+      "display_name": "Reduce Image Resolution",
+      "service_type": "file_operation",
+      "description": "Reduce image file size by lowering resolution and quality",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "reduce_resolution",
+            "enum": ["reduce_resolution"],
+            "ui_control": "hidden"
+          },
+          "image": {
+            "type": "string",
+            "description": "Image file to compress",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "image/*"
+          },
+          "max_width": {
+            "type": "integer",
+            "description": "Maximum width in pixels",
+            "minimum": 1,
+            "example": 1920
+          },
+          "max_height": {
+            "type": "integer",
+            "description": "Maximum height in pixels",
+            "minimum": 1,
+            "example": 1080
+          },
+          "quality": {
+            "type": "integer",
+            "default": 85,
+            "minimum": 1,
+            "maximum": 100,
+            "description": "JPEG quality (1-100)"
+          },
+          "output_format": {
+            "type": "string",
+            "enum": ["JPEG", "PNG", "WEBP"],
+            "default": "JPEG"
+          }
+        },
+        "required": ["image"]
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "append_images",
+      "display_name": "Append/Combine Images",
+      "service_type": "file_operation",
+      "description": "Combine multiple images horizontally or vertically",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "append_images",
+            "enum": ["append_images"],
+            "ui_control": "hidden"
+          },
+          "images": {
+            "type": "array",
+            "description": "List of images to append",
+            "items": {
+              "type": "string",
+              "format": "base64"
+            },
+            "minItems": 2,
+            "ui_control": "file-multiple",
+            "accept": "image/*",
+            "help_text": "Upload multiple images to combine"
+          },
+          "direction": {
+            "type": "string",
+            "enum": ["horizontal", "vertical"],
+            "default": "horizontal",
+            "description": "Direction to append images"
+          },
+          "spacing": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "description": "Spacing between images in pixels"
+          },
+          "resize_to_fit": {
+            "type": "boolean",
+            "default": false,
+            "description": "Resize images to match dimensions"
+          },
+          "background_color": {
+            "type": "string",
+            "default": "white",
+            "description": "Background color for spacing/padding"
+          },
+          "output_format": {
+            "type": "string",
+            "enum": ["PNG", "JPEG", "WEBP"],
+            "default": "PNG"
+          }
+        },
+        "required": ["images"]
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 60
+    },
+    {
+      "service_name": "overlay_images",
+      "display_name": "Overlay Images",
+      "service_type": "file_operation",
+      "description": "Overlay one image on top of another with positioning and opacity control",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "overlay",
+            "enum": ["overlay"],
+            "ui_control": "hidden"
+          },
+          "base_image": {
+            "type": "string",
+            "description": "Base/background image",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "image/*"
+          },
+          "overlay_image": {
+            "type": "string",
+            "description": "Image to overlay on top",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "image/*"
+          },
+          "position_x": {
+            "type": "string",
+            "default": "0",
+            "description": "X position (number in pixels or 'center', 'right')",
+            "help_text": "Use a number for pixel position or 'center'/'right' for alignment"
+          },
+          "position_y": {
+            "type": "string",
+            "default": "0",
+            "description": "Y position (number in pixels or 'center', 'bottom')",
+            "help_text": "Use a number for pixel position or 'center'/'bottom' for alignment"
+          },
+          "opacity": {
+            "type": "number",
+            "default": 1.0,
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Overlay opacity (0-1)"
+          },
+          "resize_overlay": {
+            "type": "boolean",
+            "default": false,
+            "description": "Allow resizing overlay image"
+          },
+          "overlay_width": {
+            "type": "integer",
+            "description": "Resize overlay to this width"
+          },
+          "overlay_height": {
+            "type": "integer",
+            "description": "Resize overlay to this height"
+          },
+          "output_format": {
+            "type": "string",
+            "enum": ["PNG", "JPEG", "WEBP"],
+            "default": "PNG"
+          }
+        },
+        "required": ["base_image", "overlay_image"]
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "read_qr_code",
+      "display_name": "Read QR Code",
+      "service_type": "file_operation",
+      "description": "Extract QR code data from an image",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "read_qr_code",
+            "enum": ["read_qr_code"],
+            "ui_control": "hidden"
+          },
+          "image": {
+            "type": "string",
+            "description": "Image containing QR code",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "image/*",
+            "help_text": "Upload an image containing one or more QR codes"
+          }
+        },
+        "required": ["image"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "qr_codes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "data": {"type": "string"},
+                "type": {"type": "string"},
+                "position": {"type": "object"}
+              }
+            }
+          },
+          "message": {"type": "string"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "read_barcode",
+      "display_name": "Read Barcode",
+      "service_type": "file_operation",
+      "description": "Extract barcode data from an image (supports multiple formats)",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "read_barcode",
+            "enum": ["read_barcode"],
+            "ui_control": "hidden"
+          },
+          "image": {
+            "type": "string",
+            "description": "Image containing barcode",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "image/*",
+            "help_text": "Upload an image containing barcodes (Code128, Code39, EAN, UPC, etc.)"
+          }
+        },
+        "required": ["image"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "barcodes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "data": {"type": "string"},
+                "type": {"type": "string"},
+                "position": {"type": "object"}
+              }
+            }
+          },
+          "count": {"type": "integer"},
+          "message": {"type": "string"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "ocr_extract_text",
+      "display_name": "OCR - Extract Text",
+      "service_type": "file_operation",
+      "description": "Extract text from images using OCR (Optical Character Recognition)",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "ocr",
+            "enum": ["ocr"],
+            "ui_control": "hidden"
+          },
+          "image": {
+            "type": "string",
+            "description": "Image containing text",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "image/*",
+            "help_text": "Upload an image containing text to extract"
+          },
+          "language": {
+            "type": "string",
+            "default": "eng",
+            "enum": ["eng", "fra", "deu", "spa", "ita", "por", "rus", "jpn", "chi_sim", "chi_tra", "ara", "hin"],
+            "description": "Text language for OCR",
+            "help_text": "Select the primary language of text in the image"
+          },
+          "detailed": {
+            "type": "boolean",
+            "default": false,
+            "description": "Return detailed word positions and confidence scores"
+          }
+        },
+        "required": ["image"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "text": {"type": "string"},
+          "language": {"type": "string"},
+          "words": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {"type": "string"},
+                "confidence": {"type": "number"},
+                "position": {"type": "object"}
+              }
+            }
+          }
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 60
+    },
+    {
+      "service_name": "convert_format",
+      "display_name": "Convert Image Format",
+      "service_type": "file_operation",
+      "description": "Convert images between different formats (PNG, JPEG, WEBP, BMP)",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "convert_format",
+            "enum": ["convert_format"],
+            "ui_control": "hidden"
+          },
+          "image": {
+            "type": "string",
+            "description": "Image to convert",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "image/*"
+          },
+          "output_format": {
+            "type": "string",
+            "enum": ["PNG", "JPEG", "WEBP", "BMP", "GIF", "TIFF"],
+            "description": "Target image format"
+          },
+          "quality": {
+            "type": "integer",
+            "default": 85,
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Quality for lossy formats (JPEG, WEBP)"
+          }
+        },
+        "required": ["image", "output_format"]
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "get_image_info",
+      "display_name": "Get Image Information",
+      "service_type": "file_operation",
+      "description": "Get detailed information about an image including dimensions, format, and metadata",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "get_info",
+            "enum": ["get_info"],
+            "ui_control": "hidden"
+          },
+          "image": {
+            "type": "string",
+            "description": "Image to analyze",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "image/*"
+          }
+        },
+        "required": ["image"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "width": {"type": "integer"},
+          "height": {"type": "integer"},
+          "format": {"type": "string"},
+          "mode": {"type": "string"},
+          "size_bytes": {"type": "integer"},
+          "has_transparency": {"type": "boolean"},
+          "metadata": {"type": "object"},
+          "exif": {"type": "object"}
+        }
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "create_thumbnail",
+      "display_name": "Create Thumbnail",
+      "service_type": "file_operation",
+      "description": "Create a thumbnail version of an image",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "thumbnail",
+            "enum": ["thumbnail"],
+            "ui_control": "hidden"
+          },
+          "image": {
+            "type": "string",
+            "description": "Image to create thumbnail from",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "image/*"
+          },
+          "max_size": {
+            "type": "integer",
+            "default": 128,
+            "minimum": 16,
+            "maximum": 512,
+            "description": "Maximum dimension for thumbnail"
+          },
+          "output_format": {
+            "type": "string",
+            "enum": ["PNG", "JPEG", "WEBP"],
+            "default": "JPEG"
+          }
+        },
+        "required": ["image"]
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "flip_image",
+      "display_name": "Flip Image",
+      "service_type": "file_operation",
+      "description": "Flip an image horizontally or vertically",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "flip",
+            "enum": ["flip"],
+            "ui_control": "hidden"
+          },
+          "image": {
+            "type": "string",
+            "description": "Image to flip",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "image/*"
+          },
+          "direction": {
+            "type": "string",
+            "enum": ["horizontal", "vertical"],
+            "default": "horizontal",
+            "description": "Flip direction"
+          },
+          "output_format": {
+            "type": "string",
+            "enum": ["PNG", "JPEG", "WEBP"],
+            "default": "PNG"
+          }
+        },
+        "required": ["image"]
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "adjust_brightness",
+      "display_name": "Adjust Brightness",
+      "service_type": "file_operation",
+      "description": "Adjust image brightness",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "adjust_brightness",
+            "enum": ["adjust_brightness"],
+            "ui_control": "hidden"
+          },
+          "image": {
+            "type": "string",
+            "description": "Image to adjust",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "image/*"
+          },
+          "factor": {
+            "type": "number",
+            "default": 1.0,
+            "minimum": 0,
+            "maximum": 3,
+            "description": "Brightness factor (0=black, 1=original, >1=brighter)",
+            "help_text": "Use 0.5 for darker, 1.5 for brighter"
+          },
+          "output_format": {
+            "type": "string",
+            "enum": ["PNG", "JPEG", "WEBP"],
+            "default": "PNG"
+          }
+        },
+        "required": ["image"]
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "adjust_contrast",
+      "display_name": "Adjust Contrast",
+      "service_type": "file_operation",
+      "description": "Adjust image contrast",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "adjust_contrast",
+            "enum": ["adjust_contrast"],
+            "ui_control": "hidden"
+          },
+          "image": {
+            "type": "string",
+            "description": "Image to adjust",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "image/*"
+          },
+          "factor": {
+            "type": "number",
+            "default": 1.0,
+            "minimum": 0,
+            "maximum": 3,
+            "description": "Contrast factor (0=gray, 1=original, >1=higher contrast)"
+          },
+          "output_format": {
+            "type": "string",
+            "enum": ["PNG", "JPEG", "WEBP"],
+            "default": "PNG"
+          }
+        },
+        "required": ["image"]
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "convert_to_grayscale",
+      "display_name": "Convert to Grayscale",
+      "service_type": "file_operation",
+      "description": "Convert a color image to grayscale",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "grayscale",
+            "enum": ["grayscale"],
+            "ui_control": "hidden"
+          },
+          "image": {
+            "type": "string",
+            "description": "Image to convert",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "image/*"
+          },
+          "output_format": {
+            "type": "string",
+            "enum": ["PNG", "JPEG", "WEBP"],
+            "default": "PNG"
+          }
+        },
+        "required": ["image"]
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "blur_image",
+      "display_name": "Blur Image",
+      "service_type": "file_operation",
+      "description": "Apply blur effect to an image",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "blur",
+            "enum": ["blur"],
+            "ui_control": "hidden"
+          },
+          "image": {
+            "type": "string",
+            "description": "Image to blur",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "image/*"
+          },
+          "blur_type": {
+            "type": "string",
+            "enum": ["gaussian", "box", "simple"],
+            "default": "gaussian",
+            "description": "Type of blur to apply"
+          },
+          "radius": {
+            "type": "integer",
+            "default": 2,
+            "minimum": 1,
+            "maximum": 20,
+            "description": "Blur radius/intensity"
+          },
+          "output_format": {
+            "type": "string",
+            "enum": ["PNG", "JPEG", "WEBP"],
+            "default": "PNG"
+          }
+        },
+        "required": ["image"]
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "sharpen_image",
+      "display_name": "Sharpen Image",
+      "service_type": "file_operation",
+      "description": "Apply sharpening effect to an image",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "sharpen",
+            "enum": ["sharpen"],
+            "ui_control": "hidden"
+          },
+          "image": {
+            "type": "string",
+            "description": "Image to sharpen",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "image/*"
+          },
+          "iterations": {
+            "type": "integer",
+            "default": 1,
+            "minimum": 1,
+            "maximum": 5,
+            "description": "Number of sharpening iterations"
+          },
+          "output_format": {
+            "type": "string",
+            "enum": ["PNG", "JPEG", "WEBP"],
+            "default": "PNG"
+          }
+        },
+        "required": ["image"]
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    },
+    {
+      "service_name": "add_watermark",
+      "display_name": "Add Text Watermark",
+      "service_type": "file_operation",
+      "description": "Add a text watermark to an image",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "default": "watermark",
+            "enum": ["watermark"],
+            "ui_control": "hidden"
+          },
+          "image": {
+            "type": "string",
+            "description": "Image to watermark",
+            "format": "base64",
+            "ui_control": "file",
+            "accept": "image/*"
+          },
+          "text": {
+            "type": "string",
+            "default": "WATERMARK",
+            "description": "Watermark text"
+          },
+          "position": {
+            "type": "string",
+            "enum": ["top-left", "top-right", "bottom-left", "bottom-right", "center"],
+            "default": "bottom-right",
+            "description": "Watermark position"
+          },
+          "opacity": {
+            "type": "number",
+            "default": 0.5,
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Watermark opacity"
+          },
+          "font_size": {
+            "type": "integer",
+            "default": 30,
+            "minimum": 10,
+            "maximum": 200,
+            "description": "Font size in pixels"
+          },
+          "color": {
+            "type": "string",
+            "default": "white",
+            "enum": ["white", "black"],
+            "description": "Watermark color"
+          },
+          "output_format": {
+            "type": "string",
+            "enum": ["PNG", "JPEG", "WEBP"],
+            "default": "PNG"
+          }
+        },
+        "required": ["image"]
+      },
+      "sync_mode": "synchronous",
+      "timeout_seconds": 30
+    }
+  ]
+}

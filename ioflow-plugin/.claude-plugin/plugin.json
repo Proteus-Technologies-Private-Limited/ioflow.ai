@@ -1,0 +1,9 @@
+{
+  "name": "ioflow",
+  "description": "IOFlow integration plugin - create seed applications, design flows, and edit flow designs using IOFlow's MCP server",
+  "version": "1.0.0",
+  "author": {
+    "name": "IOFlow"
+  },
+  "keywords": ["ioflow", "workflow", "automation", "flow-design", "seed-application"]
+}

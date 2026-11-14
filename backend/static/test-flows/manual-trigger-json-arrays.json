@@ -1,0 +1,129 @@
+{
+  "flow_id": "test-manual-json-002",
+  "flow_name": "Manual Trigger JSON Arrays Test",
+  "description": "Test flow with JSON arrays and different data structures",
+  "status": "active",
+  "trigger_config": {
+    "type": "manual",
+    "manual_variables": [
+      {
+        "id": "var1",
+        "name": "productList",
+        "displayName": "Product List",
+        "dataType": "json",
+        "uiControl": "code",
+        "required": true,
+        "description": "Array of products",
+        "defaultValue": [
+          {
+            "id": "prod-001",
+            "name": "Laptop",
+            "price": 999.99,
+            "inStock": true
+          },
+          {
+            "id": "prod-002",
+            "name": "Mouse",
+            "price": 29.99,
+            "inStock": false
+          }
+        ]
+      },
+      {
+        "id": "var2",
+        "name": "tags",
+        "displayName": "Tags",
+        "dataType": "json",
+        "required": false,
+        "description": "Simple array of tags",
+        "defaultValue": ["important", "urgent", "review"]
+      },
+      {
+        "id": "var3",
+        "name": "matrixData",
+        "displayName": "Matrix Data",
+        "dataType": "json",
+        "uiControl": "code",
+        "required": false,
+        "description": "2D array / matrix data",
+        "defaultValue": [
+          [1, 2, 3],
+          [4, 5, 6],
+          [7, 8, 9]
+        ]
+      },
+      {
+        "id": "var4",
+        "name": "emptyObject",
+        "displayName": "Empty Object Test",
+        "dataType": "json",
+        "required": false,
+        "description": "Test with empty object",
+        "defaultValue": {}
+      },
+      {
+        "id": "var5",
+        "name": "nullableJson",
+        "displayName": "Nullable JSON",
+        "dataType": "json",
+        "required": false,
+        "description": "JSON that can be null",
+        "defaultValue": null
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "id": "trigger",
+      "type": "trigger",
+      "position": { "x": 100, "y": 100 },
+      "data": {
+        "label": "Manual Trigger",
+        "config": {
+          "type": "manual"
+        }
+      }
+    },
+    {
+      "id": "transform",
+      "type": "transform",
+      "position": { "x": 300, "y": 100 },
+      "data": {
+        "label": "Transform Data",
+        "config": {
+          "code": "// Process the incoming data\nconst products = data.productList || [];\nconst totalValue = products.reduce((sum, p) => sum + p.price, 0);\n\nreturn {\n  productCount: products.length,\n  totalValue: totalValue,\n  tags: data.tags || [],\n  hasMatrix: Array.isArray(data.matrixData)\n};"
+        }
+      }
+    },
+    {
+      "id": "response",
+      "type": "response",
+      "position": { "x": 500, "y": 100 },
+      "data": {
+        "label": "Return Results",
+        "config": {
+          "status": 200,
+          "body": {
+            "success": true,
+            "transformedData": "{{transform.output}}",
+            "originalData": "{{trigger.data}}"
+          }
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "trigger",
+      "target": "transform"
+    },
+    {
+      "id": "e2",
+      "source": "transform",
+      "target": "response"
+    }
+  ],
+  "created_at": "2024-01-20T11:00:00Z",
+  "updated_at": "2024-01-20T11:00:00Z"
+}

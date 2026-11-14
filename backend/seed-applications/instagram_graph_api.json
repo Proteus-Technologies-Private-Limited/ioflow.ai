@@ -1,0 +1,1043 @@
+{
+  "key": "instagram_graph_api",
+  "application": {
+    "app_name": "Instagram Graph API",
+    "app_type": "api",
+    "app_scope": "global",
+    "description": "Comprehensive Instagram Graph API integration for managing Instagram Business and Creator accounts. Provides access to user profiles, media management, insights, comments, hashtag discovery, and messaging. Supports OAuth 2.0 authentication and real-time webhook notifications for Instagram activities.",
+    "category": "Communication",
+    "auth_type": "oauth2",
+    "auth_config": {
+      "authorization_url": "https://www.facebook.com/v19.0/dialog/oauth",
+      "token_url": "https://graph.facebook.com/v19.0/oauth/access_token",
+      "exchange_token_url": "https://graph.instagram.com/access_token",
+      "refresh_token_url": "https://graph.instagram.com/refresh_access_token",
+      "scopes": [
+        "instagram_basic",
+        "instagram_manage_messages",
+        "instagram_manage_comments",
+        "instagram_content_publish",
+        "pages_show_list",
+        "pages_read_engagement",
+        "business_management",
+        "instagram_manage_insights"
+      ],
+      "client_id_param": "client_id",
+      "client_secret_param": "client_secret",
+      "redirect_uri_param": "redirect_uri",
+      "response_type": "code",
+      "grant_type": "authorization_code",
+      "scope_delimiter": ",",
+      "token_exchange_required": true,
+      "token_exchange_grant_type": "ig_exchange_token"
+    },
+    "version": "1.1.0",
+    "base_url": "https://graph.instagram.com",
+    "icon_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/600px-Instagram_icon.png",
+    "auth_example": {
+      "client_id": "your_client_id",
+      "client_secret": "your_client_secret",
+      "redirect_uri": "http://localhost:8000/api/v1/oauth/callback"
+    }
+  },
+  "services": [
+    {
+      "service_name": "get_user_profile",
+      "description": "Get the Instagram Business or Creator account profile information",
+      "service_type": "api_call",
+      "endpoint_template": "/me",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "Accept": "application/json"
+        },
+        "query_params": {
+          "fields": "{{fields}}",
+          "access_token": "{{access_token}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "fields": {
+            "type": "string",
+            "description": "Comma-separated list of fields to retrieve"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "sample_input": {
+        "fields": "id,username,followers_count,media_count"
+      },
+      "sample_output": {
+        "id": "17841400000000000",
+        "username": "mybusiness",
+        "followers_count": 5000,
+        "media_count": 150
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id"
+          },
+          "username": {
+            "type": "string",
+            "description": "The username"
+          },
+          "followers_count": {
+            "type": "integer",
+            "description": "Number of followers_s"
+          },
+          "media_count": {
+            "type": "integer",
+            "description": "Number of media_s"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_user_media",
+      "description": "Get a list of media objects (posts, reels, stories) from an Instagram Business or Creator account",
+      "service_type": "api_call",
+      "endpoint_template": "/{{ig_user_id}}/media",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "Accept": "application/json"
+        },
+        "query_params": {
+          "fields": "{{fields}}",
+          "limit": "{{limit}}",
+          "since": "{{since}}",
+          "until": "{{until}}",
+          "access_token": "{{access_token}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "ig_user_id": {
+            "type": "string",
+            "description": "Instagram User ID"
+          },
+          "fields": {
+            "type": "string",
+            "description": "Fields to retrieve for each media"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum number of media to return"
+          },
+          "since": {
+            "type": "string",
+            "description": "Unix timestamp or date for media after this time"
+          },
+          "until": {
+            "type": "string",
+            "description": "Unix timestamp or date for media before this time"
+          }
+        },
+        "required": [
+          "ig_user_id"
+        ],
+        "additionalProperties": false
+      },
+      "sample_input": {
+        "ig_user_id": "17841400000000000",
+        "fields": "id,caption,media_type,media_url,timestamp",
+        "limit": 10
+      },
+      "sample_output": {
+        "data": [
+          {
+            "id": "17895695668004550",
+            "caption": "Welcome to our Instagram!",
+            "media_type": "IMAGE",
+            "media_url": "https://example.com/image.jpg",
+            "timestamp": "2025-08-13T10:00:00+0000"
+          }
+        ],
+        "paging": {
+          "cursors": {
+            "before": "xxx",
+            "after": "yyy"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "The id"
+                },
+                "caption": {
+                  "type": "string",
+                  "description": "The caption"
+                },
+                "media_type": {
+                  "type": "string",
+                  "description": "The media_type"
+                },
+                "media_url": {
+                  "type": "string",
+                  "description": "The media_url"
+                },
+                "timestamp": {
+                  "type": "string",
+                  "description": "The timestamp"
+                }
+              }
+            },
+            "description": "The data"
+          },
+          "paging": {
+            "type": "object",
+            "properties": {
+              "cursors": {
+                "type": "object",
+                "properties": {
+                  "before": {
+                    "type": "string",
+                    "description": "The before"
+                  },
+                  "after": {
+                    "type": "string",
+                    "description": "The after"
+                  }
+                },
+                "description": "The cursors"
+              }
+            },
+            "description": "The paging"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "create_media_container",
+      "description": "Create a media container for publishing a single image, video, or carousel to Instagram",
+      "service_type": "api_call",
+      "endpoint_template": "/{{ig_user_id}}/media",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        "body_template": {
+          "image_url": "{{image_url}}",
+          "video_url": "{{video_url}}",
+          "caption": "{{caption}}",
+          "location_id": "{{location_id}}",
+          "user_tags": "{{user_tags}}",
+          "access_token": "{{access_token}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "ig_user_id": {
+            "type": "string",
+            "description": "Instagram User ID"
+          },
+          "image_url": {
+            "type": "string",
+            "description": "URL of the image to publish (for IMAGE posts)"
+          },
+          "video_url": {
+            "type": "string",
+            "description": "URL of the video to publish (for VIDEO posts)"
+          },
+          "caption": {
+            "type": "string",
+            "description": "Caption for the media, including hashtags and mentions"
+          },
+          "location_id": {
+            "type": "string",
+            "description": "Facebook Page location ID"
+          },
+          "user_tags": {
+            "type": "array",
+            "description": "Array of user tags"
+          }
+        },
+        "required": [
+          "ig_user_id"
+        ],
+        "additionalProperties": false
+      },
+      "sample_input": {
+        "ig_user_id": "17841400000000000",
+        "image_url": "https://example.com/image.jpg",
+        "caption": "Check out our new product! #newproduct #instagram"
+      },
+      "sample_output": {
+        "id": "17889455560051444"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "publish_media",
+      "description": "Publish a previously created media container to Instagram",
+      "service_type": "api_call",
+      "endpoint_template": "/{{ig_user_id}}/media_publish",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        "body_template": {
+          "creation_id": "{{creation_id}}",
+          "access_token": "{{access_token}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "ig_user_id": {
+            "type": "string",
+            "description": "Instagram User ID"
+          },
+          "creation_id": {
+            "type": "string",
+            "description": "ID of the media container to publish"
+          }
+        },
+        "required": [
+          "ig_user_id",
+          "creation_id"
+        ],
+        "additionalProperties": false
+      },
+      "sample_input": {
+        "ig_user_id": "17841400000000000",
+        "creation_id": "17889455560051444"
+      },
+      "sample_output": {
+        "id": "17920238422030506"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_account_insights",
+      "description": "Get insights and analytics for an Instagram Business or Creator account",
+      "service_type": "api_call",
+      "endpoint_template": "/{{ig_user_id}}/insights",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "Accept": "application/json"
+        },
+        "query_params": {
+          "metric": "{{metric}}",
+          "period": "{{period}}",
+          "since": "{{since}}",
+          "until": "{{until}}",
+          "access_token": "{{access_token}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "ig_user_id": {
+            "type": "string",
+            "description": "Instagram User ID"
+          },
+          "metric": {
+            "type": "string",
+            "description": "Comma-separated list of metrics (impressions, reach, profile_views, follower_count, etc.)"
+          },
+          "period": {
+            "type": "string",
+            "description": "Period for metrics (day, week, days_28, lifetime)"
+          },
+          "since": {
+            "type": "string",
+            "description": "Start date for insights (Unix timestamp)"
+          },
+          "until": {
+            "type": "string",
+            "description": "End date for insights (Unix timestamp)"
+          }
+        },
+        "required": [
+          "ig_user_id",
+          "metric",
+          "period"
+        ],
+        "additionalProperties": false
+      },
+      "sample_input": {
+        "ig_user_id": "17841400000000000",
+        "metric": "impressions,reach,profile_views",
+        "period": "day"
+      },
+      "sample_output": {
+        "data": [
+          {
+            "name": "impressions",
+            "period": "day",
+            "values": [
+              {
+                "value": 5000,
+                "end_time": "2025-08-13T07:00:00+0000"
+              }
+            ],
+            "title": "Impressions",
+            "description": "Total number of times media objects have been viewed"
+          }
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "The name"
+                },
+                "period": {
+                  "type": "string",
+                  "description": "The period"
+                },
+                "values": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "value": {
+                        "type": "integer",
+                        "description": "The values"
+                      },
+                      "end_time": {
+                        "type": "string",
+                        "description": "The end_time"
+                      }
+                    }
+                  },
+                  "description": "The valuess"
+                },
+                "title": {
+                  "type": "string",
+                  "description": "The title"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "The description"
+                }
+              }
+            },
+            "description": "The data"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_media_insights",
+      "description": "Get insights and analytics for a specific media object (post, reel, story)",
+      "service_type": "api_call",
+      "endpoint_template": "/{{media_id}}/insights",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "Accept": "application/json"
+        },
+        "query_params": {
+          "metric": "{{metric}}",
+          "access_token": "{{access_token}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "media_id": {
+            "type": "string",
+            "description": "The ID of the media object"
+          },
+          "metric": {
+            "type": "string",
+            "description": "Comma-separated list of metrics (engagement, impressions, reach, saved, comments, likes, shares, etc.)"
+          }
+        },
+        "required": [
+          "media_id",
+          "metric"
+        ],
+        "additionalProperties": false
+      },
+      "sample_input": {
+        "media_id": "17895695668004550",
+        "metric": "engagement,impressions,reach,saved"
+      },
+      "sample_output": {
+        "data": [
+          {
+            "name": "engagement",
+            "period": "lifetime",
+            "values": [
+              {
+                "value": 350
+              }
+            ],
+            "title": "Engagement",
+            "description": "Total number of likes and comments"
+          }
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "The name"
+                },
+                "period": {
+                  "type": "string",
+                  "description": "The period"
+                },
+                "values": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "value": {
+                        "type": "integer",
+                        "description": "The values"
+                      }
+                    }
+                  },
+                  "description": "The valuess"
+                },
+                "title": {
+                  "type": "string",
+                  "description": "The title"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "The description"
+                }
+              }
+            },
+            "description": "The data"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_media_comments",
+      "description": "Get comments on a specific media object",
+      "service_type": "api_call",
+      "endpoint_template": "/{{media_id}}/comments",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "Accept": "application/json"
+        },
+        "query_params": {
+          "fields": "{{fields}}",
+          "limit": "{{limit}}",
+          "access_token": "{{access_token}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "media_id": {
+            "type": "string",
+            "description": "The ID of the media object"
+          },
+          "fields": {
+            "type": "string",
+            "description": "Fields to retrieve for each comment"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum number of comments to return"
+          }
+        },
+        "required": [
+          "media_id"
+        ],
+        "additionalProperties": false
+      },
+      "sample_input": {
+        "media_id": "17895695668004550",
+        "fields": "id,text,username,timestamp"
+      },
+      "sample_output": {
+        "data": [
+          {
+            "id": "17851655681164094",
+            "text": "Great post!",
+            "username": "user123",
+            "timestamp": "2025-08-13T12:00:00+0000"
+          }
+        ],
+        "paging": {
+          "cursors": {
+            "before": "xxx",
+            "after": "yyy"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "The id"
+                },
+                "text": {
+                  "type": "string",
+                  "description": "The text"
+                },
+                "username": {
+                  "type": "string",
+                  "description": "The username"
+                },
+                "timestamp": {
+                  "type": "string",
+                  "description": "The timestamp"
+                }
+              }
+            },
+            "description": "The data"
+          },
+          "paging": {
+            "type": "object",
+            "properties": {
+              "cursors": {
+                "type": "object",
+                "properties": {
+                  "before": {
+                    "type": "string",
+                    "description": "The before"
+                  },
+                  "after": {
+                    "type": "string",
+                    "description": "The after"
+                  }
+                },
+                "description": "The cursors"
+              }
+            },
+            "description": "The paging"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "create_comment",
+      "description": "Post a comment on a media object",
+      "service_type": "api_call",
+      "endpoint_template": "/{{media_id}}/comments",
+      "request_config": {
+        "method": "POST",
+        "headers_template": {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        "body_template": {
+          "message": "{{message}}",
+          "access_token": "{{access_token}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "media_id": {
+            "type": "string",
+            "description": "The ID of the media object"
+          },
+          "message": {
+            "type": "string",
+            "description": "The comment text to post"
+          }
+        },
+        "required": [
+          "media_id",
+          "message"
+        ],
+        "additionalProperties": false
+      },
+      "sample_input": {
+        "media_id": "17895695668004550",
+        "message": "Thank you for sharing this!"
+      },
+      "sample_output": {
+        "id": "17851655681164095"
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "search_hashtag",
+      "description": "Search for a hashtag ID by name",
+      "service_type": "api_call",
+      "endpoint_template": "/ig_hashtag_search",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "Accept": "application/json"
+        },
+        "query_params": {
+          "user_id": "{{user_id}}",
+          "q": "{{hashtag}}",
+          "access_token": "{{access_token}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "description": "Instagram Business Account ID"
+          },
+          "hashtag": {
+            "type": "string",
+            "description": "Hashtag name to search (without #)"
+          }
+        },
+        "required": [
+          "user_id",
+          "hashtag"
+        ],
+        "additionalProperties": false
+      },
+      "sample_input": {
+        "user_id": "17841400000000000",
+        "hashtag": "marketing"
+      },
+      "sample_output": {
+        "data": [
+          {
+            "id": "17843826142012701"
+          }
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "The id"
+                }
+              }
+            },
+            "description": "The data"
+          }
+        }
+      }
+    },
+    {
+      "service_name": "get_hashtag_top_media",
+      "description": "Get top media posts for a specific hashtag",
+      "service_type": "api_call",
+      "endpoint_template": "/{{hashtag_id}}/top_media",
+      "request_config": {
+        "method": "GET",
+        "headers_template": {
+          "Accept": "application/json"
+        },
+        "query_params": {
+          "user_id": "{{user_id}}",
+          "fields": "{{fields}}",
+          "limit": "{{limit}}",
+          "access_token": "{{access_token}}"
+        }
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "hashtag_id": {
+            "type": "string",
+            "description": "Hashtag ID from hashtag search"
+          },
+          "user_id": {
+            "type": "string",
+            "description": "Instagram Business Account ID"
+          },
+          "fields": {
+            "type": "string",
+            "description": "Fields to retrieve for each media"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum number of media to return"
+          }
+        },
+        "required": [
+          "hashtag_id",
+          "user_id"
+        ],
+        "additionalProperties": false
+      },
+      "sample_input": {
+        "hashtag_id": "17843826142012701",
+        "user_id": "17841400000000000",
+        "fields": "id,caption,media_url"
+      },
+      "sample_output": {
+        "data": [
+          {
+            "id": "17895695668004550",
+            "caption": "Great marketing tips! #marketing",
+            "media_url": "https://example.com/image.jpg"
+          }
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "The id"
+                },
+                "caption": {
+                  "type": "string",
+                  "description": "The caption"
+                },
+                "media_url": {
+                  "type": "string",
+                  "description": "The media_url"
+                }
+              }
+            },
+            "description": "The data"
+          }
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "event_name": "comment_received",
+      "description": "Triggered when a new comment is posted on your Instagram media",
+      "event_type": "webhook",
+      "event_configuration": {
+        "http_method": "POST",
+        "validation": {
+          "type": "signature",
+          "header": "X-Hub-Signature-256",
+          "algorithm": "sha256",
+          "secret_param": "webhook_secret"
+        },
+        "verification": {
+          "enabled": true,
+          "mode_param": "hub.mode",
+          "token_param": "hub.verify_token",
+          "challenge_param": "hub.challenge"
+        }
+      },
+      "sample_payload": {
+        "entry": [
+          {
+            "id": "instagram_business_account_id",
+            "time": 1628789012345,
+            "changes": [
+              {
+                "field": "comments",
+                "value": {
+                  "id": "comment_id",
+                  "media": {
+                    "id": "media_id",
+                    "media_product_type": "FEED"
+                  },
+                  "text": "Great post!",
+                  "from": {
+                    "id": "user_id",
+                    "username": "user123"
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "object": "instagram"
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "message_received",
+      "description": "Triggered when you receive a new message on Instagram",
+      "event_type": "webhook",
+      "event_configuration": {
+        "http_method": "POST",
+        "validation": {
+          "type": "signature",
+          "header": "X-Hub-Signature-256",
+          "algorithm": "sha256",
+          "secret_param": "webhook_secret"
+        }
+      },
+      "sample_payload": {
+        "entry": [
+          {
+            "id": "page_id",
+            "time": 1628789012345,
+            "messaging": [
+              {
+                "sender": {
+                  "id": "sender_id"
+                },
+                "recipient": {
+                  "id": "recipient_id"
+                },
+                "timestamp": 1628789012345,
+                "message": {
+                  "mid": "message_id",
+                  "text": "Hello!",
+                  "attachments": []
+                }
+              }
+            ]
+          }
+        ],
+        "object": "instagram"
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "mention_received",
+      "description": "Triggered when you are @mentioned in a comment or caption",
+      "event_type": "webhook",
+      "event_configuration": {
+        "http_method": "POST",
+        "validation": {
+          "type": "signature",
+          "header": "X-Hub-Signature-256",
+          "algorithm": "sha256",
+          "secret_param": "webhook_secret"
+        }
+      },
+      "sample_payload": {
+        "entry": [
+          {
+            "id": "instagram_business_account_id",
+            "time": 1628789012345,
+            "changes": [
+              {
+                "field": "mentions",
+                "value": {
+                  "media_id": "media_id",
+                  "comment_id": "comment_id",
+                  "mentioned_by": {
+                    "id": "user_id",
+                    "username": "user123"
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "object": "instagram"
+      },
+      "extraction_configuration": {
+        "path_mappings": {
+          "event_id": "$.id",
+          "event_type": "$.type",
+          "data": "$.data"
+        }
+      }
+    },
+    {
+      "event_name": "manual_trigger",
+      "description": "Manually trigger Instagram workflows for testing or on-demand execution",
+      "event_type": "manual",
+      "event_configuration": {},
+      "sample_payload": {
+        "trigger_time": "2025-08-28T12:00:00Z",
+        "triggered_by": "user@example.com"
+      }
+    }
+  ],
+  "metadata": {
+    "created_at": "2025-08-28T05:38:58.900576",
+    "created_by": "IOFlow",
+    "author": "IOFlow",
+    "tags": [
+      "communication"
+    ],
+    "documentation_url": "https://docs.example.com/instagram_graph_api",
+    "support_email": "support@example.com",
+    "last_modified": "2025-08-28T05:44:19.636163",
+    "services_count": 10,
+    "events_count": 4,
+    "modified_by": "IOFlow"
+  },
+  "_validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": [],
+    "validated_at": "2025-08-28T11:14:19.628235"
+  }
+}

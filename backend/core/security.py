@@ -166,22 +166,12 @@ class AuthService:
                 else:
                     raise AuthError("Email already exists")
 
-            # For first user, create proteus-technologies tenant
+            # First user: create their tenant from the organization name they
+            # registered with (same naming rules as every later sign-up)
             if is_first_user:
-                # Create proteus-technologies tenant
-                tenant_id = str(uuid.uuid4())
-                email_domain = email.split('@')[1]
-                
-                new_tenant = Tenant(
-                    tenant_id=tenant_id,
-                    tenant_name='proteus-technologies',
-                    schema_name='tenant_proteus_technologies',
-                    email_domain=email_domain,
-                    user_id_own=None  # Will be updated after user creation
-                )
-                db.add(new_tenant)
-                db.flush()  # Get the tenant_id
-                
+                new_tenant = AuthService.create_tenant_for_user(db, username, email, organization)
+                tenant_id = new_tenant.tenant_id
+
                 # Set user role to INSTANCE_ADMIN
                 user_role = UserRole.INSTANCE_ADMIN
                 user_status = 'A'  # First user is automatically activated
@@ -235,12 +225,7 @@ class AuthService:
             db.commit()
 
             # Create tenant schema and tables for first user or auto-created tenant
-            if is_first_user:
-                from db.database import create_schema, create_tenant_tables
-                create_schema('tenant_proteus_technologies')
-                create_tenant_tables('tenant_proteus_technologies')
-            elif 'new_tenant' in locals():
-                # Create schema and tables for auto-created tenant
+            if 'new_tenant' in locals():
                 from db.database import create_schema, create_tenant_tables
                 create_schema(new_tenant.schema_name)
                 create_tenant_tables(new_tenant.schema_name)

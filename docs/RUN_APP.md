@@ -1,5 +1,7 @@
 # Running IOFlow Application
 
+> **Outdated.** This guide predates the current scripts and lists old ports and commands. Use [GETTING_STARTED.md](GETTING_STARTED.md) instead.
+
 ## Quick Start
 
 The application is now ready to run! Follow these steps:

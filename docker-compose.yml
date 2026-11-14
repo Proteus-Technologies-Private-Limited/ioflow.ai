@@ -4,6 +4,10 @@
 #
 # Day-to-day (backend/frontend run natively from your terminal):
 #   docker compose up -d postgres redis
+#
+# Everything in containers (adds the IOFlow app on http://localhost:7001):
+#   docker compose --profile app up -d --build
+#
 #   docker compose down            (data persists in named volumes)
 #   docker compose down -v         (destroys data)
 
@@ -15,7 +19,7 @@ services:
       POSTGRES_USER: ioflow
       POSTGRES_PASSWORD: ioflow_local_pass
       POSTGRES_DB: ioflow
-    # Host port 5433: the machine's native EDB PostgreSQL 17 occupies 5432
+    # Host port 5433, so it does not clash with a PostgreSQL already on 5432
     ports:
       - "5433:5432"
     volumes:
@@ -42,38 +46,46 @@ services:
       retries: 10
     restart: unless-stopped
 
-  # Optional containerized app services (normally run natively instead)
-  backend:
-    build: ./backend
+  # Optional: the whole application in one container (UI + API on port 7001).
+  #   docker compose --profile app up -d --build
+  # Then open http://localhost:7001 and register; the first account becomes
+  # the instance administrator.
+  ioflow:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: ioflow-app
     profiles: ["app"]
     ports:
-      - "7001:7001"
+      - "${IOFLOW_PORT:-7001}:7001"
     environment:
       DATABASE_URL: postgresql://ioflow:ioflow_local_pass@postgres:5432/ioflow
       REDIS_URL: redis://redis:6379
-      SECRET_KEY: your-secret-key-here-change-in-production
+      # Public URL of this server: used in webhook URLs, OAuth callbacks and
+      # links in emails. Set IOFLOW_PUBLIC_URL when not running on localhost.
+      SERVER_URL: ${IOFLOW_PUBLIC_URL:-http://localhost:7001}
+      BASE_URL: ${IOFLOW_PUBLIC_URL:-http://localhost:7001}
+      APP_URL: ${IOFLOW_PUBLIC_URL:-http://localhost:7001}
+      FRONTEND_URL: ${IOFLOW_PUBLIC_URL:-http://localhost:7001}
+      OAUTH_CALLBACK_BASE_URL: ${IOFLOW_PUBLIC_URL:-http://localhost:7001}/api/v1/oauth2/callback
+      # Leave unset to have the container generate both keys once and keep
+      # them in the ioflow_secrets volume.
+      SECRET_KEY: ${SECRET_KEY:-}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     volumes:
-      - ./backend:/app
-    command: python run.py
-
-  frontend:
-    build: ./frontend
-    profiles: ["app"]
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    environment:
-      - REACT_APP_API_URL=http://localhost:7001
+      - ioflow_secrets:/var/lib/ioflow
+      - ioflow_uploads:/app/backend/uploads
+      - ioflow_logs:/app/logs
+    restart: unless-stopped
 
 volumes:
   postgres_data:
   redis_data:
+  ioflow_secrets:
+  ioflow_uploads:
+  ioflow_logs:

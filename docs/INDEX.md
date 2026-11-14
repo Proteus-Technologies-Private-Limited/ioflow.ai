@@ -1,6 +1,12 @@
 # IOFlow Documentation Index
 
-## Getting Started
+## Start here
+- [GETTING_STARTED.md](GETTING_STARTED.md) - Install, configure and run IOFlow (current setup guide)
+- [FEATURES.md](FEATURES.md) - Feature tour: everything IOFlow does, area by area
+- [CONTRIBUTING.md](CONTRIBUTING.md) - How to contribute connectors, plugins, flows and fixes
+
+## Older setup notes
+These predate the current scripts and list outdated ports and commands. Use GETTING_STARTED.md instead.
 - [STARTUP_GUIDE.md](STARTUP_GUIDE.md) - Development environment setup
 - [RUN_INSTRUCTIONS.md](RUN_INSTRUCTIONS.md) - Running frontend/backend locally
 - [RUN_APP.md](RUN_APP.md) - Application run guide

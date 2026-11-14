@@ -72,6 +72,63 @@ if [ ! -f ".env" ]; then
     echo "Please update .env file with your database credentials!"
 fi
 
+# Generate SECRET_KEY / ENCRYPTION_KEY when they are empty or still the example
+# placeholders, and save them in .env so they stay the same across restarts.
+# (ENCRYPTION_KEY must be a valid Fernet key; stored credentials cannot be
+# read back if it changes.) Values that are already set are never touched.
+if [ -f ".env" ]; then
+    python - <<'GENERATE_KEYS'
+import re
+import secrets
+import sys
+
+PLACEHOLDERS = {
+    "", "your-secret-key-here", "your-secret-key-here-change-this-in-production",
+    "your-secret-key-here-change-in-production", "your-encryption-key-here-32-chars",
+}
+
+try:
+    from cryptography.fernet import Fernet
+except Exception as exc:
+    print(f"Warning: could not check the keys in .env ({exc}). "
+          "Set SECRET_KEY and ENCRYPTION_KEY yourself.")
+    sys.exit(0)
+
+GENERATORS = {
+    "SECRET_KEY": lambda: secrets.token_urlsafe(48),
+    "ENCRYPTION_KEY": lambda: Fernet.generate_key().decode(),
+}
+
+try:
+    with open(".env", encoding="utf-8") as fh:
+        lines = fh.read().splitlines()
+
+    changed = []
+    seen = set()
+    for i, line in enumerate(lines):
+        m = re.match(r"^\s*(SECRET_KEY|ENCRYPTION_KEY)\s*=\s*(.*?)\s*$", line)
+        if not m:
+            continue
+        name, value = m.group(1), m.group(2).strip().strip("\"'")
+        seen.add(name)
+        if value in PLACEHOLDERS:
+            lines[i] = f'{name}="{GENERATORS[name]()}"'
+            changed.append(name)
+    for name in GENERATORS:
+        if name not in seen:
+            lines.append(f'{name}="{GENERATORS[name]()}"')
+            changed.append(name)
+
+    if changed:
+        with open(".env", "w", encoding="utf-8") as fh:
+            fh.write("\n".join(lines) + "\n")
+        print(f"Generated {', '.join(changed)} and saved to backend/.env")
+except Exception as exc:
+    print(f"Warning: could not update the keys in .env ({exc}). "
+          "Set SECRET_KEY and ENCRYPTION_KEY yourself.")
+GENERATE_KEYS
+fi
+
 # Database URL is configured via .env file (PostgreSQL)
 # Remove hardcoded SQLite path - use DATABASE_URL from .env instead
 

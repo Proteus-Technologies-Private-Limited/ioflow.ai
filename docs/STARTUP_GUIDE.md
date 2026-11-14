@@ -1,5 +1,7 @@
 # IOFlow Startup Guide
 
+> **Outdated.** This guide predates the current scripts and lists old ports and commands. Use [GETTING_STARTED.md](GETTING_STARTED.md) instead.
+
 ## Quick Start (Development)
 
 ### Prerequisites

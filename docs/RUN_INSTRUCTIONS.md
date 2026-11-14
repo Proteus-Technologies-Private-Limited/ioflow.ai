@@ -1,5 +1,7 @@
 # IOFlow - Running Instructions
 
+> **Outdated.** This guide predates the current scripts and lists old ports and commands. Use [GETTING_STARTED.md](GETTING_STARTED.md) instead.
+
 ## If localhost is not working, try these alternatives:
 
 ### Option 1: Use 127.0.0.1 instead of localhost

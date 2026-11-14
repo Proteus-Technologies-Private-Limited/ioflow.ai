@@ -95,7 +95,7 @@ This document describes the enhanced role-based access control system implemente
 2. User provides organization name
 3. System creates:
    - User with INSTANCE_ADMIN role
-   - 'proteus-technologies' tenant
+   - A tenant named after the organization the user registered with
    - User is automatically activated
 
 ### Subsequent User Registration

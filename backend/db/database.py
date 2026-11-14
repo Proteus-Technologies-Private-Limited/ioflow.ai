@@ -6,9 +6,13 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import NullPool, StaticPool
 from contextlib import contextmanager
 from typing import Generator
+import importlib
+import logging
 import threading
 
 from core.config import settings
+
+logger = logging.getLogger(__name__)
 
 # Use settings for DATABASE_URL
 DATABASE_URL = settings.database_url
@@ -218,3 +222,49 @@ def init_db():
         OAuthState.__table__,
         APIKey.__table__
     ])
+
+    # Then every other shared table, so a brand-new database needs no manual
+    # bootstrap. Never fatal: an existing installation keeps starting exactly
+    # as before even if one of these cannot be created.
+    try:
+        _create_remaining_shared_tables()
+    except Exception as e:
+        logger.error(f"Could not create the remaining shared tables: {e}", exc_info=True)
+
+
+# Modules whose models register tables on Base in the shared "ioflow" schema.
+_SHARED_MODEL_MODULES = [
+    'db.models', 'db.application_models', 'db.ai_conversation_models',
+    'db.collaboration_models', 'db.documentation_models', 'db.flow_example_models',
+    'db.google_oauth_models', 'db.marketplace_models', 'db.polling_models',
+    'db.pricing_models', 'db.user_settings_models',
+    'services.db_message_queue', 'services.audit_service',
+]
+
+
+def _create_remaining_shared_tables():
+    """Create any shared table that does not exist yet (PostgreSQL only).
+
+    Idempotent: create_all checks each table first and only creates the
+    missing ones, so on an established database this changes nothing.
+    """
+    for module_name in _SHARED_MODEL_MODULES:
+        try:
+            importlib.import_module(module_name)
+        except Exception as e:
+            logger.warning(f"Skipping tables of {module_name}: {e}")
+
+    Base.metadata.create_all(bind=engine)
+
+    # Lock table used when Redis is unavailable; it has no ORM model.
+    with engine.connect() as conn:
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS ioflow.distributed_locks ("
+            "lock_key TEXT PRIMARY KEY, owner_id TEXT NOT NULL, "
+            "acquired_at TIMESTAMP NOT NULL, expires_at TIMESTAMP NOT NULL, metadata TEXT)"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS idx_distributed_locks_expires "
+            "ON ioflow.distributed_locks(expires_at)"
+        ))
+        conn.commit()

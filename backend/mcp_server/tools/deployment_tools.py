@@ -251,89 +251,53 @@ class DeploymentTools:
         backup_current: bool = True
     ) -> Dict[str, Any]:
         """
-        Update an installed application with latest seed version.
-        
+        Apply the shipped seed version to an installed GLOBAL application.
+
+        A SOFT update (``POST /api/v1/seed-applications/{key}/update``, the
+        same one Seed applications -> Update runs): services and events are
+        updated in place by name, removed ones deactivated, and every tenant's
+        connection (subscription, token) and every id flows reference is kept.
+        It never reinstalls — a reinstall deletes every connection to the
+        application across all tenants, so it is left to a person in the UI.
+        The content comes from the seed file on disk, never from the caller.
+
         Args:
-            app_key: Application key to update
-            backup_current: Backup current configuration
-            
+            app_key: Seed key of the installed application (e.g. x_twitter_app)
+            backup_current: Kept for compatibility; the soft update replaces
+                nothing that needs a backup (ids and connections are kept).
+
         Returns:
-            Update results
+            previous_version / new_version, the services and events changed and
+            the connections preserved — or an error naming the reason.
         """
         try:
-            # Check permissions
             if not self.auth.has_permission("install_applications"):
                 return {
                     "error": "Permission denied",
                     "required_permission": "install_applications"
                 }
-            
-            # Get current installation
-            current_response = await self._get_application_by_key(app_key)
-            
-            if current_response.get("error"):
-                return {
-                    "error": "Application not installed",
-                    "hint": "Use install_application to install first"
-                }
-            
-            current_version = current_response.get("version", "0.0.0")
-            
-            # Get seed application via API bridge
             result = await self.auth.make_authenticated_request(
                 "POST",
-                "/api/mcp/tools/execute",
-                json_data={"tool": "get_all_seed_applications_raw", "parameters": {}}
+                f"/api/v1/seed-applications/{app_key}/update",
+                params={"force_reinstall": "false"}
             )
-            
-            if result.get("error"):
-                return {"error": f"Failed to get seed applications: {result.get('error')}"}
-            
-            seed_apps = result.get("result", {})
-            if app_key not in seed_apps:
-                return {"error": f"Seed application '{app_key}' not found"}
-            
-            seed_version = seed_apps[app_key].get("application", {}).get("version", "0.0.0")
-            
-            # Compare versions
-            if self._compare_versions(current_version, seed_version) >= 0:
-                return {
-                    "message": "Application is already up to date",
-                    "current_version": current_version,
-                    "seed_version": seed_version
-                }
-            
-            # Backup if requested
-            backup_data = None
-            if backup_current:
-                backup_data = {
-                    "timestamp": datetime.utcnow().isoformat(),
-                    "version": current_version,
-                    "configuration": current_response
-                }
-            
-            # Update by reinstalling
-            update_result = await self.install_application(
-                app_key=app_key,
-                pre_validate=True,
-                force_reinstall=True
-            )
-            
-            if update_result.get("success"):
-                update_result["update_info"] = {
-                    "previous_version": current_version,
-                    "new_version": seed_version,
-                    "backup_created": backup_current
-                }
-                if backup_data:
-                    update_result["backup"] = backup_data
-            
-            return update_result
-            
+            if isinstance(result, dict) and result.get("error"):
+                detail = result.get("detail") or result.get("error")
+                try:
+                    detail = json.loads(detail).get("detail", detail)
+                except (TypeError, ValueError, AttributeError):
+                    pass
+                return {"error": f"Update refused: {detail}",
+                        "status_code": result.get("status_code"),
+                        "hint": ("Only an instance admin may update a global application; "
+                                 "an application that is not installed is installed with "
+                                 "install_application")}
+            return result
+
         except Exception as e:
             logger.error(f"Error updating application: {str(e)}")
             return {"error": str(e)}
-    
+
     async def list_installed_applications(
         self,
         include_subscriptions: bool = False

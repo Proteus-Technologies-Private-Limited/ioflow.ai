@@ -282,7 +282,7 @@ class EnhancedMCPAuthHandler:
                 headers["X-Auth-Type"] = "api_key"
 
             # Handle endpoints that don't accept trailing slashes
-            no_trailing_slash_endpoints = ['/import', '/export', '/activate', '/deactivate', '/validate-and-save']
+            no_trailing_slash_endpoints = ['/import', '/export', '/activate', '/deactivate', '/validate-and-save', '/update']
             needs_trailing_slash = not any(endpoint.endswith(path) for path in no_trailing_slash_endpoints)
 
             if endpoint and needs_trailing_slash and not endpoint.endswith('/'):

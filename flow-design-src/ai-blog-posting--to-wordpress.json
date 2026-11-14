@@ -118,10 +118,31 @@
             "config": {},
             "appId": "e97d4b5a-c245-4d68-8599-7a26e4ae9ddb",
             "serviceId": "0f13695a-1ef8-4348-b52e-e7b3c90bf5af",
-            "parameterMapping": {},
+            "parameterMapping": {
+              "per_page": {
+                "source": "static",
+                "value": 100
+              },
+              "page": {
+                "source": "static",
+                "value": 1
+              },
+              "orderby": {
+                "source": "static",
+                "value": "name"
+              },
+              "order": {
+                "source": "static",
+                "value": "asc"
+              },
+              "hide_empty": {
+                "source": "static",
+                "value": false
+              }
+            },
             "parameters": {},
             "parametersRaw": "",
-            "useParameterMapping": false,
+            "useParameterMapping": true,
             "appName": "WordPress",
             "service": "get_tags",
             "serviceDisplayName": "get_tags",

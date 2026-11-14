@@ -38,6 +38,16 @@ A tenant whose contract differs sets its own prices on the **connection**:
 `subscription_config.usage_prices = {"post_read": {"amount": 0.004}}` (merged
 per meter over the connector's; `by` maps merge per key).
 
+## Asking X for less
+
+Every expanded post or user an X read returns is billed as a read. The X
+connectors' `search_tweets`, `search_all_tweets` and `get_tweets` take an
+optional `expansions` setting (`request_config.query_jinja`); left empty, the
+connector's own default is sent, so existing flows are unchanged. A flow that
+reads only the authors maps `expansions` = `author_id` and stops paying for the
+replied-to / quoted posts (`referenced_tweets.id`) — 562 of 2,020 reads in one
+900-post run.
+
 ## Recording
 
 `services/flow_usage.py`, called from `ApiCallExecutor._log_http_response`:

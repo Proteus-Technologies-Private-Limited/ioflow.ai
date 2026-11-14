@@ -1064,7 +1064,7 @@ class FlowValidator:
     
     def _find_disconnected_nodes(self, nodes: List[Dict], adjacency: Dict[str, List[str]], 
                                  reverse_adjacency: Dict[str, List[str]]) -> List[Tuple[str, str]]:
-        """Find nodes that are not connected to any other nodes"""
+        """Find nodes that nothing leads to (a trigger must lead somewhere)"""
         disconnected = []
         for node in nodes:
             node_id = node['id']
@@ -1078,13 +1078,11 @@ class FlowValidator:
             if node.get('type') == 'trigger':
                 if not has_outgoing:
                     disconnected.append((node_id, node_label))
-            # Response nodes don't need outgoing connections  
-            elif node.get('type') == 'response':
-                if not has_incoming:
-                    disconnected.append((node_id, node_label))
-            # Other nodes should have both
+            # Every other node must be reachable (an incoming connection). An
+            # outgoing connection is optional: the last step of a flow is a
+            # leaf, and flagging it made every finished flow show a warning.
             else:
-                if not has_incoming or not has_outgoing:
+                if not has_incoming:
                     disconnected.append((node_id, node_label))
         
         return disconnected

@@ -151,7 +151,7 @@ class MCPAuthHandler:
         try:
             # Some endpoints don't accept trailing slashes (e.g., /import)
             # Only add trailing slash for specific endpoints that need it
-            no_trailing_slash_endpoints = ['/import', '/export', '/activate', '/deactivate']
+            no_trailing_slash_endpoints = ['/import', '/export', '/activate', '/deactivate', '/update']
             needs_trailing_slash = not any(endpoint.endswith(path) for path in no_trailing_slash_endpoints)
 
             if endpoint and needs_trailing_slash and not endpoint.endswith('/'):

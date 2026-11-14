@@ -13,7 +13,7 @@
       "description": "X app Bearer token (developer portal → your app → Keys and tokens)",
       "test_endpoint": "/2/usage/tweets"
     },
-    "version": "1.1.0",
+    "version": "1.2.0",
     "base_url": "https://api.twitter.com",
     "icon_url": "https://abs.twimg.com/responsive-web/client-web/icon-ios.77d25eba.png",
     "configuration_schema": {
@@ -50,7 +50,8 @@
           "tweet.fields": "created_at,author_id,lang,geo,public_metrics,entities,conversation_id,referenced_tweets,context_annotations",
           "user.fields": "name,username,location,description,verified,public_metrics,profile_image_url",
           "place.fields": "full_name,name,country,country_code,place_type,geo"
-        }
+        },
+        "query_jinja": "{% if expansions %}{\"expansions\": {{ expansions | tojson }}}{% else %}{}{% endif %}"
       },
       "parameter_schema": {
         "type": "object",
@@ -93,6 +94,10 @@
               "relevancy"
             ],
             "description": "Result order"
+          },
+          "expansions": {
+            "type": "string",
+            "description": "Comma-separated X expansions to return. Leave empty for the default: author_id,geo.place_id,referenced_tweets.id. Every expanded post or user is billed as a read, so name only what the flow uses (e.g. drop referenced_tweets.id when the replied-to / quoted posts are not read)."
           }
         },
         "required": [
@@ -271,7 +276,8 @@
           "tweet.fields": "created_at,author_id,lang,geo,public_metrics,entities,conversation_id,referenced_tweets,context_annotations",
           "user.fields": "name,username,location,description,verified,public_metrics,profile_image_url",
           "place.fields": "full_name,name,country,country_code,place_type,geo"
-        }
+        },
+        "query_jinja": "{% if expansions %}{\"expansions\": {{ expansions | tojson }}}{% else %}{}{% endif %}"
       },
       "parameter_schema": {
         "type": "object",
@@ -314,6 +320,10 @@
               "relevancy"
             ],
             "description": "Result order"
+          },
+          "expansions": {
+            "type": "string",
+            "description": "Comma-separated X expansions to return. Leave empty for the default: author_id,geo.place_id,referenced_tweets.id. Every expanded post or user is billed as a read, so name only what the flow uses (e.g. drop referenced_tweets.id when the replied-to / quoted posts are not read)."
           }
         },
         "required": [
@@ -484,7 +494,8 @@
           "expansions": "author_id,attachments.media_keys,referenced_tweets.id",
           "tweet.fields": "created_at,public_metrics,lang,context_annotations,entities",
           "user.fields": "name,username,profile_image_url,verified"
-        }
+        },
+        "query_jinja": "{% if expansions %}{\"expansions\": {{ expansions | tojson }}}{% else %}{}{% endif %}"
       },
       "parameter_schema": {
         "type": "object",
@@ -492,6 +503,10 @@
           "tweet_ids": {
             "type": "string",
             "description": "Comma-separated list of tweet IDs (max 100)"
+          },
+          "expansions": {
+            "type": "string",
+            "description": "Comma-separated X expansions to return. Leave empty for the default: author_id,attachments.media_keys,referenced_tweets.id. Every expanded post or user is billed as a read, so name only what the flow uses (e.g. drop referenced_tweets.id when the replied-to / quoted posts are not read)."
           }
         },
         "required": [

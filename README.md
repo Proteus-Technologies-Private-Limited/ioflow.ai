@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="ioFlow_icons/Assets.xcassets/AppIcon.appiconset/256.png" alt="IOFlow logo" width="120" />
+  <img src="docs/images/ioflow-icon.png" alt="IOFlow icon" width="140" />
 </p>
 
 <h1 align="center">IOFlow</h1>
@@ -24,6 +24,12 @@
   <a href="#build-with-ai-agents">Build with AI agents</a> ·
   <a href="#extend-ioflow">Extend</a> ·
   <a href="docs/CONTRIBUTING.md">Contribute</a>
+</p>
+
+<p align="center">
+  <img src="docs/images/flow-designer.png" alt="The IOFlow flow designer showing a 13-step flow that writes a blog post with OpenAI, generates two images, uploads them and publishes the post to WordPress" width="100%" />
+  <br/>
+  <sub>The flow designer: an AI blog-publishing flow built from OpenAI and WordPress actions and Python transforms. It ships as an example in <a href="flow-design-src/ai-blog-posting--to-wordpress.json"><code>flow-design-src/</code></a>.</sub>
 </p>
 
 ---
@@ -177,7 +183,13 @@ The plugin adds three agents (`flow-designer`, `flow-editor`, `seed-app-designer
 }
 ```
 
-**Inside IOFlow.** The built-in assistant designs flows and connectors from a chat panel, using Google ADK (Gemini) or a local Claude Code installation. Transform generation works with OpenAI, Anthropic, Gemini, Azure OpenAI, DeepSeek, and local models through Ollama or LM Studio.
+**Inside IOFlow.** Describe a flow or a connector in plain language on the dashboard, and the built-in assistant designs it from a chat panel, using Google ADK (Gemini) or a local Claude Code installation.
+
+<p align="center">
+  <img src="docs/images/dashboard.png" alt="The IOFlow dashboard with Design a Flow and Build a Connector prompts that start the AI assistant" width="100%" />
+</p>
+
+AI-written transforms work with OpenAI, Anthropic, Gemini, Azure OpenAI, DeepSeek, and local models through Ollama or LM Studio.
 
 ## Extend IOFlow
 

@@ -66,6 +66,26 @@ application piece by piece.
    install updates in place: ids and subscriptions are kept; a service or event
    you removed is deactivated, not deleted.
 
+## WORKFLOW — APPLY A SHIPPED UPDATE TO AN INSTALLED GLOBAL APPLICATION
+
+When a global application's seed file has a newer `application.version` than
+the installed copy (the user asks to "update the X connector", or a flow needs
+a setting the newer version adds):
+
+1. `get_seed_application(app_key)` — the shipped version; `list_applications()`
+   — the installed one. Equal versions: nothing to do, say so.
+2. `update_installed_application(app_key)` — a SOFT update to the shipped
+   version: services and events are updated in place by name, and every
+   tenant's connection, token and the ids flows use are KEPT. It never
+   reinstalls; never try to reach a reinstall another way (it deletes every
+   connection to the application, for every tenant).
+3. Report previous → new version, the services/events changed and the
+   connections preserved, exactly as the response gives them.
+
+Instance admins only — the tool refuses everyone else; do not retry, tell the
+user an instance admin must apply it. It applies the file already shipped; it
+does not edit the seed (that is the global catalog's create/edit tools).
+
 ## RULES
 
 - Use `parameter_schema` (NOT `input_schema`) for service arguments.
